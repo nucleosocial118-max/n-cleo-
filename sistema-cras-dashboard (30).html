@@ -1,0 +1,3983 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema CRAS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --navy:#0E1B33;
+    --navy-active:#182C4E;
+    --page-bg:#F3F5FB;
+    --card:#FFFFFF;
+    --ink:#1B2340;
+    --muted:#7B8299;
+    --line:#E7E9F2;
+    --blue:#2F6FED;
+    --blue-light:#33C7F0;
+    --orange:#F2994A;
+    --coral:#EB5757;
+    --cyan:#2FC5E0;
+    --green:#27AE60;
+  }
+  *{box-sizing:border-box;}
+  i svg{ width:1em; height:1em; vertical-align:-0.15em; }
+  body{
+    margin:0;
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(circle at 8% 4%, #C9D4FF 0%, transparent 32%),
+      radial-gradient(circle at 96% 0%, #FFD9A8 0%, transparent 26%),
+      radial-gradient(circle at 100% 60%, #D8E0FF 0%, transparent 30%),
+      var(--page-bg);
+    min-height:100vh;
+    padding:26px;
+  }
+  .page-brand{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:10px;
+    max-width:1360px;
+    margin:0 auto 18px;
+    padding-right:6px;
+  }
+  .page-brand i{
+    font-size:22px;
+    color:var(--blue);
+  }
+  .page-brand span{
+    font-weight:700;
+    font-size:18px;
+  }
+
+  .shell{
+    max-width:1360px;
+    margin:0 auto;
+    display:flex;
+    background:var(--card);
+    border-radius:22px;
+    box-shadow:0 20px 50px rgba(20,30,60,0.10);
+    overflow:hidden;
+    min-height:820px;
+  }
+
+  /* SIDEBAR */
+  .sidebar{
+    width:250px;
+    flex-shrink:0;
+    background:var(--navy);
+    color:#AEB6CC;
+    padding:22px 16px;
+  }
+  .side-brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:4px 8px 22px;
+  }
+  .sidebar-toggle{
+    width:30px;
+    height:30px;
+    border-radius:8px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#AEB6CC;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .sidebar-toggle:hover{ background:var(--navy-active); color:#fff; }
+  .logo-slot{
+    width:36px;
+    height:36px;
+    border-radius:9px;
+    border:1.5px dashed #4A557A;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    overflow:hidden;
+    flex-shrink:0;
+  }
+  .logo-slot img{ width:100%; height:100%; object-fit:cover; }
+  .logo-slot i{ font-size:16px; color:#7C87A8; }
+  .side-brand strong{ color:#fff; font-size:16px; }
+
+  .side-label{
+    font-size:11px;
+    letter-spacing:.03em;
+    color:#5D6684;
+    margin:20px 10px 8px;
+  }
+  .nav-item{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:10px 12px;
+    border-radius:10px;
+    font-size:14px;
+    cursor:pointer;
+    margin-bottom:2px;
+  }
+  .nav-item i{ font-size:17px; width:18px; }
+  .nav-item:hover{ background:var(--navy-active); color:#fff; }
+  .nav-item.active{ background:var(--blue); color:#fff; }
+
+  /* SIDEBAR RECOLHIDA — só ícones */
+  .sidebar.collapsed{ width:76px; }
+  .sidebar.collapsed .side-text{ display:none; }
+  .sidebar.collapsed .nav-item{ justify-content:center; padding:12px 0; }
+  .sidebar.collapsed .nav-item i{ width:auto; }
+  .sidebar.collapsed .side-brand{ justify-content:center; padding:4px 0 22px; }
+  .sidebar.collapsed .logo-slot{ display:none; }
+
+  /* MAIN */
+  .main{
+    flex:1;
+    padding:26px 32px 32px;
+    min-width:0;
+  }
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:24px;
+    flex-wrap:wrap;
+  }
+  .search{
+    flex:1;
+    max-width:360px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:var(--page-bg);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:9px 14px;
+    color:var(--muted);
+    font-size:14px;
+  }
+  .search i{ font-size:16px; }
+  .top-icons{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .icon-btn{
+    width:38px;
+    height:38px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--muted);
+    font-size:17px;
+    cursor:pointer;
+  }
+  .avatar{
+    width:38px;
+    height:38px;
+    border-radius:10px;
+    background:var(--blue);
+    color:#fff;
+    font-weight:600;
+    font-size:13px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  /* HERO */
+  .hero{
+    background:linear-gradient(120deg, var(--blue) 0%, var(--blue-light) 100%);
+    border-radius:18px;
+    padding:34px 38px;
+    color:#fff;
+    position:relative;
+    overflow:hidden;
+    margin-bottom:28px;
+  }
+  .hero h2{ font-size:26px; margin:0 0 8px; font-weight:700; }
+  .hero p{ margin:0; font-size:14.5px; opacity:.92; max-width:440px; }
+  .hero-blob{
+    position:absolute;
+    right:-30px;
+    top:-40px;
+    width:180px;
+    height:180px;
+    border-radius:50%;
+    background:rgba(255,255,255,0.12);
+  }
+  .hero-blob.two{
+    right:60px;
+    top:60px;
+    width:90px;
+    height:90px;
+    background:rgba(255,255,255,0.10);
+  }
+
+  /* STAT CARDS */
+  .section-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .section-head h3{ font-size:16px; margin:0; }
+  .view-all{ font-size:12.5px; color:var(--blue); cursor:pointer; }
+
+  .stat-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:16px;
+    margin-bottom:30px;
+  }
+  .stat-card{
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px;
+  }
+  .badge{
+    display:inline-block;
+    color:#fff;
+    font-size:12px;
+    font-weight:600;
+    padding:5px 12px;
+    border-radius:8px;
+    margin-bottom:12px;
+  }
+  .stat-card p.desc{
+    margin:0 0 12px;
+    font-size:13.5px;
+    color:var(--ink);
+    line-height:1.4;
+  }
+  .stat-foot{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:8px;
+  }
+  .stat-foot b{ display:block; color:var(--ink); font-size:13px; font-weight:600; }
+  .bar{
+    height:5px;
+    border-radius:3px;
+    background:var(--line);
+    overflow:hidden;
+  }
+  .bar span{ display:block; height:100%; border-radius:3px; }
+
+  /* LOWER GRID */
+  .lower-grid{
+    display:grid;
+    grid-template-columns:1.3fr 1fr 1fr;
+    gap:20px;
+  }
+  .panel{
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:18px;
+  }
+  .visit-item{
+    border-top:3px solid var(--blue);
+    background:var(--page-bg);
+    border-radius:10px;
+    padding:14px;
+    margin-bottom:12px;
+  }
+  .visit-item h4{ margin:0 0 4px; font-size:14px; }
+  .visit-item p{ margin:0 0 10px; font-size:12.5px; color:var(--muted); }
+  .avatars{ display:flex; align-items:center; gap:-6px; }
+  .mini-avatar{
+    width:28px; height:28px;
+    border-radius:50%;
+    background:var(--blue);
+    color:#fff;
+    font-size:11px;
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border:2px solid var(--page-bg);
+    margin-left:-8px;
+  }
+  .mini-avatar:first-child{ margin-left:0; }
+  .mini-avatar.plus{ background:var(--navy); }
+
+  .case-item{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:11px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .case-item:last-child{ border-bottom:none; }
+  .case-icon{
+    width:36px; height:36px;
+    border-radius:9px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#fff;
+    font-size:16px;
+    flex-shrink:0;
+  }
+  .case-item h5{ margin:0; font-size:13.5px; }
+  .case-item p{ margin:2px 0 0; font-size:12px; color:var(--muted); }
+  .case-item i.chevron{ margin-left:auto; color:var(--muted); font-size:15px; }
+
+  .notif-item{
+    display:flex;
+    gap:12px;
+    padding:11px 0;
+  }
+  .notif-time{ font-size:12px; color:var(--muted); width:42px; flex-shrink:0; }
+  .notif-dot{
+    width:3px;
+    border-radius:2px;
+    flex-shrink:0;
+  }
+  .notif-text p{ margin:0; font-size:13px; }
+  .notif-text span{ font-size:12px; color:var(--muted); }
+
+  @media (max-width:1100px){
+    .stat-grid{ grid-template-columns:repeat(2,1fr); }
+    .lower-grid{ grid-template-columns:1fr; }
+  }
+  @media (max-width:760px){
+    .shell{ flex-direction:column; }
+    .sidebar{ width:100%; }
+  }
+
+  /* CADASTRO DE FAMÍLIAS */
+  .form-panel{
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:24px 26px 26px;
+    margin-bottom:30px;
+  }
+  .form-panel .section-head p.hint{
+    margin:2px 0 0;
+    font-size:13px;
+    color:var(--muted);
+  }
+  .field-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:14px;
+    margin-bottom:22px;
+  }
+  .field{ display:flex; flex-direction:column; gap:6px; }
+  .field.span-2{ grid-column:span 2; }
+  .field label{ font-size:12.5px; font-weight:600; color:var(--ink); }
+  .field input,.field select,.field textarea{
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    padding:9px 12px;
+    border:1px solid var(--line);
+    border-radius:9px;
+    background:var(--page-bg);
+    color:var(--ink);
+  }
+  .field textarea{ resize:vertical; min-height:60px; }
+  .field input:focus,.field select:focus,.field textarea:focus{
+    outline:none;
+    border-color:var(--blue);
+  }
+
+  /* AGENDA ED — layout de duas colunas (calendário + formulário) */
+  .visita-two-col{
+    display:grid;
+    grid-template-columns:300px minmax(0,1fr);
+    gap:22px;
+    align-items:start;
+    margin-bottom:30px;
+  }
+  .visita-two-col > .form-panel{ min-width:0; }
+  .visita-two-col .field .chk-list{
+    display:flex;
+    flex-direction:column;
+    box-sizing:border-box;
+    max-height:84px; /* 2 linhas de 41px + borda do quadro */
+    overflow-y:auto;
+    overflow-x:hidden;
+    padding:0;
+    border:1px solid var(--line);
+    border-radius:10px;
+    background:#fff;
+  }
+  .visita-two-col .field .chk-list label{
+    display:flex;
+    flex-direction:row;
+    align-items:center;
+    gap:12px;
+    padding:10px 14px;
+    margin:0;
+    line-height:20px;
+    font-size:14px;
+    font-weight:500;
+    color:var(--ink);
+    cursor:pointer;
+    border-bottom:1px solid var(--line);
+    transition:background .12s ease;
+  }
+  .visita-two-col .field .chk-list label:last-child{ border-bottom:0; }
+  .visita-two-col .field .chk-list label:hover{ background:var(--page-bg); }
+  .visita-two-col .field .chk-list input[type=checkbox]{
+    width:18px; height:18px; min-width:18px; flex:0 0 18px;
+    margin:0; padding:0; border-radius:4px;
+    accent-color:#2563eb; cursor:pointer;
+  }
+  .visita-two-col .field .chk-list span{
+    flex:1; min-width:0;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+
+  .visita-two-col .field .vs-entrev-info{ font-size:12.5px; color:var(--muted); }
+  .visita-two-col .field .vs-entrev-info b{ color:var(--ink); font-weight:600; }
+
+  /* Urgência */
+  .visita-two-col .vs-urgente-box{
+    grid-column:1/-1; display:flex; align-items:center; gap:12px;
+    padding:12px 14px; border:1px solid var(--line); border-radius:10px;
+    background:#fff; cursor:pointer; transition:background .12s ease, border-color .12s ease;
+  }
+  .visita-two-col .vs-urgente-box input[type=checkbox]{
+    width:18px; height:18px; min-width:18px; margin:0; padding:0; accent-color:#DC2626; cursor:pointer;
+  }
+  .visita-two-col .vs-urg-txt{ display:flex; flex-direction:column; gap:1px; }
+  .visita-two-col .vs-urg-txt b{ font-size:14px; font-weight:600; color:var(--ink); }
+  .visita-two-col .vs-urg-txt small{ font-size:12px; color:var(--muted); }
+  .visita-two-col .vs-urgente-box:has(input:checked){ background:#FEF2F2; border-color:#FCA5A5; }
+  .visita-two-col .vs-urgente-box:has(input:checked) b{ color:#B91C1C; }
+
+  .cal-day .dots{
+    position:absolute; left:0; right:0; bottom:3px;
+    display:flex; justify-content:center; gap:3px; pointer-events:none;
+  }
+  .cal-day .dots .dot{ position:static; width:5px; height:5px; flex:none; box-sizing:border-box; }
+  .cal-day .dot.urgente{ background:#DC2626; width:5px; height:5px; }
+  .cal-day .dot.reag{ background:#F97316; }
+  .cal-day .dot.origem{ background:transparent; border:1.5px solid #F97316; }
+  .cal-day.selected .dot.origem{ background:transparent; border-color:#fff; }
+  .cal-legend{
+    display:flex; flex-wrap:wrap; gap:6px 12px; margin-top:12px; padding-top:10px;
+    border-top:1px solid var(--line); font-size:11px; color:var(--muted);
+  }
+  .cal-legend span{ display:inline-flex; align-items:center; gap:5px; }
+  .cal-legend i{ width:8px; height:8px; border-radius:50%; display:inline-block; box-sizing:border-box; }
+  .cal-legend .lg-verde{ background:var(--green); }
+  .cal-legend .lg-verm{ background:#DC2626; }
+  .cal-legend .lg-lar{ background:#F97316; }
+  .cal-legend .lg-oco{ border:1.5px solid #F97316; }
+
+  .mini-visit-reag{ margin-top:3px; font-size:11.5px; font-weight:600; color:#C2410C; }
+  .mini-visit-item:hover .mini-visit-reag{ color:#fff; }
+  .mini-visit-reagtag{
+    display:inline-block; margin-top:4px; margin-left:4px; font-size:10px; font-weight:700;
+    padding:2px 7px; border-radius:20px; background:#FFEDD5; color:#C2410C; text-transform:uppercase; letter-spacing:.03em;
+  }
+  .mini-visit-item.reag-origem{ background:#FFFBF5; border:1px dashed #FDBA74; }
+  .mini-visit-item.reag-origem .mini-visit-date{ color:#C2410C; }
+  .mini-visit-item.reag-origem:hover{ background:#F97316; }
+  .mini-visit-item.reag-origem:hover .mini-visit-date{ color:#fff; }
+  .cal-day.urgente:not(.selected){ color:#DC2626; font-weight:700; }
+  .mini-visit-item.urgente{ background:#FEF2F2; border-color:#FECACA; box-shadow:inset 4px 0 0 #DC2626; }
+  .mini-visit-item.urgente .mini-visit-date{ color:#DC2626; }
+  .mini-visit-item.urgente:hover{ background:#DC2626; }
+  .mini-visit-urg{
+    display:inline-block; margin-top:4px; margin-left:4px; font-size:10px; font-weight:700;
+    padding:2px 7px; border-radius:20px; background:#DC2626; color:#fff; letter-spacing:.03em; text-transform:uppercase;
+  }
+  .vs-table tbody tr.vs-urgente td{ background:#FFF5F5; }
+  .vs-table tbody tr.vs-urgente td:first-child{ box-shadow:inset 4px 0 0 #DC2626; }
+  .vs-table tbody tr.vs-urgente:hover td{ background:#FEECEC; }
+  .vs-table .vs-badge-urg{
+    display:inline-block; margin-left:6px; padding:2px 8px; border-radius:999px;
+    font-size:10.5px; font-weight:700; letter-spacing:.03em; text-transform:uppercase;
+    background:#DC2626; color:#fff; vertical-align:middle;
+  }
+
+  /* Reagendamento */
+  .vs-table .vs-btn-icon{ position:relative; }
+  .vs-table .vs-btn-icon.reagendar:hover{ background:#FFF7ED; color:#C2410C; border-color:#FED7AA; }
+  .vs-reag-badge{
+    position:absolute; top:-6px; right:-6px; min-width:17px; height:17px; padding:0 4px;
+    border-radius:999px; background:#F97316; color:#fff; font-size:10.5px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; line-height:1;
+  }
+  .vs-table .vs-reag-tag{ margin-top:4px; font-size:11.5px; font-weight:600; color:#C2410C; white-space:nowrap; }
+
+  .vs-modal-overlay{
+    position:fixed; inset:0; z-index:1100; display:flex; align-items:center; justify-content:center;
+    padding:20px; background:rgba(15,23,42,.45);
+  }
+  .vs-modal{
+    width:min(540px,100%); max-height:90vh; display:flex; flex-direction:column;
+    background:#fff; border-radius:16px; box-shadow:0 24px 60px rgba(15,23,42,.28); overflow:hidden;
+  }
+  .vs-modal-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:20px 22px 14px; border-bottom:1px solid var(--line); }
+  .vs-modal-head h3{ margin:0; font-size:17px; color:var(--ink); }
+  .vs-modal-head p{ margin:3px 0 0; font-size:13px; color:var(--muted); }
+  .vs-modal-x{ border:0; background:transparent; font-size:26px; line-height:1; color:var(--muted); cursor:pointer; padding:0 4px; }
+  .vs-modal-x:hover{ color:var(--ink); }
+  .vs-modal-body{ padding:16px 22px; overflow-y:auto; display:flex; flex-direction:column; gap:16px; }
+  .vs-modal-foot{ display:flex; justify-content:flex-end; gap:10px; padding:14px 22px 18px; border-top:1px solid var(--line); }
+  .vs-reag-count{ align-self:flex-start; padding:4px 12px; border-radius:999px; font-size:12px; font-weight:700; background:#FFF7ED; color:#C2410C; }
+  .vs-reag-count.cheio{ background:#FEF2F2; color:#B91C1C; }
+  .vs-reag-timeline{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; }
+  .vs-reag-timeline li{ position:relative; padding:0 0 16px 26px; }
+  .vs-reag-timeline li:last-child{ padding-bottom:0; }
+  .vs-reag-timeline li::before{ content:''; position:absolute; left:4px; top:5px; width:11px; height:11px; border-radius:50%; background:#fff; border:2px solid #CBD5E1; }
+  .vs-reag-timeline li::after{ content:''; position:absolute; left:9px; top:18px; bottom:-4px; width:2px; background:var(--line); }
+  .vs-reag-timeline li:last-child::after{ display:none; }
+  .vs-reag-timeline li.atual::before{ background:#F97316; border-color:#F97316; }
+  .vs-reag-label{ font-size:11.5px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; color:var(--muted); margin-bottom:2px; }
+  .vs-reag-when{ font-size:14px; color:var(--ink); }
+  .vs-reag-atual{ margin-left:8px; padding:2px 8px; border-radius:999px; font-size:10.5px; font-weight:700; background:#F97316; color:#fff; text-transform:uppercase; }
+  .vs-reag-meta{ margin-top:2px; font-size:12px; color:var(--muted); }
+  .vs-reag-form{ border:1px solid var(--line); border-radius:12px; padding:14px 16px; background:var(--page-bg); }
+  .vs-reag-form h4{ margin:0 0 10px; font-size:13.5px; color:var(--ink); }
+  .vs-reag-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .vs-reag-limite{ padding:12px 14px; border-radius:10px; background:#FEF2F2; color:#B91C1C; font-size:13px; font-weight:600; }
+  @media (max-width:520px){ .vs-reag-grid{ grid-template-columns:1fr; } }
+
+  /* Filtros da tabela */
+  .vs-filtros{ margin-top:10px; padding:14px 16px; border:1px solid var(--line); border-radius:12px; background:#fff; }
+  .vs-filtros-grid{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+  .vs-filtros-grid .field{ min-width:0; }
+  .vs-filtros-grid .vs-f-busca{ grid-column:span 2; }
+  .vs-filtros-grid .vs-f-motivo{ grid-column:span 2; }
+  .vs-filtros-grid .field input,.vs-filtros-grid .field select{ width:100%; min-width:0; box-sizing:border-box; }
+  .vs-filtros-rodape{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-top:12px; }
+  .vs-f-chips{ display:flex; gap:8px; flex-wrap:wrap; }
+  .vs-f-chip{
+    display:inline-flex; align-items:center; gap:8px; padding:7px 13px; border:1px solid var(--line);
+    border-radius:999px; font-size:13px; cursor:pointer; background:#fff; color:var(--ink); user-select:none;
+  }
+  .vs-f-chip input{ width:15px; height:15px; margin:0; cursor:pointer; }
+  .vs-f-chip.urg input{ accent-color:#DC2626; }
+  .vs-f-chip.reag input{ accent-color:#F97316; }
+  .vs-f-chip.urg:has(input:checked){ background:#FEF2F2; border-color:#FCA5A5; color:#B91C1C; font-weight:600; }
+  .vs-f-chip.reag:has(input:checked){ background:#FFF7ED; border-color:#FDBA74; color:#C2410C; font-weight:600; }
+  .vs-filtros-rodape .btn-ghost:disabled{ opacity:.45; cursor:default; }
+  .vs-mais{ display:flex; justify-content:center; margin-top:12px; }
+  @media (max-width:900px){
+    .vs-filtros-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .vs-filtros-grid .vs-f-busca,.vs-filtros-grid .vs-f-motivo{ grid-column:span 2; }
+  }
+  @media (max-width:520px){
+    .vs-filtros-grid{ grid-template-columns:minmax(0,1fr); }
+    .vs-filtros-grid .vs-f-busca,.vs-filtros-grid .vs-f-motivo{ grid-column:span 1; }
+  }
+
+  /* Tabela: últimas entrevistas domiciliares */
+  .vs-table-wrap{ margin-top:10px; overflow-x:auto; border:1px solid var(--line); border-radius:12px; background:#fff; }
+  .vs-table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  .vs-table thead th{
+    text-align:left; padding:11px 16px;
+    font-size:11.5px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+    color:var(--muted); background:var(--page-bg); border-bottom:1px solid var(--line);
+    white-space:nowrap;
+  }
+  .vs-table tbody td{ padding:13px 16px; vertical-align:top; border-bottom:1px solid var(--line); color:var(--ink); }
+  .vs-table tbody tr:last-child td{ border-bottom:0; }
+  .vs-table tbody tr:hover td{ background:#FAFBFE; }
+  .vs-table .vs-col-data{ white-space:nowrap; width:1%; }
+  .vs-table .vs-data{ font-weight:600; }
+  .vs-table .vs-hora{ font-size:12px; color:var(--muted); margin-top:2px; }
+  .vs-table .vs-nome{ font-weight:600; }
+  .vs-table .vs-cras{ color:var(--muted); }
+  .vs-table .vs-motivo{ min-width:220px; max-width:340px; }
+  .vs-table .vs-tag{
+    display:inline-block; margin-top:6px; padding:2px 9px;
+    border-radius:999px; font-size:11.5px; font-weight:600;
+    background:#EEF2FF; color:#3B4FCB;
+  }
+  .vs-table .vs-obs{ margin-top:6px; font-size:12.5px; color:var(--muted); font-style:italic; }
+  .vs-table .vs-chips{ display:flex; flex-wrap:wrap; gap:5px; }
+  .vs-table .vs-chip{
+    padding:3px 10px; border-radius:999px; font-size:12px;
+    background:var(--page-bg); border:1px solid var(--line); white-space:nowrap;
+  }
+  .vs-table .vs-vazio{ color:var(--muted); }
+  .vs-table .vs-col-acoes{ width:1%; white-space:nowrap; }
+  .vs-table .vs-acoes{ display:flex; gap:6px; }
+  .vs-table .vs-btn-icon{
+    width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center;
+    border:1px solid var(--line); border-radius:9px; background:#fff; color:var(--muted);
+    cursor:pointer; padding:0; transition:background .12s ease, color .12s ease, border-color .12s ease;
+  }
+  .vs-table .vs-btn-icon svg{ width:16px; height:16px; }
+  .vs-table .vs-btn-icon.editar:hover{ background:#EEF2FF; color:#3B4FCB; border-color:#C7D2FE; }
+  .vs-table .vs-btn-icon.excluir:hover{ background:#FEF2F2; color:#DC2626; border-color:#FECACA; }
+  .vs-table tbody tr.vs-editando td{ background:#F5F8FF; }
+
+  .visita-two-col .field-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .visita-two-col .field{ min-width:0; }
+  .visita-two-col .field input,
+  .visita-two-col .field select{ width:100%; min-width:0; box-sizing:border-box; }
+  @media (max-width:900px){
+    .visita-two-col .field-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+  }
+  @media (max-width:640px){
+    .visita-two-col .field-grid{ grid-template-columns:minmax(0,1fr); }
+  }
+  @media (max-width:900px){
+    .visita-two-col{ grid-template-columns:1fr; }
+  }
+  .visita-left-col{
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+  .calendar-card{
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:18px 18px 20px;
+    background:var(--card);
+  }
+  .calendar-card .cal-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .calendar-card .cal-head h4{
+    margin:0;
+    font-size:14.5px;
+    color:var(--ink);
+    text-transform:capitalize;
+  }
+  .cal-nav-btn{
+    border:none;
+    background:var(--page-bg);
+    color:var(--ink);
+    width:28px;
+    height:28px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:16px;
+    line-height:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .cal-nav-btn:hover{ background:var(--blue); color:#fff; }
+  .cal-weekdays,.cal-days{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:4px;
+    text-align:center;
+  }
+  .cal-weekdays span{
+    font-size:11px;
+    color:var(--muted);
+    font-weight:600;
+    padding-bottom:6px;
+  }
+  .cal-day{
+    position:relative;
+    aspect-ratio:1/1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:50%;
+    font-size:12.5px;
+    color:var(--ink);
+    cursor:pointer;
+    background:transparent;
+    border:none;
+    font-family:'Inter',sans-serif;
+  }
+  .cal-day:hover{ background:var(--page-bg); }
+  .cal-day.muted{ color:var(--line); cursor:default; }
+  .cal-day.muted:hover{ background:transparent; }
+  .cal-day.selected{ background:var(--blue); color:#fff; font-weight:600; }
+  .cal-day.today:not(.selected){ box-shadow:inset 0 0 0 1.5px var(--blue); }
+  .cal-day .dot{
+    position:absolute;
+    bottom:3px;
+    width:4px;
+    height:4px;
+    border-radius:50%;
+    background:var(--green);
+  }
+  .cal-day.selected .dot{ background:#fff; }
+
+  .mini-visits-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    max-height:180px;
+    overflow-y:auto;
+  }
+  .mini-visits-card .section-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .mini-visits-clear{
+    border:none;
+    background:none;
+    color:var(--blue);
+    font-size:11.5px;
+    font-weight:600;
+    cursor:pointer;
+    padding:0;
+    text-decoration:underline;
+    white-space:nowrap;
+  }
+  .mini-visit-item{
+    padding:9px 11px;
+    border-radius:10px;
+    background:var(--page-bg);
+    cursor:pointer;
+    border:1px solid transparent;
+  }
+  .mini-visit-item:hover{ background:var(--blue); }
+  .mini-visit-item:hover .mini-visit-date,
+  .mini-visit-item:hover .mini-visit-name,
+  .mini-visit-item:hover .mini-visit-motivo{ color:#fff; }
+  .mini-visit-date{ font-size:11px; font-weight:700; color:var(--blue); }
+  .mini-visit-name{ font-size:13px; font-weight:600; color:var(--ink); margin-top:2px; }
+  .mini-visit-motivo{ font-size:11.5px; color:var(--muted); margin-top:1px; }
+  .mini-visit-status{
+    display:inline-block;
+    margin-top:4px;
+    font-size:10px;
+    font-weight:700;
+    padding:2px 7px;
+    border-radius:20px;
+    background:var(--card);
+    color:var(--muted);
+  }
+
+  .chip-group{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{
+    font-size:12.5px;
+    padding:7px 13px;
+    border-radius:20px;
+    border:1px solid var(--line);
+    background:var(--page-bg);
+    color:var(--muted);
+    cursor:pointer;
+    user-select:none;
+  }
+  .chip.on{
+    background:var(--blue);
+    border-color:var(--blue);
+    color:#fff;
+  }
+
+  .members-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin:6px 0 12px;
+  }
+  .members-head h4{ font-size:14.5px; margin:0; }
+  .count-badge{
+    background:var(--page-bg);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:4px 12px;
+    font-size:12px;
+    color:var(--ink);
+    font-weight:600;
+  }
+  .add-btn{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background:var(--blue);
+    color:#fff;
+    border:none;
+    border-radius:9px;
+    padding:8px 14px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .add-btn i{ font-size:15px; }
+
+  .member-row{
+    display:grid;
+    grid-template-columns:1.4fr .9fr 1fr 1fr 1fr auto;
+    gap:10px;
+    align-items:center;
+    background:var(--page-bg);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px 12px;
+    margin-bottom:8px;
+  }
+  .member-row input,.member-row select{
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    padding:7px 10px;
+    border:1px solid var(--line);
+    border-radius:7px;
+    background:#fff;
+    width:100%;
+  }
+  .remove-btn{
+    width:30px; height:30px;
+    border-radius:7px;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--coral);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+
+  .form-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    margin-top:20px;
+  }
+  .btn-ghost{
+    padding:10px 18px;
+    border-radius:9px;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--ink);
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .btn-primary{
+    padding:10px 20px;
+    border-radius:9px;
+    border:none;
+    background:var(--blue);
+    color:#fff;
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .toast{
+    position:fixed;
+    bottom:26px;
+    left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--navy);
+    color:#fff;
+    padding:12px 20px;
+    border-radius:10px;
+    font-size:13.5px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s ease, transform .2s ease;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  @media (max-width:900px){
+    .field-grid{ grid-template-columns:1fr 1fr; }
+    .field.span-2{ grid-column:span 2; }
+    .member-row{ grid-template-columns:1fr 1fr; }
+  }
+
+  /* ENCAMINHAMENTOS — lista com status */
+  .enc-list{
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:20px 22px 8px;
+  }
+  .enc-row{
+    display:grid;
+    grid-template-columns:1.3fr 1.2fr .9fr auto;
+    align-items:center;
+    gap:14px;
+    padding:14px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .enc-row:last-child{ border-bottom:none; }
+  .enc-row h5{ margin:0 0 3px; font-size:14px; }
+  .enc-row p{ margin:0; font-size:12.5px; color:var(--muted); }
+  .status-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-size:12px;
+    font-weight:600;
+    padding:6px 12px;
+    border-radius:20px;
+    cursor:pointer;
+    user-select:none;
+    justify-self:start;
+  }
+  .status-pill .dot{
+    width:7px; height:7px;
+    border-radius:50%;
+  }
+  .status-pill.aguardando{ background:#FDEAEA; color:#B23A3A; }
+  .status-pill.aguardando .dot{ background:var(--coral); }
+  .status-pill.acompanhamento{ background:#FEF1E4; color:#A6621E; }
+  .status-pill.acompanhamento .dot{ background:var(--orange); }
+  .status-pill.concluido{ background:#E7F7ED; color:#1E7F45; }
+  .status-pill.concluido .dot{ background:var(--green); }
+  .status-pill.agendada{ background:#E8F0FE; color:#2050B0; }
+  .status-pill.agendada .dot{ background:var(--blue); }
+  .status-pill.realizada{ background:#E7F7ED; color:#1E7F45; }
+  .status-pill.realizada .dot{ background:var(--green); }
+  .status-pill.naolocalizada{ background:#F1F1F1; color:#6B6B6B; }
+  .status-pill.naolocalizada .dot{ background:#9A9A9A; }
+  .status-pill.solicitado{ background:#E8F0FE; color:#2050B0; }
+  .status-pill.solicitado .dot{ background:var(--blue); }
+  .status-pill.aprovado{ background:#FEF1E4; color:#A6621E; }
+  .status-pill.aprovado .dot{ background:var(--orange); }
+  .status-pill.entregue{ background:#E7F7ED; color:#1E7F45; }
+  .status-pill.entregue .dot{ background:var(--green); }
+  .status-hint{
+    font-size:11.5px;
+    color:var(--muted);
+  }
+
+  @media (max-width:760px){
+    .enc-row{ grid-template-columns:1fr; }
+  }
+
+  /* COMUNICAÇÃO ENTRE CRAS — chat */
+  .comms-alert{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:#FDEAEA;
+    color:#B23A3A;
+    border-radius:12px;
+    padding:12px 16px;
+    font-size:13.5px;
+    font-weight:600;
+    margin-bottom:20px;
+  }
+  .comms-alert i{ font-size:17px; }
+
+  .comms-shell{
+    display:flex;
+    border:1px solid var(--line);
+    border-radius:16px;
+    overflow:hidden;
+    height:480px;
+  }
+  .comms-list{
+    width:270px;
+    flex-shrink:0;
+    border-right:1px solid var(--line);
+    overflow-y:auto;
+    background:var(--page-bg);
+  }
+  .comms-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:13px 16px;
+    cursor:pointer;
+    border-bottom:1px solid var(--line);
+  }
+  .comms-item:hover{ background:#fff; }
+  .comms-item.active{ background:#fff; border-left:3px solid var(--blue); }
+  .comms-avatar{
+    width:36px; height:36px;
+    border-radius:10px;
+    background:var(--navy);
+    color:#fff;
+    font-size:12px;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+  }
+  .comms-item-text{ min-width:0; flex:1; }
+  .comms-item-text h5{ margin:0 0 2px; font-size:13.5px; }
+  .comms-item-text p{
+    margin:0;
+    font-size:12px;
+    color:var(--muted);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .comms-badge{
+    background:var(--coral);
+    color:#fff;
+    font-size:11px;
+    font-weight:700;
+    border-radius:20px;
+    padding:2px 7px;
+    flex-shrink:0;
+  }
+
+  .comms-main{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+  }
+  .comms-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 18px;
+    border-bottom:1px solid var(--line);
+  }
+  .comms-header h4{ margin:0; font-size:14.5px; }
+  .comms-link-tag{
+    font-size:12px;
+    color:var(--blue);
+    background:#E8F0FE;
+    padding:5px 11px;
+    border-radius:20px;
+    font-weight:600;
+  }
+  .comms-messages{
+    flex:1;
+    overflow-y:auto;
+    padding:18px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .msg{
+    max-width:70%;
+    padding:10px 14px;
+    border-radius:14px;
+    font-size:13.5px;
+    line-height:1.45;
+  }
+  .msg .msg-time{
+    display:block;
+    font-size:10.5px;
+    margin-top:4px;
+    opacity:.7;
+  }
+  .msg.received{
+    align-self:flex-start;
+    background:var(--page-bg);
+    border-bottom-left-radius:4px;
+  }
+  .msg.sent{
+    align-self:flex-end;
+    background:var(--blue);
+    color:#fff;
+    border-bottom-right-radius:4px;
+  }
+  .comms-inputbar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:12px 16px;
+    border-top:1px solid var(--line);
+  }
+  .comms-inputbar input[type="text"]{
+    flex:1;
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    padding:10px 14px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    background:var(--page-bg);
+  }
+  .comms-family-chip{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:12px;
+    color:var(--muted);
+    border:1px solid var(--line);
+    border-radius:9px;
+    padding:9px 12px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .comms-send{
+    width:38px; height:38px;
+    border-radius:10px;
+    border:none;
+    background:var(--blue);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+
+  @media (max-width:760px){
+    .comms-shell{ flex-direction:column; height:auto; }
+    .comms-list{ width:100%; max-height:200px; }
+  }
+
+  /* CONFIGURAÇÕES */
+  .subhead{
+    font-size:14.5px;
+    font-weight:600;
+    margin:0 0 12px;
+    color:var(--ink);
+  }
+  .config-block{
+    margin-bottom:26px;
+  }
+  .config-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    max-width:360px;
+    font-size:14px;
+  }
+  .switch{
+    position:relative;
+    width:44px;
+    height:24px;
+    display:inline-block;
+    flex-shrink:0;
+  }
+  .switch input{ display:none; }
+  .switch .track{
+    position:absolute;
+    inset:0;
+    background:var(--line);
+    border-radius:20px;
+    cursor:pointer;
+    transition:background .2s ease;
+  }
+  .switch .thumb{
+    position:absolute;
+    width:18px;
+    height:18px;
+    background:#fff;
+    border-radius:50%;
+    top:3px;
+    left:3px;
+    transition:transform .2s ease;
+    box-shadow:0 1px 3px rgba(0,0,0,0.2);
+  }
+  .switch input:checked + .track{ background:var(--blue); }
+  .switch input:checked + .track .thumb{ transform:translateX(20px); }
+
+  .btn-danger-outline{
+    padding:10px 18px;
+    border-radius:9px;
+    border:1px solid var(--coral);
+    background:#fff;
+    color:var(--coral);
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+  }
+
+  /* MODO ESCURO */
+  body.dark{
+    --page-bg:#10182B;
+    --card:#16213A;
+    --ink:#E7EAF5;
+    --muted:#8B93AC;
+    --line:#293555;
+    --navy:#0A1220;
+    --navy-active:#131F38;
+  }
+  body.dark{
+    background:
+      radial-gradient(circle at 8% 4%, #1B2A4E 0%, transparent 32%),
+      radial-gradient(circle at 96% 0%, #2A2010 0%, transparent 26%),
+      var(--page-bg);
+  }
+  body.dark .switch input:not(:checked) + .track{ background:#3A4568; }
+  body.dark .comms-list{ background:#0F1830; }
+  body.dark .search,
+  body.dark .field input,
+  body.dark .field select,
+  body.dark .field textarea,
+  body.dark .member-row input,
+  body.dark .member-row select,
+  body.dark .comms-inputbar input,
+  body.dark .visit-item{ background:#0F1830; }
+
+  /* FICHA DA FAMÍLIA */
+  .family-link{ cursor:pointer; }
+  .enc-row.family-link:hover{ background:#fff; }
+  body.dark .enc-row.family-link:hover{ background:#0F1830; }
+  .case-item.family-link:hover h5{ color:var(--blue); }
+
+  .ficha-top{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:20px;
+  }
+  .ficha-top h3{ font-size:20px; margin:0; }
+  .ficha-top p{ margin:2px 0 0; font-size:13px; color:var(--muted); }
+
+  .ficha-summary{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:20px;
+  }
+  .summary-chip{
+    background:var(--page-bg);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:8px 14px;
+    font-size:12px;
+    color:var(--muted);
+    min-width:110px;
+  }
+  .summary-chip b{
+    display:block;
+    font-size:13.5px;
+    color:var(--ink);
+    font-weight:600;
+    margin-top:2px;
+  }
+
+  .members-strip{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:28px;
+  }
+  .member-badge{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:6px 13px;
+    font-size:12.5px;
+  }
+
+  .timeline{
+    position:relative;
+    padding-left:24px;
+  }
+  .timeline:before{
+    content:'';
+    position:absolute;
+    left:5px;
+    top:6px;
+    bottom:6px;
+    width:2px;
+    background:var(--line);
+  }
+  .tl-item{
+    position:relative;
+    padding-bottom:24px;
+  }
+  .tl-item:last-child{ padding-bottom:0; }
+  .tl-dot{
+    position:absolute;
+    left:-24px;
+    top:3px;
+    width:12px;
+    height:12px;
+    border-radius:50%;
+    background:var(--dot, var(--blue));
+  }
+  .tl-date{ font-size:11.5px; color:var(--muted); margin-bottom:2px; }
+  .tl-title{ font-size:14px; font-weight:600; margin:0 0 3px; }
+  .tl-desc{ font-size:13px; color:var(--muted); margin:0; }
+
+  /* AUTOCOMPLETAR */
+  .field{ position:relative; }
+  .search{ position:relative; }
+  .search input{
+    border:none;
+    background:transparent;
+    outline:none;
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    color:var(--ink);
+    flex:1;
+  }
+  .ac-list{
+    position:absolute;
+    top:100%;
+    left:0;
+    right:0;
+    margin-top:6px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    max-height:190px;
+    overflow-y:auto;
+    box-shadow:0 12px 26px rgba(20,30,60,0.12);
+    z-index:30;
+  }
+  .ac-item{
+    padding:9px 14px;
+    font-size:13.5px;
+    cursor:pointer;
+  }
+  .ac-item:hover{ background:var(--page-bg); }
+  body.dark .ac-item:hover{ background:#0F1830; }
+
+  /* LOGIN */
+  #loginScreen{
+    position:fixed;
+    inset:0;
+    background:var(--navy);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:1000;
+  }
+  .login-card{
+    width:100%;
+    max-width:360px;
+    background:var(--card);
+    border-radius:18px;
+    padding:36px 32px;
+    box-shadow:0 20px 50px rgba(0,0,0,0.3);
+  }
+  .login-card h2{
+    font-size:19px;
+    margin:0 0 6px;
+  }
+  .login-card p.hint{
+    margin:0 0 24px;
+    font-size:13px;
+    color:var(--muted);
+  }
+  .login-card .field{ margin-bottom:14px; }
+  .login-card label{ font-size:12.5px; font-weight:600; display:block; margin-bottom:6px; }
+  .login-card input{
+    width:100%;
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:9px;
+    background:var(--page-bg);
+  }
+  .login-card button{
+    width:100%;
+    margin-top:8px;
+    padding:11px;
+    border:none;
+    border-radius:9px;
+    background:var(--blue);
+    color:#fff;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .login-card button:disabled{ opacity:.6; cursor:default; }
+  .login-error{
+    color:var(--coral);
+    font-size:12.5px;
+    margin-top:12px;
+    display:none;
+  }
+
+  /* ============================================================
+     RESPONSIVO — CELULAR (aplica-se por cima de todas as regras
+     acima, cobrindo todos os painéis: geral, atendimentos,
+     usuários, encaminhamentos, visitas, benefícios, comunicação,
+     configurações e ficha da família)
+     ============================================================ */
+  @media (max-width:760px){
+    body{ padding:10px; }
+    .shell{ min-height:auto; border-radius:14px; }
+
+    /* Menu lateral vira uma barra horizontal de ícones, rolável,
+       no topo — em vez de uma coluna vertical enorme */
+    .sidebar, .sidebar.collapsed{
+      width:100%;
+      display:flex;
+      flex-direction:row;
+      align-items:center;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      padding:8px 6px;
+      gap:2px;
+    }
+    .sidebar .side-brand, .sidebar.collapsed .side-brand{ display:none; }
+    .sidebar .side-label{ display:none; }
+    .sidebar .nav-item, .sidebar.collapsed .nav-item{
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      gap:4px;
+      padding:8px 10px;
+      flex-shrink:0;
+      white-space:nowrap;
+      margin-bottom:0;
+    }
+    .sidebar .nav-item i, .sidebar.collapsed .nav-item i{ width:auto; font-size:18px; }
+    .sidebar .nav-item .side-text, .sidebar.collapsed .nav-item .side-text{
+      display:inline-block;
+      font-size:9.5px;
+    }
+
+    /* Área principal */
+    .main{ padding:14px; }
+    .topbar{ margin-bottom:16px; }
+    .hero{ padding:20px 18px; }
+    .hero h2{ font-size:19px; }
+    .hero p{ max-width:100%; font-size:13.5px; }
+
+    /* Cartões de estatística */
+    .stat-grid{ grid-template-columns:1fr 1fr; gap:12px; margin-bottom:22px; }
+
+    /* Formulários (Cadastro, Atendimentos, Usuários, Encaminhamentos,
+       Visitas, Benefícios, Configurações) */
+    .form-panel{ padding:16px 14px 18px; }
+    .field-grid{ grid-template-columns:1fr; }
+    .field.span-2{ grid-column:span 1; }
+    .member-row{ grid-template-columns:1fr; }
+    .form-actions{ flex-wrap:wrap; }
+    .form-actions button{ flex:1 1 auto; }
+
+    /* Listas de encaminhamentos/benefícios */
+    .enc-row{ grid-template-columns:1fr; }
+    .enc-list{ padding:14px 14px 4px; }
+
+    /* Comunicação entre CRAS */
+    .comms-shell{ flex-direction:column; height:auto; }
+    .comms-list{ width:100%; max-height:180px; }
+    .msg{ max-width:88%; }
+
+    /* Ficha da família */
+    .ficha-top{ align-items:flex-start; }
+    .summary-chip{ min-width:44%; }
+
+    /* Login */
+    #loginScreen{ padding:16px; }
+    .login-card{ padding:26px 20px; max-width:100%; }
+
+    /* Tabelas — continuam roláveis na horizontal, só reduz a fonte */
+    table{ font-size:12px; }
+  }
+
+  @media (max-width:420px){
+    .stat-grid{ grid-template-columns:1fr; }
+    .summary-chip{ min-width:100%; }
+  }
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="login-card">
+    <h2>Sistema CRAS</h2>
+    <p class="hint">Entre com o e-mail e senha da sua unidade.</p>
+    <div class="field">
+      <label>E-mail</label>
+      <input type="email" id="loginEmail" placeholder="seuemail@exemplo.org">
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input type="password" id="loginPassword" placeholder="••••••••">
+    </div>
+    <button id="loginBtn">Entrar</button>
+    <p class="login-error" id="loginError">E-mail ou senha incorretos.</p>
+  </div>
+</div>
+
+<div class="shell" id="appShell" style="display:none">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="side-brand">
+      <div class="sidebar-toggle" id="sidebarToggle" title="Recolher/expandir menu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+      </div>
+      <div class="logo-slot" id="logoSlot" title="Adicionar logo do CRAS">
+        <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></i>
+      </div>
+      <input type="file" id="logoInput" accept="image/*" style="display:none">
+      <strong class="side-text">CRAS</strong>
+    </div>
+
+    <div class="side-label side-text">PAINEL</div>
+    <div class="nav-item active" data-panel="panel-geral" title="Painel geral"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></i><span class="side-text">Painel geral</span></div>
+
+    <div class="side-label side-text">ATENDIMENTO</div>
+    <div class="nav-item" data-panel="panel-atendimentos" title="Atendimentos"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6a1 1 0 0 1 1 1v1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h1V5a1 1 0 0 1 1-1z"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="16" y2="15"/></svg></i><span class="side-text">Atendimentos</span></div>
+    <div class="nav-item" id="navUsuarios" data-panel="panel-usuarios" title="Usuários" style="display:none"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></i><span class="side-text">Usuários</span></div>
+    <div class="nav-item" data-panel="panel-fluxos" title="Fluxos"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.3"/><circle cx="6" cy="18" r="2.3"/><path d="M6 8.3V15.7"/><path d="M8.5 6H15a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3H9a3 3 0 0 0-3 3v0"/><path d="M17 9.5l2-2.3-2-2.3"/></svg></i><span class="side-text">Fluxos</span></div>
+    <div class="nav-item" data-panel="panel-visitas" title="Visitas domiciliares"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.5 7-11a7 7 0 0 0-14 0c0 4.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></i><span class="side-text">Visitas domiciliares</span></div>
+
+    <div class="side-label side-text">RECURSOS</div>
+    <div class="nav-item" data-panel="panel-beneficios" title="Benefícios eventuais"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l1 13H5L6 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></i><span class="side-text">Benefícios eventuais</span></div>
+    <div class="nav-item" data-panel="panel-comunicacao" title="Comunicação entre CRAS"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-8.5 8.5c-1.35 0-2.63-.31-3.76-.86L4 21l1.36-4.74A8.5 8.5 0 1 1 21 12z"/></svg></i><span class="side-text">Comunicação entre CRAS</span></div>
+
+    <div class="side-label side-text">SISTEMA</div>
+    <div class="nav-item" data-panel="panel-config" title="Configurações"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.04 1.56V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.04H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1.04-1.56V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15 4.6a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.56 1.04H21a2 2 0 1 1 0 4h-.09A1.7 1.7 0 0 0 19.4 15z"/></svg></i><span class="side-text">Configurações</span></div>
+  </aside>
+
+  <div class="main">
+
+    <div class="topbar">
+      <div class="top-icons" style="margin-left:auto">
+        <div class="icon-btn"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></i></div>
+        <div class="avatar">AS</div>
+      </div>
+    </div>
+
+    <div class="hero panel-geral">
+      <div class="hero-blob"></div>
+      <div class="hero-blob two"></div>
+      <h2>Bom trabalho por aqui, Ana!</h2>
+      <p>Cada atendimento registrado aproxima uma família de mais autonomia. As 5 unidades estão conectadas em um só lugar.</p>
+    </div>
+
+    <div class="form-panel panel-atendimentos" style="display:none">
+      <div class="section-head"><div><h3>Controle de atendimentos</h3><p class="hint">Registre atendimentos e consulte o histórico.</p></div></div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button class="btn-primary" id="tabNovoBtn">Novo atendimento</button>
+        <button class="btn-ghost" id="tabHistBtn">Histórico</button>
+      </div>
+      <div id="atTabForm">
+      <div class="field-grid" style="margin-top:16px">
+        <div class="field"><label>Data *</label><input type="date" id="atData"></div>
+        <div class="field"><label>Nome *</label><input type="text" id="atNome"></div>
+        <div class="field"><label>CPF *</label><input type="text" id="atCpf" placeholder="000.000.000-00"></div>
+        <div class="field"><label>CRAS *</label><select id="atCras"></select></div>
+        <div class="field"><label>Motivo *</label><select id="atMotivo"></select></div>
+        <div class="field" id="atSubBox" style="display:none"><label>Submotivo</label><select id="atSub"></select></div>
+        <div class="field span-2"><label>Entrevistador(es) * (clique para selecionar; Ctrl para vários)</label><select id="atEntrev" multiple style="height:120px;width:100%"></select></div>
+      </div>
+      <div id="atDupBox" style="display:none;margin-top:14px;padding:12px 14px;border-radius:12px;background:#fff4e5;border:1px solid #f5b971;color:#7a4a00;font-size:13.5px"></div>
+      <div class="form-actions">
+        <button class="btn-ghost" id="atLimparBtn">Limpar</button>
+        <button class="btn-primary" id="saveAtendimentoBtn">Salvar atendimento</button>
+      </div>
+      <div class="section-head" style="margin-top:28px"><div><h3>Últimos atendimentos</h3><p class="hint">Os 14 registros mais recentes dos últimos 7 dias. O restante fica na aba Histórico.</p></div></div>
+      <div style="overflow-x:auto;margin-top:8px">
+        <table style="width:100%;border-collapse:collapse;font-size:13.5px">
+          <thead><tr style="text-align:left;color:var(--muted)"><th>Data</th><th>Hora</th><th>Nome</th><th>CRAS</th><th>Motivo</th><th>Entrevistadores</th><th>Ações</th></tr></thead>
+          <tbody id="atRecentes"></tbody>
+        </table>
+      </div>
+      </div>
+      <div id="atTabHist" style="display:none">
+      <div class="field-grid" style="margin-top:16px">
+        <div class="field"><label>CRAS</label><select id="fCras"></select></div>
+        <div class="field"><label>Entrevistador</label><select id="fEntrev"></select></div>
+        <div class="field"><label>Data inicial</label><input type="date" id="fIni"></div>
+        <div class="field"><label>Data final</label><input type="date" id="fFim"></div>
+        <div class="field"><label>Nome ou CPF</label><input type="text" id="fBusca"></div>
+        <div class="field"><label>Motivo (Ctrl para vários)</label><select id="fMotivo" multiple style="height:90px;width:100%"></select></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-ghost" id="fLimparBtn">Limpar filtros</button>
+        <button class="btn-primary" id="fFiltrarBtn">Filtrar</button>
+        <button class="btn-ghost" id="fExportPdfBtn" title="Baixa em PDF os registros que batem com os filtros acima (não só a página atual)">Baixar PDF</button>
+        <button class="btn-ghost" id="fExportXlsBtn" title="Baixa em Excel os registros que batem com os filtros acima (não só a página atual)">Baixar Excel</button>
+      </div>
+      <div style="overflow-x:auto;margin-top:12px">
+        <table style="width:100%;border-collapse:collapse;font-size:13.5px">
+          <thead><tr style="text-align:left;color:var(--muted)"><th>Data</th><th>Hora</th><th>Nome</th><th>CRAS</th><th>Motivo</th><th>Entrevistadores</th><th>Ações</th></tr></thead>
+          <tbody id="atLista"></tbody>
+        </table>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-top:14px">
+        <button class="btn-ghost" id="atPrev">Anterior</button>
+        <span id="atPagInfo" style="font-size:13px"></span>
+        <button class="btn-ghost" id="atNext">Próxima</button>
+      </div>
+      </div>
+    </div>
+
+    <div class="form-panel panel-usuarios" style="display:none">
+      <div class="section-head"><div><h3>Usuários</h3><p class="hint">Cadastre novos usuários e defina o nível de acesso.</p></div></div>
+      <div class="field-grid" style="margin-top:16px">
+        <div class="field"><label>Nome *</label><input type="text" id="usuNome"></div>
+        <div class="field"><label>E-mail *</label><input type="email" id="usuEmail" autocomplete="off"></div>
+        <div class="field"><label>Senha temporária * (mín. 6)</label><input type="password" id="usuSenha" autocomplete="new-password"></div>
+        <div class="field"><label>Cargo</label><input type="text" id="usuCargo"></div>
+        <div class="field"><label>Nível *</label><select id="usuNivel"></select></div>
+        <div class="field"><label>Unidade</label><select id="usuCras"></select></div>
+      </div>
+      <div class="form-actions"><button class="btn-primary" id="usuCriarBtn">Criar usuário</button></div>
+      <div style="overflow-x:auto;margin-top:16px">
+        <table style="width:100%;border-collapse:collapse;font-size:13.5px">
+          <thead><tr style="text-align:left;color:var(--muted)"><th>Nome</th><th>Cargo</th><th>Nível</th><th>Unidade</th></tr></thead>
+          <tbody id="usuLista"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel-fluxos" style="display:none">
+      <div class="form-panel">
+        <div class="section-head">
+          <div>
+            <h3>Fluxos de atendimento</h3>
+            <p class="hint">Busque uma pessoa (ou um período) para ver a linha do tempo completa: atendimentos, reagendamentos, inclusões, atualizações — e as edições feitas em cada um, com data, hora e quem alterou.</p>
+          </div>
+        </div>
+
+        <div class="field-grid" style="margin-top:16px">
+          <div class="field span-2">
+            <label>Nome ou CPF do atendido</label>
+            <input type="text" id="fluxoBusca" placeholder="Buscar por nome ou CPF...">
+          </div>
+          <div class="field"><label>CRAS</label><select id="fluxoCras"></select></div>
+          <div class="field"><label>De</label><input type="date" id="fluxoIni"></div>
+          <div class="field"><label>Até</label><input type="date" id="fluxoFim"></div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-ghost" id="fluxoLimparBtn">Limpar</button>
+          <button class="btn-primary" id="fluxoBuscarBtn">Buscar fluxo</button>
+        </div>
+      </div>
+
+      <div style="height:22px"></div>
+
+      <div class="enc-list" id="fluxoResultado">
+        <div class="section-head">
+          <h3>Resultado</h3>
+          <span class="status-hint" id="fluxoResumo">Use a busca acima</span>
+        </div>
+        <p style="color:var(--muted);font-size:13.5px;padding:6px 0 14px">Digite um nome, um CPF ou um período e clique em "Buscar fluxo".</p>
+      </div>
+    </div>
+
+    <div class="panel-visitas" style="display:none">
+      <div class="visita-two-col">
+        <div class="visita-left-col">
+          <div class="calendar-card">
+            <div class="cal-head">
+              <button class="cal-nav-btn" id="vsCalPrev" type="button">&lsaquo;</button>
+              <h4 id="vsCalLabel"></h4>
+              <button class="cal-nav-btn" id="vsCalNext" type="button">&rsaquo;</button>
+            </div>
+            <div class="cal-weekdays">
+              <span>dom.</span><span>seg.</span><span>ter.</span><span>qua.</span><span>qui.</span><span>sex.</span><span>sáb.</span>
+            </div>
+            <div class="cal-days" id="vsCalDays"></div>
+            <div class="cal-legend">
+              <span><i class="lg-verde"></i>Visita</span>
+              <span><i class="lg-verm"></i>Urgente</span>
+              <span><i class="lg-lar"></i>Reagendada</span>
+              <span><i class="lg-oco"></i>Data anterior</span>
+            </div>
+          </div>
+
+          <div class="calendar-card mini-visits-card">
+            <div class="section-head" style="margin-bottom:10px">
+              <h4 id="vsMiniTitulo" style="margin:0;font-size:13.5px">Visitas domiciliares</h4>
+              <button type="button" id="vsMiniLimparFiltro" class="mini-visits-clear" style="display:none">ver todas</button>
+            </div>
+            <div id="vsMiniList" class="mini-visits-list">
+              <p class="hint" style="margin:0">Carregando...</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-panel" style="margin-bottom:0">
+          <div class="section-head">
+            <div>
+              <h3>Agenda ED — Entrevista domiciliar</h3>
+              <p class="hint">Mesmo cadastro do Controle de atendimentos, usado quando o CRAS é "Entrevista em Domicílio". Busque um nome já atendido ou cadastre um novo.</p>
+            </div>
+          </div>
+
+          <div class="field-grid" style="margin-top:16px">
+            <div class="field span-2">
+              <label>Nome do atendido *</label>
+              <input type="text" id="vsNome" placeholder="Buscar por nome já atendido ou digitar um novo...">
+            </div>
+            <div class="field"><label>CPF *</label><input type="text" id="vsCpf" placeholder="000.000.000-00"></div>
+            <div class="field"><label>Data *</label><input type="date" id="vsData"></div>
+            <div class="field"><label>Horário previsto</label><input type="time" id="vsHora"></div>
+            <div class="field"><label>CRAS *</label><select id="vsCras"></select></div>
+            <div class="field span-2"><label>Motivo *</label><select id="vsMotivo"></select></div>
+            <div class="field"><label>Benefício</label><input type="text" id="vsBeneficio" placeholder="Informe o benefício..."></div>
+            <label class="vs-urgente-box" for="vsUrgente">
+              <input type="checkbox" id="vsUrgente">
+              <span class="vs-urg-txt"><b>Visita urgente</b><small>Destaca esta visita em vermelho no calendário, na lista lateral e na tabela</small></span>
+            </label>
+            <div class="field" id="vsObsBox" style="display:none;grid-column:1/-1"><label>Observação</label><input type="text" id="vsObs" placeholder="Descreva o atendimento ou a demanda específica..."></div>
+            <div class="field span-2"><label>Entrevistador(es) * (marque até 2 pessoas na mesma ED)</label><input type="text" id="vsEntrevBusca" placeholder="Buscar entrevistador pelo nome..." autocomplete="off"><div id="vsEntrev" class="chk-list"></div><div id="vsEntrevVazio" class="vs-entrev-info" style="display:none">Nenhum entrevistador encontrado.</div><div id="vsEntrevSel" class="vs-entrev-info">Nenhum selecionado (máx. 2)</div></div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn-ghost" id="vsLimparBtn">Limpar</button>
+            <button class="btn-primary" id="saveVisitaBtn">Agendar visita</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:22px"></div>
+
+      <div class="enc-list">
+        <div class="section-head">
+          <h3>Últimas entrevistas domiciliares</h3>
+          <span class="status-hint" id="vsResumo"></span>
+        </div>
+        <div class="vs-filtros" id="vsFiltros">
+          <div class="vs-filtros-grid">
+            <div class="field vs-f-busca"><label>Buscar</label><input type="text" id="vfBusca" placeholder="Nome ou CPF..." autocomplete="off"></div>
+            <div class="field"><label>Data de</label><input type="date" id="vfDe"></div>
+            <div class="field"><label>Data até</label><input type="date" id="vfAte"></div>
+            <div class="field"><label>CRAS</label><select id="vfCras"></select></div>
+            <div class="field vs-f-motivo"><label>Motivo</label><select id="vfMotivo"></select></div>
+            <div class="field"><label>Entrevistador</label><select id="vfEntrev"></select></div>
+          </div>
+          <div class="vs-filtros-rodape">
+            <div class="vs-f-chips">
+              <label class="vs-f-chip urg"><input type="checkbox" id="vfUrgente"><span>Urgentes</span></label>
+              <label class="vs-f-chip reag"><input type="checkbox" id="vfReag"><span>Reagendadas</span></label>
+            </div>
+            <button type="button" class="btn-ghost" id="vfLimpar" disabled>Limpar filtros</button>
+          </div>
+        </div>
+        <div class="vs-table-wrap">
+          <table class="vs-table">
+            <thead><tr><th>Data / Hora</th><th>Nome</th><th>CRAS</th><th>Motivo</th><th>Entrevistadores</th><th>Ações</th></tr></thead>
+            <tbody id="vsLista"></tbody>
+          </table>
+        </div>
+        <div class="vs-mais" id="vsMaisWrap" style="display:none"><button type="button" class="btn-ghost" id="vsMaisBtn">Ver mais</button></div>
+      </div>
+    </div>
+
+    <div class="panel-beneficios" style="display:none">
+      <div class="form-panel">
+        <div class="section-head">
+          <div>
+            <h3>Conceder benefício eventual</h3>
+            <p class="hint">Registre entregas de cestas, auxílios e outros benefícios às famílias.</p>
+          </div>
+        </div>
+
+        <div class="field-grid" style="margin-top:16px">
+          <div class="field span-2">
+            <label>Família beneficiária</label>
+            <input type="text" id="buscaFamiliaBeneficio" placeholder="Buscar por nome do responsável...">
+          </div>
+          <div class="field">
+            <label>Tipo de benefício</label>
+            <select>
+              <option>Cesta básica</option>
+              <option>Auxílio funeral</option>
+              <option>Auxílio natalidade</option>
+              <option>Passagem</option>
+              <option>Documentação</option>
+              <option>Outro</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Quantidade</label>
+            <input type="number" placeholder="1" min="1">
+          </div>
+          <div class="field">
+            <label>Profissional responsável</label>
+            <select>
+              <option>Ana Souza</option>
+              <option>Carlos Lima</option>
+              <option>Beatriz Alves</option>
+              <option>Diego Rocha</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Data da solicitação</label>
+            <input type="date">
+          </div>
+        </div>
+
+        <div class="field" style="margin-bottom:14px">
+          <label>Motivo / justificativa</label>
+          <textarea placeholder="Por que a família precisa deste benefício..."></textarea>
+        </div>
+
+        <div class="field-grid">
+          <div class="field">
+            <label>Data de entrega prevista</label>
+            <input type="date">
+          </div>
+          <div class="field span-2">
+            <label>Observações</label>
+            <input type="text" placeholder="Opcional">
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-ghost">Cancelar</button>
+          <button class="btn-primary" id="saveBeneficioBtn">Registrar benefício</button>
+        </div>
+      </div>
+
+      <div style="height:22px"></div>
+
+      <div class="enc-list">
+        <div class="section-head">
+          <h3>Benefícios concedidos</h3>
+          <span class="status-hint">Clique no status para atualizar</span>
+        </div>
+
+        <div class="enc-row family-link" data-family="Família Martins" data-context="Cesta básica solicitada em 10/09">
+          <div><h5>Família Martins</h5><p>Cesta básica · qtd 1</p></div>
+          <div><p>Solicitado por Ana Souza</p></div>
+          <div><p>10/09</p></div>
+          <div class="status-pill solicitado"><span class="dot"></span>Solicitado</div>
+        </div>
+        <div class="enc-row family-link" data-family="Família Rocha" data-context="Auxílio natalidade aprovado em 07/09">
+          <div><h5>Família Rocha</h5><p>Auxílio natalidade</p></div>
+          <div><p>Solicitado por Diego Rocha</p></div>
+          <div><p>07/09</p></div>
+          <div class="status-pill aprovado"><span class="dot"></span>Aprovado</div>
+        </div>
+        <div class="enc-row family-link" data-family="Família Souza" data-context="Cesta básica entregue em 02/09">
+          <div><h5>Família Souza</h5><p>Cesta básica · qtd 2</p></div>
+          <div><p>Solicitado por Carlos Lima</p></div>
+          <div><p>02/09</p></div>
+          <div class="status-pill entregue"><span class="dot"></span>Entregue</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-comunicacao" style="display:none">
+      <div class="comms-alert">
+        <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 1 21h22L12 2z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></i>
+        3 famílias aguardando resposta de outra unidade
+      </div>
+
+      <div class="comms-shell">
+        <div class="comms-list" id="commsList">
+          <div class="comms-item" data-unit="Centro">
+            <div class="comms-avatar">CE</div>
+            <div class="comms-item-text"><h5>CRAS Centro</h5><p>Ok, vamos verificar por aqui.</p></div>
+          </div>
+          <div class="comms-item active" data-unit="Norte">
+            <div class="comms-avatar">NO</div>
+            <div class="comms-item-text"><h5>CRAS Norte</h5><p>Família Costa já chegou aí?</p></div>
+            <div class="comms-badge">2</div>
+          </div>
+          <div class="comms-item" data-unit="Sul">
+            <div class="comms-avatar">SU</div>
+            <div class="comms-item-text"><h5>CRAS Sul</h5><p>Recebemos o encaminhamento, obrigado.</p></div>
+          </div>
+          <div class="comms-item" data-unit="Leste">
+            <div class="comms-avatar">LE</div>
+            <div class="comms-item-text"><h5>CRAS Leste</h5><p>Podemos remarcar a visita?</p></div>
+            <div class="comms-badge">1</div>
+          </div>
+          <div class="comms-item" data-unit="Oeste">
+            <div class="comms-avatar">OE</div>
+            <div class="comms-item-text"><h5>CRAS Oeste</h5><p>Tudo certo por aqui, obrigada!</p></div>
+          </div>
+        </div>
+
+        <div class="comms-main">
+          <div class="comms-header">
+            <h4 id="commsTitle">CRAS Norte</h4>
+            <span class="comms-link-tag" id="commsLinkTag">Sobre: Família Costa</span>
+          </div>
+          <div class="comms-messages" id="commsMessages"></div>
+          <div class="comms-inputbar">
+            <div class="comms-family-chip"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.07 0l1.93-1.93a5 5 0 0 0-7.07-7.07L10.5 5.43"/><path d="M14 11a5 5 0 0 0-7.07 0L4.99 12.93a5 5 0 0 0 7.07 7.07l1.43-1.43"/></svg></i>Vincular família</div>
+            <input type="text" placeholder="Digite uma mensagem...">
+            <div class="comms-send" id="commsSendBtn"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></i></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-config" style="display:none">
+      <div class="form-panel">
+        <div class="section-head">
+          <div>
+            <h3>Configurações</h3>
+            <p class="hint">Preferências da sua conta neste sistema.</p>
+          </div>
+        </div>
+
+        <div class="config-block" style="margin-top:20px">
+          <h4 class="subhead">Conta</h4>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="avatar" style="width:44px;height:44px;font-size:14px">AS</div>
+            <div>
+              <div style="font-weight:600;font-size:14px">Ana Souza</div>
+              <div style="font-size:12.5px;color:var(--muted)">Técnica · CRAS Norte</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="config-block">
+          <h4 class="subhead">Aparência</h4>
+          <div class="config-row">
+            <span>Modo escuro</span>
+            <label class="switch">
+              <input type="checkbox" id="darkModeToggle">
+              <span class="track"><span class="thumb"></span></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="config-block">
+          <h4 class="subhead">Alterar senha</h4>
+          <div class="field-grid">
+            <div class="field">
+              <label>Senha atual</label>
+              <input type="password" placeholder="••••••••">
+            </div>
+            <div class="field">
+              <label>Nova senha</label>
+              <input type="password" placeholder="••••••••">
+            </div>
+            <div class="field">
+              <label>Confirmar nova senha</label>
+              <input type="password" placeholder="••••••••">
+            </div>
+          </div>
+          <div class="form-actions" style="margin-top:6px">
+            <button class="btn-primary" id="changePasswordBtn">Salvar nova senha</button>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid var(--line); padding-top:20px">
+          <h4 class="subhead">Sessão</h4>
+          <button class="btn-danger-outline" id="logoutBtn"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></i>Sair da conta</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-ficha" style="display:none">
+      <div class="form-panel">
+        <div class="ficha-top">
+          <div class="icon-btn" id="fichaBackBtn" title="Voltar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          </div>
+          <div>
+            <h3 id="fichaNome">Família</h3>
+            <p id="fichaSub">CRAS · Bairro</p>
+          </div>
+        </div>
+
+        <div class="ficha-summary" id="fichaSummary"></div>
+        <div class="members-strip" id="fichaMembros"></div>
+
+        <h4 class="subhead">Linha do tempo</h4>
+        <div class="timeline" id="fichaTimeline"></div>
+      </div>
+    </div>
+
+    <div class="section-head panel-geral" id="visaoMesHead">
+      <h3>Visão do mês</h3>
+      <span class="view-all">Ver tudo</span>
+    </div>
+    <div class="stat-grid panel-geral">
+      <div class="stat-card">
+        <span class="badge" style="background:var(--blue)">Cadastro</span>
+        <p class="desc">Novas famílias cadastradas nas 5 unidades</p>
+        <div class="stat-foot"><span>Técnica<br><b>Ana Souza</b></span><b>62%</b></div>
+        <div class="bar"><span style="width:62%;background:var(--blue)"></span></div>
+      </div>
+      <div class="stat-card">
+        <span class="badge" style="background:var(--orange)">Atendimentos</span>
+        <p class="desc">Atendimentos realizados este mês</p>
+        <div class="stat-foot"><span>Técnico<br><b>Carlos Lima</b></span><b>74%</b></div>
+        <div class="bar"><span style="width:74%;background:var(--orange)"></span></div>
+      </div>
+      <div class="stat-card">
+        <span class="badge" style="background:var(--coral)">Encaminhamentos</span>
+        <p class="desc">Casos encaminhados para a rede</p>
+        <div class="stat-foot"><span>Técnica<br><b>Beatriz Alves</b></span><b>45%</b></div>
+        <div class="bar"><span style="width:45%;background:var(--coral)"></span></div>
+      </div>
+      <div class="stat-card">
+        <span class="badge" style="background:var(--cyan)">Benefícios</span>
+        <p class="desc">Auxílios entregues às famílias</p>
+        <div class="stat-foot"><span>Técnico<br><b>Diego Rocha</b></span><b>88%</b></div>
+        <div class="bar"><span style="width:88%;background:var(--cyan)"></span></div>
+      </div>
+    </div>
+
+    <div class="lower-grid panel-geral">
+      <div class="panel">
+        <div class="section-head">
+          <h3>Próximas visitas</h3>
+          <span class="view-all">Ver tudo</span>
+        </div>
+        <div class="visit-item">
+          <h4>Visita domiciliar</h4>
+          <p>Hoje, 10h às 11h — bairro Vila Nova</p>
+          <div class="avatars">
+            <div class="mini-avatar">AS</div>
+            <div class="mini-avatar">CL</div>
+            <div class="mini-avatar plus">+</div>
+          </div>
+        </div>
+        <div class="visit-item family-link" style="border-top-color:var(--orange)" data-family="Família Oliveira" data-context="Retorno de acompanhamento, amanhã 14h">
+          <h4>Retorno de acompanhamento</h4>
+          <p>Amanhã, 14h — Família Oliveira</p>
+          <div class="avatars">
+            <div class="mini-avatar" style="background:var(--orange)">BA</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="section-head">
+          <h3>Casos recentes</h3>
+        </div>
+        <div class="case-item family-link" data-family="Família Silva" data-context="Encaminhamento — Serviço de saúde, 12 set">
+          <div class="case-icon" style="background:var(--coral)"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h11l-3-3"/><path d="M17 17H6l3 3"/></svg></i></div>
+          <div><h5>Encaminhamento — Família Silva</h5><p>Serviço de saúde, 12 set</p></div>
+          <i class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></i>
+        </div>
+        <div class="case-item">
+          <div class="case-icon" style="background:var(--blue)"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-8.5 8.5c-1.35 0-2.63-.31-3.76-.86L4 21l1.36-4.74A8.5 8.5 0 1 1 21 12z"/></svg></i></div>
+          <div><h5>Comunicação — CRAS Norte</h5><p>Transferência de cadastro</p></div>
+          <i class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></i>
+        </div>
+        <div class="case-item family-link" data-family="Família Souza" data-context="Benefício entregue — Cesta básica, 11 set">
+          <div class="case-icon" style="background:var(--cyan)"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l1 13H5L6 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></i></div>
+          <div><h5>Benefício entregue — Família Souza</h5><p>Cesta básica, 11 set</p></div>
+          <i class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></i>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="section-head">
+          <h3>Notificações</h3>
+        </div>
+        <div class="notif-item">
+          <span class="notif-time">10:10</span>
+          <span class="notif-dot" style="background:var(--blue)"></span>
+          <div class="notif-text"><p>Novo atendimento registrado</p><span>por Ana</span></div>
+        </div>
+        <div class="notif-item">
+          <span class="notif-time">08:40</span>
+          <span class="notif-dot" style="background:var(--coral)"></span>
+          <div class="notif-text"><p>Encaminhamento pendente há 5 dias</p><span>Família Costa</span></div>
+        </div>
+        <div class="notif-item">
+          <span class="notif-time">07:10</span>
+          <span class="notif-dot" style="background:var(--cyan)"></span>
+          <div class="notif-text"><p>Benefício entregue com sucesso</p><span>por Diego</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ============================================================
+  // CONEXÃO COM O SUPABASE
+  // ============================================================
+  const SUPABASE_URL = 'https://cjoxxbngdyvndiwkckjz.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqb3h4Ym5nZHl2bmRpd2tja2p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAxMTU2NTAsImV4cCI6MjEwNTY5MTY1MH0.YQoq6Ia8xQdlyO354MFDLN0Ux2mNYoSRMXOV6vDlMh4';
+  const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  let currentFuncionario = null;   // { id, nome, cargo, role, cras_id, cras_nome }
+  let familiasCache = [];          // [{ id, nome_responsavel }]
+  let mapaCrasFluxo = {};          // { [cras_id]: nome } — usado pra traduzir ids no comparador de edições
+  let mapaFuncFluxo = {};          // { [funcionario_id]: nome }
+
+  // ---- Login ----
+  const loginScreen = document.getElementById('loginScreen');
+  const appShell = document.getElementById('appShell');
+  const loginBtn = document.getElementById('loginBtn');
+  const loginError = document.getElementById('loginError');
+
+  async function doLogin(){
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    loginError.style.display = 'none';
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'Entrando...';
+    const { error } = await sbClient.auth.signInWithPassword({ email, password });
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Entrar';
+    if (error){
+      loginError.textContent = 'E-mail ou senha incorretos.';
+      loginError.style.display = 'block';
+    }
+    // se der certo, onAuthStateChange cuida do resto
+  }
+  loginBtn.addEventListener('click', doLogin);
+  document.getElementById('loginPassword').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') doLogin();
+  });
+
+  async function carregarFuncionario(userId){
+    const { data, error } = await sbClient
+      .from('funcionarios')
+      .select('id, nome, cargo, role, cras_id, cras:cras_id(nome)')
+      .eq('id', userId)
+      .single();
+    if (error || !data){
+      loginError.textContent = 'Login feito, mas sua conta ainda não está vinculada a uma unidade. Fale com o coordenador.';
+      loginError.style.display = 'block';
+      await sbClient.auth.signOut();
+      return null;
+    }
+    return {
+      id: data.id,
+      nome: data.nome,
+      cargo: data.cargo,
+      role: data.role,
+      cras_id: data.cras_id,
+      cras_nome: data.cras ? data.cras.nome : ''
+    };
+  }
+
+  function aplicarFuncionarioNaTela(f){
+    const iniciais = f.nome.split(' ').filter(Boolean).slice(0,2).map(p => p[0]).join('').toUpperCase();
+    document.querySelectorAll('.avatar').forEach(el => el.textContent = iniciais);
+    const configNome = document.querySelector('.config-block div[style*="font-weight:600"]');
+    if (configNome) configNome.textContent = f.nome;
+    const configCargo = document.querySelector('.config-block div[style*="color:var(--muted)"]');
+    if (configCargo) configCargo.textContent = (f.cargo || ({ adm: 'Administrador(a)', coordenador: 'Coordenador(a)', atendente: 'Atendente' }[f.role] || f.role)) + ' · ' + f.cras_nome;
+    const greeting = document.querySelector('.hero h2');
+    if (greeting) greeting.textContent = 'Bom trabalho por aqui, ' + f.nome.split(' ')[0] + '!';
+  }
+
+  function escapeHtml(v){
+    return String(v ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
+
+  async function carregarFamilias(){
+    const { data, error } = await sbClient
+      .from('familias')
+      .select('id, nome_responsavel')
+      .order('nome_responsavel');
+    if (error){ console.error('Erro ao carregar famílias:', error); return; }
+    familiasCache = (data || []).map(f => ({ id: f.id, nome: f.nome_responsavel }));
+  }
+
+  async function popularSelectCras(){
+    const [c, f] = await Promise.all([
+      sbClient.from('cras').select('id, nome').order('nome'),
+      sbClient.from('funcionarios').select('id, nome').order('nome')
+    ]);
+    const opt = (l, first) => (first || '') + (l || []).map(x => `<option value="${x.id}">${escapeHtml(x.nome)}</option>`).join('');
+    document.getElementById('atCras').innerHTML = opt(c.data, '<option value="">Selecione</option>');
+    document.getElementById('fCras').innerHTML = opt(c.data, '<option value="">Todos</option>');
+    document.getElementById('fluxoCras').innerHTML = opt(c.data, '<option value="">Todos</option>');
+    document.getElementById('vsCras').innerHTML = opt(c.data, '<option value="">Selecione</option>');
+    document.getElementById('atEntrev').innerHTML = opt(f.data);
+    document.getElementById('fEntrev').innerHTML = opt(f.data, '<option value="">Todos</option>');
+    document.getElementById('vsEntrev').innerHTML = (f.data || []).map(x =>
+      `<label><input type="checkbox" value="${x.id}"><span>${escapeHtml(x.nome)}</span></label>`).join('');
+    mapaCrasFluxo = Object.fromEntries((c.data || []).map(x => [x.id, x.nome]));
+    mapaFuncFluxo = Object.fromEntries((f.data || []).map(x => [x.id, x.nome]));
+    if (currentFuncionario && currentFuncionario.cras_id) document.getElementById('atCras').value = currentFuncionario.cras_id;
+    if (currentFuncionario) [...document.getElementById('atEntrev').options].forEach(o => o.selected = o.value === currentFuncionario.id);
+    // "Entrevista em Domicílio" costuma ser o CRAS padrão da tela de ED
+    const crasED = (c.data || []).find(x => normalizeText(x.nome).includes('entrevista em domic'));
+    if (crasED) document.getElementById('vsCras').value = crasED.id;
+    if (typeof listarAtendimentos === 'function'){ listarAtendimentos(1); listarRecentes(); }
+    if (typeof listarVisitasRecentes === 'function') listarVisitasRecentes();
+    if (typeof loadVisitas === 'function') loadVisitas();
+    if (typeof aplicarPerfil === 'function') aplicarPerfil();
+  }
+
+  sbClient.auth.onAuthStateChange(async (event, session) => {
+    if (session && session.user){
+      const f = await carregarFuncionario(session.user.id);
+      if (f){
+        currentFuncionario = f;
+        aplicarFuncionarioNaTela(f);
+        await popularSelectCras();
+        await carregarFamilias();
+        loginScreen.style.display = 'none';
+        appShell.style.display = 'flex';
+      }
+    } else {
+      currentFuncionario = null;
+      familiasCache = [];
+      appShell.style.display = 'none';
+      loginScreen.style.display = 'flex';
+    }
+  });
+
+</script>
+<script>
+  const sidebar = document.getElementById('sidebar');
+  const sidebarToggle = document.getElementById('sidebarToggle');
+  sidebarToggle.addEventListener('click', () => {
+    sidebar.classList.toggle('collapsed');
+  });
+
+  const allPanels = ['panel-geral', 'panel-cadastro', 'panel-atendimentos', 'panel-fluxos', 'panel-visitas', 'panel-beneficios', 'panel-comunicacao', 'panel-config', 'panel-ficha', 'panel-usuarios'];
+  function showPanel(target){
+    allPanels.forEach(p => {
+      document.querySelectorAll('.' + p).forEach(el => {
+        el.style.display = (p === target) ? '' : 'none';
+      });
+    });
+  }
+
+  const navItems = document.querySelectorAll('.nav-item');
+  navItems.forEach(item => {
+    const target = item.dataset.panel;
+    if (!target) return;
+    item.addEventListener('click', () => {
+      navItems.forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+      showPanel(target);
+    });
+  });
+
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => chip.classList.toggle('on'));
+  });
+
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  document.body.appendChild(toast);
+  function showToast(msg){
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2600);
+  }
+
+  // ---- Atendimentos ----
+  const el = (id) => document.getElementById(id);
+  const MOTIVOS = ['Agenda ED p/ Atualizacao','Agenda ED p/ Inclusao','Atend N efetuado','Atualização','Atualização c/ED','Consulta','ED N localizada','Exclusão família','Inclusão','Inclusão c/ED','Reagenda ED','Transferência'];
+  const SUBMOTIVOS = ['Endereço não localizado','Falta de documento','Impossibilidade de chegar no local','Mudou-se','Pessoa não localizada','Recusa'];
+  const POR_PAGINA = 10;
+  let paginaAt = 1;
+  let editandoId = null, editandoEntrevs = [];
+  const optsHtml = (l) => l.map(v => `<option>${escapeHtml(v)}</option>`).join('');
+  el('atMotivo').innerHTML = '<option value="">Selecione</option>' + optsHtml(MOTIVOS);
+  el('atSub').innerHTML = '<option value="">Selecione</option>' + optsHtml(SUBMOTIVOS);
+  el('fMotivo').innerHTML = optsHtml(MOTIVOS);
+  el('atMotivo').addEventListener('change', () => {
+    const ed = el('atMotivo').value === 'ED N localizada';
+    el('atSubBox').style.display = ed ? '' : 'none';
+    if (!ed) el('atSub').value = '';
+  });
+
+  // ---- Agenda ED / Visitas domiciliares (mesma tabela de atendimentos) ----
+  const VS_MOTIVOS = [
+    'Atualização Cadastral',
+    'Novo Cadastro / Inclusão Cadastral',
+    'Inscrição em Programas',
+    'Emissão de Folha Resumo',
+    'Orientação / Consulta / Informações',
+    'Encaminhamento para Benefício Eventual / Cesta Básica',
+    'Atendimento Especializado / Outros Serviços do CRAS',
+    'Transferência',
+    'Alteração de Endereço',
+    'Inclusão / Entrada de BPC',
+    'Outros atendimentos e demandas específicas'
+  ];
+  const VS_MOTIVO_OUTROS = 'Outros atendimentos e demandas específicas';
+  el('vsMotivo').innerHTML = '<option value="">Selecione</option>' +
+    VS_MOTIVOS.map((m, i) => `<option value="${escapeHtml(m)}">${i + 1} - ${escapeHtml(m)}</option>`).join('');
+  // Atalho: digitar o número do motivo (1 a 11) seleciona a opção; "1" e "0" em seguida = 10, "1" e "1" = 11
+  let vsMotivoBuf = '', vsMotivoTimer = null;
+  el('vsMotivo').addEventListener('keydown', (e) => {
+    if (!/^[0-9]$/.test(e.key) || e.ctrlKey || e.metaKey || e.altKey) return;
+    e.preventDefault();
+    clearTimeout(vsMotivoTimer);
+    let seq = vsMotivoBuf + e.key;
+    let n = parseInt(seq, 10);
+    if (n < 1 || n > VS_MOTIVOS.length){ seq = e.key; n = parseInt(seq, 10); }
+    if (n >= 1 && n <= VS_MOTIVOS.length){
+      el('vsMotivo').selectedIndex = n;
+      el('vsMotivo').dispatchEvent(new Event('change'));
+    }
+    vsMotivoBuf = seq;
+    vsMotivoTimer = setTimeout(() => { vsMotivoBuf = ''; }, 700);
+  });
+  el('vsMotivo').addEventListener('change', () => {
+    const outros = el('vsMotivo').value === VS_MOTIVO_OUTROS;
+    el('vsObsBox').style.display = outros ? '' : 'none';
+    if (!outros) el('vsObs').value = '';
+  });
+
+  const hoje = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  const fmtData = (d) => d ? d.split('-').reverse().join('/') : '';
+
+  // ---- Calendário do painel Agenda ED ----
+  const MESES_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  let vsCalViewYear, vsCalViewMonth; // mês/ano em exibição no calendário
+  let vsDatasReagendadas = new Set(); // datas atuais de visitas que já foram reagendadas
+  let vsDatasOrigemReag = new Set();  // datas anteriores (de onde as visitas foram reagendadas)
+  let vsDatasUrgentes = new Set(); // datas com pelo menos uma visita urgente (dia em vermelho)
+  let vsDatasComVisita = new Set(); // datas (yyyy-mm-dd) que já têm visita agendada, para o pontinho
+  let vsVisitasCache = []; // último resultado carregado do banco
+  let vsFiltroData = null; // se preenchido, mini-lista mostra só visitas dessa data
+
+  function pad2(n){ return String(n).padStart(2, '0'); }
+
+  function renderVsCalendar(){
+    const label = el('vsCalLabel');
+    const daysBox = el('vsCalDays');
+    if (!label || !daysBox) return;
+
+    label.textContent = `${MESES_PT[vsCalViewMonth]} de ${vsCalViewYear}`;
+
+    const primeiroDiaSemana = new Date(vsCalViewYear, vsCalViewMonth, 1).getDay();
+    const totalDiasMes = new Date(vsCalViewYear, vsCalViewMonth + 1, 0).getDate();
+    const totalDiasMesAnterior = new Date(vsCalViewYear, vsCalViewMonth, 0).getDate();
+
+    const dataSelecionada = el('vsData').value;
+    const hojeStr = hoje();
+
+    let html = '';
+
+    // dias finais do mês anterior (cinza, não clicáveis)
+    for (let i = primeiroDiaSemana - 1; i >= 0; i--) {
+      html += `<button type="button" class="cal-day muted" disabled>${totalDiasMesAnterior - i}</button>`;
+    }
+
+    // dias do mês atual
+    for (let d = 1; d <= totalDiasMes; d++) {
+      const dataStr = `${vsCalViewYear}-${pad2(vsCalViewMonth + 1)}-${pad2(d)}`;
+      const classes = ['cal-day'];
+      if (dataStr === dataSelecionada) classes.push('selected');
+      if (dataStr === hojeStr) classes.push('today');
+      const temVisita = vsDatasComVisita.has(dataStr);
+      const temUrgente = vsDatasUrgentes.has(dataStr);
+      const temReag = vsDatasReagendadas.has(dataStr);
+      const temOrigem = vsDatasOrigemReag.has(dataStr);
+      if (temUrgente) classes.push('urgente');
+      let dots = '';
+      if (temUrgente) dots += '<span class="dot urgente"></span>';
+      if (temReag) dots += '<span class="dot reag"></span>';
+      if (temVisita && !temUrgente && !temReag) dots += '<span class="dot"></span>';
+      if (temOrigem) dots += '<span class="dot origem"></span>';
+      const dica = [temUrgente ? 'Visita urgente' : '', temReag ? 'Visita reagendada para esta data' : '', temOrigem ? 'Visita reagendada a partir desta data' : ''].filter(Boolean).join(' · ');
+      html += `<button type="button" class="${classes.join(' ')}" data-data="${dataStr}" data-tem-visita="${temVisita || temOrigem}"${dica ? ` title="${dica}"` : ''}>${d}${dots ? `<span class="dots">${dots}</span>` : ''}</button>`;
+    }
+
+    daysBox.innerHTML = html;
+
+    daysBox.querySelectorAll('.cal-day:not(.muted)').forEach(btn => {
+      btn.addEventListener('click', () => {
+        el('vsData').value = btn.dataset.data;
+        // Se o dia clicado tem visita agendada, filtra a mini-lista só para esse dia
+        vsFiltroData = btn.dataset.temVisita === 'true' ? btn.dataset.data : null;
+        renderVsCalendar();
+        renderVsMiniList();
+      });
+    });
+  }
+
+  function initVsCalendar(){
+    const dataAtual = el('vsData').value || hoje();
+    const [ano, mes] = dataAtual.split('-').map(Number);
+    vsCalViewYear = ano;
+    vsCalViewMonth = mes - 1;
+    renderVsCalendar();
+  }
+
+  function renderVsMiniList(){
+    const box = el('vsMiniList');
+    if (!box) return;
+
+    const data = vsVisitasCache;
+    const titulo = el('vsMiniTitulo');
+    const limparBtn = el('vsMiniLimparFiltro');
+
+    if (!data || !data.length) {
+      if (titulo) titulo.textContent = 'Visitas domiciliares';
+      if (limparBtn) limparBtn.style.display = 'none';
+      box.innerHTML = '<p class="hint" style="margin:0">Nenhuma visita encontrada.</p>';
+      return;
+    }
+
+    const hojeStr = hoje();
+    let lista;
+
+    if (vsFiltroData) {
+      const histDe = (v) => Array.isArray(v.historico_reagendamentos) ? v.historico_reagendamentos : [];
+      lista = data
+        .filter(v => v.data_agendada === vsFiltroData || histDe(v).some(h => h.de_data === vsFiltroData))
+        .sort((a, b) => (a.hora_prevista || '').localeCompare(b.hora_prevista || ''));
+      if (titulo) titulo.textContent = `Visitas em ${fmtData(vsFiltroData)}`;
+      if (limparBtn) limparBtn.style.display = '';
+    } else {
+      const ordenado = [...data].sort((a, b) => (a.data_agendada || '').localeCompare(b.data_agendada || ''));
+      const futuras = ordenado.filter(v => v.data_agendada >= hojeStr);
+      lista = (futuras.length ? futuras : ordenado.slice().reverse()).slice(0, 8);
+      if (titulo) titulo.textContent = 'Visitas domiciliares';
+      if (limparBtn) limparBtn.style.display = 'none';
+    }
+
+    if (!lista.length) {
+      box.innerHTML = '<p class="hint" style="margin:0">Nenhuma visita nesta data.</p>';
+    } else {
+      const statusLabel = { agendada: 'Agendada', realizada: 'Realizada', naolocalizada: 'Não localizada' };
+
+      const histDe = (v) => Array.isArray(v.historico_reagendamentos) ? v.historico_reagendamentos : [];
+      const horaTxt = (h) => h ? ' às ' + String(h).slice(0, 5) : '';
+
+      box.innerHTML = lista.map(v => {
+        const hist = histDe(v);
+        // visita que saiu desta data por reagendamento (aparece só quando o filtro está numa data anterior)
+        const saiu = !!vsFiltroData && v.data_agendada !== vsFiltroData;
+        const regOrigem = saiu ? hist.find(h => h.de_data === vsFiltroData) : null;
+        const dataTxt = saiu
+          ? fmtData(vsFiltroData) + (regOrigem && regOrigem.de_hora ? ' · ' + String(regOrigem.de_hora).slice(0, 5) : '')
+          : fmtData(v.data_agendada) + (v.hora_prevista ? ' · ' + v.hora_prevista.slice(0, 5) : '');
+        let nota = '';
+        if (saiu) nota = `↻ Reagendada para ${fmtData(v.data_agendada)}${horaTxt(v.hora_prevista)}`;
+        else if (hist.length) nota = `↻ Reagendada ${hist.length}× · original ${fmtData(hist[0].de_data)}${horaTxt(hist[0].de_hora)}`;
+        return `
+        <div class="mini-visit-item${v.urgente ? ' urgente' : ''}${saiu ? ' reag-origem' : ''}" data-data="${v.data_agendada}">
+          <div class="mini-visit-date">${dataTxt}</div>
+          <div class="mini-visit-name">${escapeHtml(v.nome_responsavel || '')}</div>
+          <div class="mini-visit-motivo">${escapeHtml(v.motivo || '')}</div>
+          ${nota ? `<div class="mini-visit-reag">${nota}</div>` : ''}
+          <span class="mini-visit-status">${statusLabel[v.status] || v.status || ''}</span>${v.urgente ? '<span class="mini-visit-urg">Urgente</span>' : ''}${hist.length ? '<span class="mini-visit-reagtag">Reagendada</span>' : ''}
+        </div>`;
+      }).join('');
+
+      box.querySelectorAll('.mini-visit-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const d = item.dataset.data;
+          if (!d) return;
+          const [ano, mes] = d.split('-').map(Number);
+          vsCalViewYear = ano;
+          vsCalViewMonth = mes - 1;
+          vsFiltroData = d;
+          renderVsCalendar();
+          renderVsMiniList();
+        });
+      });
+    }
+  }
+
+  if (el('vsMiniLimparFiltro')) {
+    el('vsMiniLimparFiltro').addEventListener('click', () => {
+      vsFiltroData = null;
+      renderVsMiniList();
+    });
+  }
+
+  if (el('vsCalPrev') && el('vsCalNext')) {
+    el('vsCalPrev').addEventListener('click', () => {
+      vsCalViewMonth--;
+      if (vsCalViewMonth < 0) { vsCalViewMonth = 11; vsCalViewYear--; }
+      renderVsCalendar();
+    });
+    el('vsCalNext').addEventListener('click', () => {
+      vsCalViewMonth++;
+      if (vsCalViewMonth > 11) { vsCalViewMonth = 0; vsCalViewYear++; }
+      renderVsCalendar();
+    });
+    el('vsData').addEventListener('change', () => {
+      const [ano, mes] = el('vsData').value.split('-').map(Number);
+      if (ano && mes) { vsCalViewYear = ano; vsCalViewMonth = mes - 1; }
+      renderVsCalendar();
+    });
+    initVsCalendar();
+  }
+
+  function limparAtendimento(){
+    editandoId = null; editandoEntrevs = [];
+    el('atDupBox').style.display = 'none';
+    el('saveAtendimentoBtn').textContent = 'Salvar atendimento'; el('atLimparBtn').textContent = 'Limpar';
+    el('atNome').value = ''; el('atCpf').value = ''; el('atData').value = hoje();
+    el('atMotivo').value = ''; el('atSub').value = ''; el('atSubBox').style.display = 'none';
+    [...el('atEntrev').options].forEach(o => o.selected = !!currentFuncionario && o.value === currentFuncionario.id);
+    if (currentFuncionario && currentFuncionario.cras_id) el('atCras').value = currentFuncionario.cras_id;
+  }
+  limparAtendimento();
+  el('atLimparBtn').addEventListener('click', limparAtendimento);
+
+  el('saveAtendimentoBtn').addEventListener('click', async () => {
+    const btn = el('saveAtendimentoBtn');
+    const nome = el('atNome').value.trim();
+    const cpf = el('atCpf').value.replace(/\D/g, '');
+    const entrevs = [...el('atEntrev').selectedOptions].map(o => o.value);
+    const faltando = [];
+    if (!el('atData').value) faltando.push('data');
+    if (!nome) faltando.push('nome');
+    if (!cpf) faltando.push('CPF');
+    if (!el('atCras').value) faltando.push('CRAS');
+    if (!el('atMotivo').value) faltando.push('motivo');
+    if (!entrevs.length) faltando.push('entrevistador (clique no nome para selecionar)');
+    if (faltando.length){ showToast('Falta preencher: ' + faltando.join(', ')); return; }
+    const dups = await verificarCpfDuplicado();
+    if (dups.length && !confirm(`Já existe(m) ${dups.length} atendimento(s) com este CPF.\n\nSalvar mesmo assim, em duplicidade?`)) return;
+    btn.disabled = true; btn.textContent = 'Salvando...';
+    try {
+      if (editandoId){
+        const { data: up, error: eu } = await sbClient.from('atendimentos').update({
+          data_atendimento: el('atData').value, nome_atendido: nome, cpf_atendido: cpf,
+          cras_origem_id: el('atCras').value, motivo: el('atMotivo').value, submotivo: el('atSub').value || null
+        }).eq('id', editandoId).select('id');
+        if (eu) throw eu;
+        if (!up || !up.length) throw new Error('o banco bloqueou a alteração (falta política de UPDATE no RLS)');
+        const novos = entrevs.filter(x => !editandoEntrevs.includes(x));
+        const removidos = editandoEntrevs.filter(x => !entrevs.includes(x));
+        if (novos.length){
+          const { error: ei } = await sbClient.from('atendimento_entrevistadores')
+            .insert(novos.map(f => ({ atendimento_id: editandoId, funcionario_id: f })));
+          if (ei) throw ei;
+        }
+        if (removidos.length){
+          const { error: er } = await sbClient.from('atendimento_entrevistadores').delete()
+            .eq('atendimento_id', editandoId).in('funcionario_id', removidos);
+          if (er) throw er;
+        }
+        limparAtendimento(); showToast('Atendimento atualizado'); listarAtendimentos(paginaAt); listarRecentes();
+        return;
+      }
+      const { data: at, error } = await sbClient.from('atendimentos').insert({
+        data_atendimento: el('atData').value, horario: new Date().toTimeString().slice(0, 8), nome_atendido: nome, cpf_atendido: cpf,
+        cras_origem_id: el('atCras').value, motivo: el('atMotivo').value,
+        submotivo: el('atSub').value || null, profissional_id: currentFuncionario.id
+      }).select('id').single();
+      if (error) throw error;
+      const { error: e2 } = await sbClient.from('atendimento_entrevistadores')
+        .insert(entrevs.map(f => ({ atendimento_id: at.id, funcionario_id: f })));
+      if (e2){ await sbClient.from('atendimentos').delete().eq('id', at.id); throw e2; }
+      limparAtendimento(); showToast('Atendimento salvo'); listarAtendimentos(1); listarRecentes();
+    } catch (err){
+      console.error(err); showToast('Não foi possível salvar: ' + (err.message || 'erro'));
+    } finally { btn.disabled = false; btn.textContent = editandoId ? 'Salvar alterações' : 'Salvar atendimento'; }
+  });
+
+  const SEL_ATEND = 'id, data_atendimento, horario, nome_atendido, motivo, cras:cras_origem_id(nome), ents:atendimento_entrevistadores(func:funcionario_id(nome))';
+  function linhasAtendimento(data){
+    return (data || []).map(a => `<tr>
+      <td>${fmtData(a.data_atendimento)}</td><td>${a.horario ? a.horario.slice(0, 5) : '—'}</td><td>${escapeHtml(a.nome_atendido)}</td>
+      <td>${escapeHtml(a.cras && a.cras.nome)}</td><td>${escapeHtml(a.motivo)}</td>
+      <td>${escapeHtml((a.ents || []).map(e => e.func && e.func.nome).filter(Boolean).join(' / '))}</td>
+      <td style="white-space:nowrap"><a href="#" class="at-edit" data-id="${a.id}" style="color:var(--blue);margin-right:12px">Editar</a><a href="#" class="at-del" data-id="${a.id}" style="color:var(--coral)">Excluir</a></td></tr>`).join('')
+      || '<tr><td colspan="7" style="padding:12px">Nenhum atendimento encontrado.</td></tr>';
+  }
+
+  async function listarRecentes(){
+    const dataLocal = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    const ini = new Date(); ini.setDate(ini.getDate() - 7);
+    const { data, error } = await sbClient.from('atendimentos').select(SEL_ATEND)
+      .gte('data_atendimento', dataLocal(ini)).lte('data_atendimento', hoje())
+      .order('data_atendimento', { ascending: false })
+      .order('horario', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false }).limit(14);
+    if (error){ console.error(error); return; }
+    el('atRecentes').innerHTML = linhasAtendimento(data);
+  }
+
+  // Monta a query com os filtros da tela de Histórico, sem aplicar paginação.
+  // Reaproveitada pela listagem em tela e pela exportação em PDF/Excel.
+  function montarQueryFiltrada(){
+    const fEnt = el('fEntrev').value;
+    const sel = 'id, data_atendimento, horario, nome_atendido, motivo, cras:cras_origem_id(nome), ents:atendimento_entrevistadores(func:funcionario_id(nome))'
+      + (fEnt ? ', filtro:atendimento_entrevistadores!inner(funcionario_id)' : '');
+    let q = sbClient.from('atendimentos').select(sel, { count: 'exact' });
+    if (el('fCras').value) q = q.eq('cras_origem_id', el('fCras').value);
+    if (fEnt) q = q.eq('filtro.funcionario_id', fEnt);
+    if (el('fIni').value) q = q.gte('data_atendimento', el('fIni').value);
+    if (el('fFim').value) q = q.lte('data_atendimento', el('fFim').value);
+    const ms = [...el('fMotivo').selectedOptions].map(o => o.value);
+    if (ms.length) q = q.in('motivo', ms);
+    const busca = el('fBusca').value.trim().replace(/[,()%*]/g, '');
+    if (busca) q = q.or(`nome_atendido.ilike.%${busca}%,cpf_atendido.ilike.%${busca}%`);
+    return q.order('data_atendimento', { ascending: false }).order('created_at', { ascending: false });
+  }
+
+  async function listarAtendimentos(pag){
+    paginaAt = pag || 1;
+    const de = (paginaAt - 1) * POR_PAGINA;
+    const { data, error, count } = await montarQueryFiltrada().range(de, de + POR_PAGINA - 1);
+    if (error){ console.error(error); showToast('Erro ao listar: ' + error.message); return; }
+    el('atLista').innerHTML = linhasAtendimento(data);
+    const total = Math.max(1, Math.ceil((count || 0) / POR_PAGINA));
+    el('atPagInfo').textContent = `Página ${paginaAt} de ${total} · ${count || 0} atendimentos`;
+    el('atPrev').disabled = paginaAt <= 1; el('atNext').disabled = paginaAt >= total;
+  }
+
+  // Limite de segurança para exportação (evita travar o navegador com listas gigantes)
+  const LIMITE_EXPORT = 3000;
+
+  async function buscarAtendimentosParaExportar(){
+    const { data, error, count } = await montarQueryFiltrada().range(0, LIMITE_EXPORT - 1);
+    if (error){ console.error(error); showToast('Erro ao buscar para exportar: ' + error.message); return null; }
+    if (count > LIMITE_EXPORT){
+      showToast(`Atenção: há ${count} registros com esse filtro; exportando só os ${LIMITE_EXPORT} mais recentes.`);
+    }
+    return data || [];
+  }
+
+  function linhaTextoAtendimento(a){
+    return [
+      fmtData(a.data_atendimento),
+      a.horario ? a.horario.slice(0, 5) : '—',
+      a.nome_atendido || '',
+      (a.cras && a.cras.nome) || '',
+      a.motivo || '',
+      (a.ents || []).map(e => e.func && e.func.nome).filter(Boolean).join(' / ')
+    ];
+  }
+
+  function resumoFiltrosAtuais(){
+    const partes = [];
+    if (el('fCras').value) partes.push('CRAS: ' + el('fCras').selectedOptions[0].textContent);
+    if (el('fEntrev').value) partes.push('Entrevistador: ' + el('fEntrev').selectedOptions[0].textContent);
+    if (el('fIni').value) partes.push('De: ' + fmtData(el('fIni').value));
+    if (el('fFim').value) partes.push('Até: ' + fmtData(el('fFim').value));
+    if (el('fBusca').value.trim()) partes.push('Busca: ' + el('fBusca').value.trim());
+    const ms = [...el('fMotivo').selectedOptions].map(o => o.value);
+    if (ms.length) partes.push('Motivo: ' + ms.join(', '));
+    return partes.length ? partes.join(' · ') : 'Sem filtros aplicados (todos os atendimentos)';
+  }
+
+  async function exportarAtendimentosPDF(){
+    const btn = el('fExportPdfBtn');
+    btn.disabled = true; const txtOrig = btn.textContent; btn.textContent = 'Gerando PDF...';
+    try {
+      const data = await buscarAtendimentosParaExportar();
+      if (data === null) return;
+      if (!data.length){ showToast('Nenhum atendimento encontrado com esses filtros.'); return; }
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'landscape' });
+      doc.setFontSize(14);
+      doc.text('Controle de atendimentos — Sistema CRAS', 14, 15);
+      doc.setFontSize(9);
+      doc.setTextColor(120);
+      doc.text(resumoFiltrosAtuais(), 14, 21);
+      doc.text('Gerado em ' + new Date().toLocaleString('pt-BR'), 14, 26);
+      doc.autoTable({
+        startY: 32,
+        head: [['Data', 'Hora', 'Nome', 'CRAS', 'Motivo', 'Entrevistadores']],
+        body: data.map(linhaTextoAtendimento),
+        styles: { fontSize: 8.5, cellPadding: 2.5 },
+        headStyles: { fillColor: [47, 111, 237] },
+        alternateRowStyles: { fillColor: [243, 245, 251] }
+      });
+      doc.save(`atendimentos_${hoje()}.pdf`);
+    } catch (err){
+      console.error(err); showToast('Não foi possível gerar o PDF: ' + (err.message || 'erro'));
+    } finally { btn.disabled = false; btn.textContent = txtOrig; }
+  }
+
+  async function exportarAtendimentosExcel(){
+    const btn = el('fExportXlsBtn');
+    btn.disabled = true; const txtOrig = btn.textContent; btn.textContent = 'Gerando Excel...';
+    try {
+      const data = await buscarAtendimentosParaExportar();
+      if (data === null) return;
+      if (!data.length){ showToast('Nenhum atendimento encontrado com esses filtros.'); return; }
+      const linhas = data.map(a => ({
+        Data: fmtData(a.data_atendimento),
+        Hora: a.horario ? a.horario.slice(0, 5) : '',
+        Nome: a.nome_atendido || '',
+        CRAS: (a.cras && a.cras.nome) || '',
+        Motivo: a.motivo || '',
+        Entrevistadores: (a.ents || []).map(e => e.func && e.func.nome).filter(Boolean).join(' / ')
+      }));
+      const ws = XLSX.utils.json_to_sheet(linhas);
+      ws['!cols'] = [{ wch: 12 }, { wch: 8 }, { wch: 28 }, { wch: 16 }, { wch: 22 }, { wch: 28 }];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Atendimentos');
+      XLSX.writeFile(wb, `atendimentos_${hoje()}.xlsx`);
+    } catch (err){
+      console.error(err); showToast('Não foi possível gerar o Excel: ' + (err.message || 'erro'));
+    } finally { btn.disabled = false; btn.textContent = txtOrig; }
+  }
+
+  el('fExportPdfBtn').addEventListener('click', exportarAtendimentosPDF);
+  el('fExportXlsBtn').addEventListener('click', exportarAtendimentosExcel);
+  el('fFiltrarBtn').addEventListener('click', () => listarAtendimentos(1));
+  el('fLimparBtn').addEventListener('click', () => {
+    ['fCras','fEntrev','fIni','fFim','fBusca'].forEach(i => el(i).value = '');
+    [...el('fMotivo').options].forEach(o => o.selected = false);
+    listarAtendimentos(1);
+  });
+  el('atPrev').addEventListener('click', () => listarAtendimentos(paginaAt - 1));
+  el('atNext').addEventListener('click', () => listarAtendimentos(paginaAt + 1));
+  // ---- Níveis de acesso e usuários ----
+  const ROTULOS = { adm: 'Administrador(a)', coordenador: 'Coordenador(a)', atendente: 'Atendente' };
+  const podeGerir = () => !!currentFuncionario && ['adm', 'coordenador'].includes(currentFuncionario.role);
+
+  async function carregarUsuarios(){
+    const { data, error } = await sbClient.from('funcionarios').select('nome, cargo, role, cras:cras_id(nome)').order('nome');
+    if (error){ console.error(error); return; }
+    el('usuLista').innerHTML = (data || []).map(u => `<tr><td>${escapeHtml(u.nome)}</td><td>${escapeHtml(u.cargo || '')}</td>
+      <td>${escapeHtml(ROTULOS[u.role] || u.role)}</td><td>${escapeHtml(u.cras && u.cras.nome)}</td></tr>`).join('');
+  }
+
+  function aplicarPerfil(){
+    const gere = podeGerir();
+    el('navUsuarios').style.display = gere ? '' : 'none';
+    if (gere){
+      const niveis = currentFuncionario.role === 'adm' ? ['atendente', 'coordenador', 'adm'] : ['atendente', 'coordenador'];
+      el('usuNivel').innerHTML = niveis.map(n => `<option value="${n}">${ROTULOS[n]}</option>`).join('');
+      el('usuCras').innerHTML = el('atCras').innerHTML.replace('<option value="">Selecione</option>', '<option value="">Sem unidade</option>');
+      el('usuCras').value = currentFuncionario.cras_id || '';
+      carregarUsuarios();
+    } else {
+      // atendente: o filtro de entrevistador mostra só ele mesmo
+      el('fEntrev').innerHTML = `<option value="">Todos</option><option value="${currentFuncionario.id}">${escapeHtml(currentFuncionario.nome)}</option>`;
+    }
+  }
+
+  el('usuCriarBtn').addEventListener('click', async () => {
+    const b = { nome: el('usuNome').value.trim(), email: el('usuEmail').value.trim(), senha: el('usuSenha').value,
+                cargo: el('usuCargo').value.trim(), role: el('usuNivel').value, cras_id: el('usuCras').value };
+    if (!b.nome || !b.email || b.senha.length < 6){ showToast('Informe nome, e-mail e senha (mínimo 6 caracteres)'); return; }
+    const btn = el('usuCriarBtn'); btn.disabled = true; btn.textContent = 'Criando...';
+    const { error } = await sbClient.functions.invoke('criar-usuario', { body: b });
+    btn.disabled = false; btn.textContent = 'Criar usuário';
+    if (error){
+      let msg = error.message;
+      try { const j = await error.context.json(); if (j.error) msg = j.error; } catch (_) {}
+      showToast('Não foi possível criar: ' + msg); return;
+    }
+    ['usuNome', 'usuEmail', 'usuSenha', 'usuCargo'].forEach(i => el(i).value = '');
+    showToast('Usuário criado'); carregarUsuarios();
+  });
+
+  // ---- Aviso de CPF duplicado ----
+  const fmtCpf = (d) => d.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+
+  async function verificarCpfDuplicado(){
+    const box = el('atDupBox');
+    const cpf = el('atCpf').value.replace(/\D/g, '');
+    if (cpf.length !== 11){ box.style.display = 'none'; return []; }
+    let q = sbClient.from('atendimentos').select(SEL_ATEND)
+      .or(`cpf_atendido.eq.${cpf},cpf_atendido.eq.${fmtCpf(cpf)}`)
+      .order('data_atendimento', { ascending: false }).limit(20);
+    if (editandoId) q = q.neq('id', editandoId);
+    const { data, error } = await q;
+    if (error){ console.error(error); return []; }
+    if (!data || !data.length){ box.style.display = 'none'; return []; }
+    const linhas = data.map(a => `<tr>
+      <td>${fmtData(a.data_atendimento)}</td><td>${a.horario ? a.horario.slice(0, 5) : '—'}</td>
+      <td>${escapeHtml(a.nome_atendido)}</td><td>${escapeHtml(a.cras && a.cras.nome)}</td><td>${escapeHtml(a.motivo)}</td>
+      <td>${escapeHtml((a.ents || []).map(e => e.func && e.func.nome).filter(Boolean).join(' / '))}</td></tr>`).join('');
+    box.innerHTML = `<b>Atenção: já existe(m) ${data.length >= 20 ? '20 ou mais' : data.length} atendimento(s) com este CPF.</b>
+      Se você salvar, este atendimento será cadastrado em duplicidade.
+      <div style="overflow-x:auto;margin-top:8px"><table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr style="text-align:left"><th>Data</th><th>Hora</th><th>Nome</th><th>CRAS</th><th>Motivo</th><th>Entrevistadores</th></tr></thead>
+      <tbody>${linhas}</tbody></table></div>`;
+    box.style.display = 'block';
+    return data;
+  }
+  el('atCpf').addEventListener('input', () => { if (el('atCpf').value.replace(/\D/g, '').length === 11) verificarCpfDuplicado(); else el('atDupBox').style.display = 'none'; });
+  el('atCpf').addEventListener('blur', verificarCpfDuplicado);
+
+  function abrirAba(hist){
+    el('atTabForm').style.display = hist ? 'none' : '';
+    el('atTabHist').style.display = hist ? '' : 'none';
+    el('tabNovoBtn').className = hist ? 'btn-ghost' : 'btn-primary';
+    el('tabHistBtn').className = hist ? 'btn-primary' : 'btn-ghost';
+    if (hist) listarAtendimentos(paginaAt);
+  }
+  el('tabNovoBtn').addEventListener('click', () => abrirAba(false));
+  el('tabHistBtn').addEventListener('click', () => abrirAba(true));
+  async function excluirAtendimento(e){
+    const a = e.target.closest('.at-del'); if (!a) return;
+    e.preventDefault();
+    if (!confirm('Deseja realmente excluir?')) return;
+    const r1 = await sbClient.from('atendimento_entrevistadores').delete().eq('atendimento_id', a.dataset.id);
+    if (r1.error){ showToast('Não foi possível excluir: ' + r1.error.message); return; }
+    const { data, error } = await sbClient.from('atendimentos').delete().eq('id', a.dataset.id).select('id');
+    if (error){ showToast('Não foi possível excluir: ' + error.message); return; }
+    if (!data || !data.length){ showToast('O banco bloqueou a exclusão (falta política de DELETE no RLS)'); return; }
+    if (editandoId === a.dataset.id) limparAtendimento();
+    listarAtendimentos(paginaAt); listarRecentes();
+  }
+
+  async function editarAtendimento(e){
+    const a = e.target.closest('.at-edit'); if (!a) return;
+    e.preventDefault();
+    const { data, error } = await sbClient.from('atendimentos')
+      .select('id, data_atendimento, nome_atendido, cpf_atendido, cras_origem_id, motivo, submotivo, atendimento_entrevistadores(funcionario_id)')
+      .eq('id', a.dataset.id).single();
+    if (error || !data){ showToast('Não foi possível carregar o atendimento'); return; }
+    const garantir = (sel, v) => { if (v && ![...sel.options].some(o => o.value === v)) sel.add(new Option(v, v)); sel.value = v || ''; };
+    el('atData').value = data.data_atendimento;
+    el('atNome').value = data.nome_atendido || '';
+    el('atCpf').value = data.cpf_atendido || '';
+    el('atCras').value = data.cras_origem_id || '';
+    garantir(el('atMotivo'), data.motivo);
+    el('atMotivo').dispatchEvent(new Event('change'));
+    garantir(el('atSub'), data.submotivo);
+    editandoEntrevs = (data.atendimento_entrevistadores || []).map(x => x.funcionario_id);
+    [...el('atEntrev').options].forEach(o => o.selected = editandoEntrevs.includes(o.value));
+    editandoId = data.id;
+    verificarCpfDuplicado();
+    el('saveAtendimentoBtn').textContent = 'Salvar alterações';
+    el('atLimparBtn').textContent = 'Cancelar edição';
+    abrirAba(false);
+    el('atNome').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  el('atLista').addEventListener('click', editarAtendimento);
+  el('atRecentes').addEventListener('click', editarAtendimento);
+  el('atLista').addEventListener('click', excluirAtendimento);
+  el('atRecentes').addEventListener('click', excluirAtendimento);
+
+  // ---- Fluxos de atendimento (busca + histórico de edições) ----
+  const CAMPO_LABELS = {
+    data_atendimento: 'Data do atendimento',
+    horario: 'Horário',
+    nome_atendido: 'Nome',
+    cpf_atendido: 'CPF',
+    cras_origem_id: 'CRAS',
+    motivo: 'Motivo',
+    submotivo: 'Submotivo'
+  };
+
+  function traduzirValorCampo(campo, valor){
+    if (valor === null || valor === undefined || valor === '') return '—';
+    if (campo === 'cras_origem_id') return mapaCrasFluxo[valor] || valor;
+    if (campo === 'data_atendimento') return fmtData(valor);
+    if (campo === 'horario') return String(valor).slice(0, 5);
+    return String(valor);
+  }
+
+  // Busca o histórico de edições de um atendimento. Se a tabela de auditoria
+  // ainda não existir no banco, falha de forma silenciosa (não quebra a tela).
+  async function buscarHistoricoEdicoes(atendimentoId){
+    const { data, error } = await sbClient
+      .from('atendimentos_historico')
+      .select('campo, valor_antigo, valor_novo, alterado_em, alterado_por')
+      .eq('atendimento_id', atendimentoId)
+      .order('alterado_em', { ascending: false });
+    if (error){ console.warn('Histórico de edições indisponível:', error.message); return null; }
+    return data || [];
+  }
+
+  function linhaHistorico(h){
+    const quem = mapaFuncFluxo[h.alterado_por] || h.alterado_por || 'Alguém';
+    const campo = CAMPO_LABELS[h.campo] || h.campo;
+    const de = traduzirValorCampo(h.campo, h.valor_antigo);
+    const para = traduzirValorCampo(h.campo, h.valor_novo);
+    const quando = h.alterado_em ? new Date(h.alterado_em).toLocaleString('pt-BR') : '';
+    return `<p class="tl-desc"><b>${escapeHtml(campo)}</b>: ${escapeHtml(de)} → ${escapeHtml(para)}
+      <span style="color:var(--muted)"> · ${escapeHtml(quem)}, ${escapeHtml(quando)}</span></p>`;
+  }
+
+  async function alternarHistorico(btn, atendimentoId){
+    const box = btn.closest('.tl-item').querySelector('.fluxo-historico');
+    if (box.style.display === 'block'){ box.style.display = 'none'; btn.textContent = 'Ver histórico de edições'; return; }
+    box.style.display = 'block';
+    btn.textContent = 'Ocultar histórico de edições';
+    if (box.dataset.loaded) return;
+    box.innerHTML = '<p class="tl-desc">Carregando...</p>';
+    const historico = await buscarHistoricoEdicoes(atendimentoId);
+    box.dataset.loaded = '1';
+    if (historico === null){
+      box.innerHTML = '<p class="tl-desc">Histórico de edições ainda não disponível para este atendimento.</p>';
+    } else if (!historico.length){
+      box.innerHTML = '<p class="tl-desc">Nenhuma edição registrada neste atendimento.</p>';
+    } else {
+      box.innerHTML = historico.map(linhaHistorico).join('');
+    }
+  }
+
+  function itemFluxo(a){
+    const quem = (a.ents || []).map(e => e.func && e.func.nome).filter(Boolean).join(' / ') || '—';
+    const cras = (a.cras && a.cras.nome) || '—';
+    return `
+      <div class="tl-item">
+        <div class="tl-dot" style="--dot:var(--blue)"></div>
+        <div class="tl-date">${escapeHtml(fmtData(a.data_atendimento))}${a.horario ? ' · ' + escapeHtml(a.horario.slice(0, 5)) : ''}</div>
+        <div class="tl-title">${escapeHtml(a.nome_atendido || 'Sem nome')} — ${escapeHtml(a.motivo || 'Atendimento')}</div>
+        <p class="tl-desc">${escapeHtml(cras)}${a.submotivo ? ' · ' + escapeHtml(a.submotivo) : ''} · Entrevistador(es): ${escapeHtml(quem)}</p>
+        <a href="#" class="fluxo-hist-toggle" style="font-size:12.5px;color:var(--blue)" data-id="${a.id}">Ver histórico de edições</a>
+        <div class="fluxo-historico" style="display:none;margin-top:6px"></div>
+      </div>`;
+  }
+
+  async function buscarFluxo(){
+    const busca = el('fluxoBusca').value.trim().replace(/[,()%*]/g, '');
+    const cras = el('fluxoCras').value;
+    const ini = el('fluxoIni').value;
+    const fim = el('fluxoFim').value;
+    if (!busca && !cras && !ini && !fim){
+      showToast('Informe um nome, CPF ou período para buscar.');
+      return;
+    }
+    el('fluxoResumo').textContent = 'Buscando...';
+    el('fluxoResultado').querySelectorAll('.tl-item, p').forEach(n => n.remove());
+    let q = sbClient.from('atendimentos').select(SEL_ATEND);
+    if (busca) q = q.or(`nome_atendido.ilike.%${busca}%,cpf_atendido.ilike.%${busca}%`);
+    if (cras) q = q.eq('cras_origem_id', cras);
+    if (ini) q = q.gte('data_atendimento', ini);
+    if (fim) q = q.lte('data_atendimento', fim);
+    q = q.order('data_atendimento', { ascending: false }).order('horario', { ascending: false, nullsFirst: false }).limit(200);
+    const { data, error } = await q;
+    if (error){ console.error(error); el('fluxoResumo').textContent = 'Erro ao buscar.'; showToast('Erro ao buscar fluxo: ' + error.message); return; }
+    const lista = data || [];
+    el('fluxoResumo').textContent = lista.length
+      ? `${lista.length} registro(s) encontrado(s)`
+      : 'Nenhum registro encontrado';
+    const resultado = el('fluxoResultado');
+    resultado.insertAdjacentHTML('beforeend', lista.length
+      ? lista.map(itemFluxo).join('')
+      : '<p style="color:var(--muted);font-size:13.5px;padding:6px 0 14px">Nada encontrado com esses filtros.</p>');
+  }
+
+  el('fluxoResultado').addEventListener('click', (e) => {
+    const link = e.target.closest('.fluxo-hist-toggle');
+    if (!link) return;
+    e.preventDefault();
+    alternarHistorico(link, link.dataset.id);
+  });
+  el('fluxoBuscarBtn').addEventListener('click', buscarFluxo);
+  el('fluxoBusca').addEventListener('keydown', (e) => { if (e.key === 'Enter') buscarFluxo(); });
+  el('fluxoLimparBtn').addEventListener('click', () => {
+    ['fluxoBusca', 'fluxoCras', 'fluxoIni', 'fluxoFim'].forEach(i => el(i).value = '');
+    el('fluxoResumo').textContent = 'Use a busca acima';
+    el('fluxoResultado').querySelectorAll('.tl-item, p').forEach(n => n.remove());
+    el('fluxoResultado').insertAdjacentHTML('beforeend',
+      '<p style="color:var(--muted);font-size:13.5px;padding:6px 0 14px">Digite um nome, um CPF ou um período e clique em "Buscar fluxo".</p>');
+  });
+
+  const conversations = {
+    Centro: { linkedFamily: null,
+      messages: [
+        { from: 'received', text: 'Bom dia! Passando pra avisar que recebemos o encaminhamento de vocês.', time: '09:02' },
+        { from: 'sent', text: 'Ótimo, obrigada! Qualquer novidade nos avisa.', time: '09:05' },
+        { from: 'received', text: 'Ok, vamos verificar por aqui.', time: '09:20' }
+      ] },
+    Norte: { linkedFamily: 'Família Costa',
+      messages: [
+        { from: 'received', text: 'Oi! A família Costa foi encaminhada pra vocês na semana passada.', time: '08:12' },
+        { from: 'sent', text: 'Recebemos sim, já está na nossa agenda de visitas.', time: '08:15' },
+        { from: 'received', text: 'Família Costa já chegou aí?', time: '08:40' }
+      ] },
+    Sul: { linkedFamily: null,
+      messages: [
+        { from: 'sent', text: 'Encaminhamos um caso pra vocês hoje de manhã, pode conferir?', time: '10:00' },
+        { from: 'received', text: 'Recebemos o encaminhamento, obrigado.', time: '10:22' }
+      ] },
+    Leste: { linkedFamily: 'Família Pires',
+      messages: [
+        { from: 'received', text: 'A visita da família Pires ficou marcada pra sexta.', time: '07:55' },
+        { from: 'received', text: 'Podemos remarcar a visita?', time: '11:10' }
+      ] },
+    Oeste: { linkedFamily: null,
+      messages: [
+        { from: 'sent', text: 'Como ficou o caso que conversamos ontem?', time: '09:30' },
+        { from: 'received', text: 'Tudo certo por aqui, obrigada!', time: '09:41' }
+      ] }
+  };
+
+  function renderConversation(unit){
+    const data = conversations[unit];
+    document.getElementById('commsTitle').textContent = 'CRAS ' + unit;
+    const linkTag = document.getElementById('commsLinkTag');
+    if (data.linkedFamily){
+      linkTag.style.display = '';
+      linkTag.textContent = 'Sobre: ' + data.linkedFamily;
+    } else {
+      linkTag.style.display = 'none';
+    }
+    const box = document.getElementById('commsMessages');
+    box.innerHTML = data.messages.map(m =>
+      `<div class="msg ${m.from}">${m.text}<span class="msg-time">${m.time}</span></div>`
+    ).join('');
+    box.scrollTop = box.scrollHeight;
+  }
+
+  document.querySelectorAll('.comms-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.comms-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+      const badge = item.querySelector('.comms-badge');
+      if (badge) badge.remove();
+      renderConversation(item.dataset.unit);
+    });
+  });
+  renderConversation('Norte');
+
+  document.getElementById('commsSendBtn').addEventListener('click', () => {
+    const input = document.querySelector('.comms-inputbar input[type="text"]');
+    if (!input.value.trim()) return;
+    const activeUnit = document.querySelector('.comms-item.active').dataset.unit;
+    conversations[activeUnit].messages.push({ from: 'sent', text: input.value.trim(), time: 'agora' });
+    input.value = '';
+    renderConversation(activeUnit);
+  });
+
+  document.getElementById('darkModeToggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark', e.target.checked);
+  });
+
+  document.getElementById('changePasswordBtn').addEventListener('click', () => {
+    toast.textContent = 'Senha atualizada (exemplo — ainda sem conexão com o banco)';
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2600);
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await sbClient.auth.signOut(); // onAuthStateChange volta para a tela de login
+  });
+
+  // ====== VALIDAÇÃO E SALVAMENTO DE ATENDIMENTOS ======
+  document.getElementById('saveAtendimentoBtn').addEventListener('click', async () => {
+    const data = document.getElementById('atData').value;
+    const nome = document.getElementById('atNome').value;
+    const cpf = document.getElementById('atCpf').value;
+    const cras = document.getElementById('atCras').value;
+    const motivo = document.getElementById('atMotivo').value;
+    const submotivo = document.getElementById('atSub').value;
+    const entrevistadores = Array.from(document.getElementById('atEntrev').selectedOptions).map(o => o.value);
+
+    // Validações
+    if (!data || !nome || !cpf || !cras || !motivo || entrevistadores.length === 0) {
+      showToast('⚠️ Preencha todos os campos obrigatórios (*)');
+      return;
+    }
+
+    if (cpf.replace(/\D/g, '').length !== 11) {
+      showToast('⚠️ CPF inválido');
+      return;
+    }
+
+    try {
+      const { data: atendData, error } = await sbClient.from('atendimentos').insert({
+        data: data,
+        nome_responsavel: nome,
+        cpf: cpf.replace(/\D/g, ''),
+        cras_id: cras,
+        motivo: motivo,
+        submotivo: submotivo || null,
+        entrevistadores: entrevistadores,
+        data_criacao: new Date().toISOString()
+      }).select();
+
+      if (error) throw error;
+
+      showToast('✅ Atendimento registrado com sucesso!');
+      document.getElementById('atLimparBtn').click();
+      
+      // Recarregar lista
+      loadAtendimentos();
+    } catch (err) {
+      console.error('Erro ao salvar:', err);
+      showToast('❌ Erro ao salvar atendimento: ' + err.message);
+    }
+  });
+
+  document.getElementById('atLimparBtn').addEventListener('click', () => {
+    document.getElementById('atData').value = '';
+    document.getElementById('atNome').value = '';
+    document.getElementById('atCpf').value = '';
+    document.getElementById('atCras').value = '';
+    document.getElementById('atMotivo').value = '';
+    document.getElementById('atSub').value = '';
+    document.getElementById('atEntrev').value = '';
+  });
+
+  // ====== VALIDAÇÃO E SALVAMENTO DE VISITAS ======
+  let editandoVisitaId = null;
+  let vsTabelaCache = [];
+
+  document.getElementById('saveVisitaBtn').addEventListener('click', async () => {
+    const nome = document.getElementById('vsNome').value;
+    const cpf = document.getElementById('vsCpf').value;
+    const data = document.getElementById('vsData').value;
+    const hora = document.getElementById('vsHora').value;
+    const cras = document.getElementById('vsCras').value;
+    const motivo = document.getElementById('vsMotivo').value;
+    const beneficio = document.getElementById('vsBeneficio').value.trim();
+    const observacao = document.getElementById('vsObs').value.trim();
+    const urgente = document.getElementById('vsUrgente').checked;
+    const entrevistadores = Array.from(document.querySelectorAll('#vsEntrev input:checked')).map(i => i.value);
+
+    // Validações
+    if (!nome || !cpf || !data || !cras || !motivo || entrevistadores.length === 0) {
+      showToast('⚠️ Preencha todos os campos obrigatórios (*)');
+      return;
+    }
+
+    if (entrevistadores.length > 2) {
+      showToast('⚠️ Selecione no máximo 2 técnicos responsáveis');
+      return;
+    }
+
+    if (cpf.replace(/\D/g, '').length !== 11) {
+      showToast('⚠️ CPF inválido');
+      return;
+    }
+
+    const hojeLocal = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    if (!editandoVisitaId && data < hojeLocal) {
+      showToast('⚠️ Data da visita não pode ser no passado');
+      return;
+    }
+
+    const btnSalvar = document.getElementById('saveVisitaBtn');
+    btnSalvar.disabled = true;
+    btnSalvar.textContent = 'Salvando...';
+
+    try {
+      if (editandoVisitaId) {
+        const { data: up, error: eu } = await sbClient.from('visitas_domiciliares').update({
+          nome_responsavel: nome,
+          cpf: cpf.replace(/\D/g, ''),
+          data_agendada: data,
+          hora_prevista: hora || null,
+          cras_id: cras,
+          motivo: motivo,
+          beneficio: beneficio || null,
+          observacao: motivo === VS_MOTIVO_OUTROS ? (observacao || null) : null,
+          urgente: urgente,
+          entrevistadores: entrevistadores
+        }).eq('id', editandoVisitaId).select('id');
+        if (eu) throw eu;
+        if (!up || !up.length) throw new Error('o banco bloqueou a alteração (falta política de UPDATE no RLS)');
+        showToast('✅ Visita atualizada com sucesso!');
+        document.getElementById('vsLimparBtn').click();
+        loadVisitas();
+        return;
+      }
+
+      const { data: visitaData, error } = await sbClient.from('visitas_domiciliares').insert({
+        nome_responsavel: nome,
+        cpf: cpf.replace(/\D/g, ''),
+        data_agendada: data,
+        hora_prevista: hora || null,
+        cras_id: cras,
+        motivo: motivo,
+        beneficio: beneficio || null,
+        observacao: motivo === VS_MOTIVO_OUTROS ? (observacao || null) : null,
+        urgente: urgente,
+        entrevistadores: entrevistadores,
+        status: 'agendada',
+        data_criacao: new Date().toISOString()
+      }).select();
+
+      if (error) throw error;
+
+      showToast('✅ Visita agendada com sucesso!');
+      document.getElementById('vsLimparBtn').click();
+      
+      // Recarregar lista
+      loadVisitas();
+    } catch (err) {
+      console.error('Erro ao salvar:', err);
+      showToast('❌ Erro ao agendar visita: ' + err.message);
+    } finally {
+      btnSalvar.disabled = false;
+      btnSalvar.textContent = editandoVisitaId ? 'Salvar alterações' : 'Agendar visita';
+    }
+  });
+
+  document.getElementById('vsLimparBtn').addEventListener('click', () => {
+    editandoVisitaId = null;
+    document.getElementById('saveVisitaBtn').textContent = 'Agendar visita';
+    document.getElementById('vsLimparBtn').textContent = 'Limpar';
+    document.querySelectorAll('#vsMotivo option[data-antigo]').forEach(o => o.remove());
+    document.querySelectorAll('#vsLista tr.vs-editando').forEach(r => r.classList.remove('vs-editando'));
+    document.getElementById('vsNome').value = '';
+    document.getElementById('vsCpf').value = '';
+    document.getElementById('vsData').value = '';
+    document.getElementById('vsHora').value = '';
+    document.getElementById('vsCras').value = '';
+    document.getElementById('vsMotivo').value = '';
+    document.getElementById('vsBeneficio').value = '';
+    document.getElementById('vsObs').value = '';
+    document.getElementById('vsUrgente').checked = false;
+    document.getElementById('vsObsBox').style.display = 'none';
+    document.querySelectorAll('#vsEntrev input:checked').forEach(i => { i.checked = false; });
+    document.getElementById('vsEntrevBusca').value = '';
+    vsFiltrarEntrev();
+    vsAtualizarEntrevSel();
+  });
+
+  // ====== BUSCA DE ENTREVISTADORES (VISITAS) ======
+  const vsNorm = (t) => (typeof normalizeText === 'function' ? normalizeText(t) : String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+
+  function vsFiltrarEntrev(){
+    const termo = vsNorm(document.getElementById('vsEntrevBusca').value.trim());
+    let visiveis = 0;
+    document.querySelectorAll('#vsEntrev label').forEach(l => {
+      const ok = !termo || vsNorm(l.textContent).includes(termo);
+      l.style.display = ok ? '' : 'none';
+      if (ok) visiveis++;
+    });
+    document.getElementById('vsEntrevVazio').style.display = visiveis ? 'none' : '';
+    return visiveis;
+  }
+
+  function vsAtualizarEntrevSel(){
+    const nomes = [...document.querySelectorAll('#vsEntrev input:checked')]
+      .map(i => (i.parentElement.textContent || '').trim());
+    document.getElementById('vsEntrevSel').innerHTML = nomes.length
+      ? `Selecionados (${nomes.length}/2): <b>${nomes.map(escapeHtml).join(', ')}</b>`
+      : 'Nenhum selecionado (máx. 2)';
+  }
+
+  document.getElementById('vsEntrevBusca').addEventListener('input', vsFiltrarEntrev);
+  document.getElementById('vsEntrevBusca').addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const vis = [...document.querySelectorAll('#vsEntrev label')].filter(l => l.style.display !== 'none');
+    if (vis.length === 1) vis[0].querySelector('input').click();
+  });
+  document.getElementById('vsEntrev').addEventListener('change', () => setTimeout(vsAtualizarEntrevSel, 0));
+
+  // ====== EDITAR / EXCLUIR VISITAS ======
+  function vsFormatarCpf(v){
+    const d = String(v || '').replace(/\D/g, '');
+    return d.length === 11 ? d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : d;
+  }
+
+  function vsEditar(v){
+    editandoVisitaId = v.id;
+    document.getElementById('vsNome').value = v.nome_responsavel || '';
+    document.getElementById('vsCpf').value = vsFormatarCpf(v.cpf);
+    document.getElementById('vsData').value = v.data_agendada ? String(v.data_agendada).slice(0, 10) : '';
+    document.getElementById('vsHora').value = v.hora_prevista ? String(v.hora_prevista).slice(0, 5) : '';
+    document.getElementById('vsCras').value = v.cras_id || '';
+
+    const selMotivo = document.getElementById('vsMotivo');
+    selMotivo.querySelectorAll('option[data-antigo]').forEach(o => o.remove());
+    if (v.motivo && ![...selMotivo.options].some(o => o.value === v.motivo)) {
+      // motivo antigo (de antes da lista nova): mantém o valor para não perder a informação
+      const op = document.createElement('option');
+      op.value = v.motivo; op.textContent = v.motivo + ' (motivo antigo)'; op.setAttribute('data-antigo', '1');
+      selMotivo.appendChild(op);
+    }
+    selMotivo.value = v.motivo || '';
+    selMotivo.dispatchEvent(new Event('change'));
+
+    document.getElementById('vsBeneficio').value = v.beneficio || '';
+    document.getElementById('vsUrgente').checked = !!v.urgente;
+    if (v.motivo === VS_MOTIVO_OUTROS) document.getElementById('vsObs').value = v.observacao || '';
+
+    const ids = (v.entrevistadores || []).map(String);
+    document.querySelectorAll('#vsEntrev input[type=checkbox]').forEach(i => { i.checked = ids.includes(String(i.value)); });
+    document.getElementById('vsEntrevBusca').value = '';
+    vsFiltrarEntrev();
+    vsAtualizarEntrevSel();
+
+    document.getElementById('saveVisitaBtn').textContent = 'Salvar alterações';
+    document.getElementById('vsLimparBtn').textContent = 'Cancelar';
+    document.querySelectorAll('#vsLista tr').forEach(r => r.classList.toggle('vs-editando', r.dataset.id === String(v.id)));
+    document.getElementById('vsNome').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    showToast('Editando visita — altere os campos e clique em "Salvar alterações"');
+  }
+
+  async function vsExcluir(v){
+    if (!confirm(`Excluir a visita de "${v.nome_responsavel}"?\n\nEsta ação não pode ser desfeita.`)) return;
+    try {
+      const { data: del, error } = await sbClient.from('visitas_domiciliares').delete().eq('id', v.id).select('id');
+      if (error) throw error;
+      if (!del || !del.length) throw new Error('o banco bloqueou a exclusão (falta política de DELETE no RLS)');
+      if (String(editandoVisitaId) === String(v.id)) document.getElementById('vsLimparBtn').click();
+      showToast('🗑️ Visita excluída');
+      loadVisitas();
+    } catch (err) {
+      console.error('Erro ao excluir visita:', err);
+      showToast('❌ Não foi possível excluir: ' + (err.message || 'erro'));
+    }
+  }
+
+  // ====== FILTROS DA TABELA DE VISITAS ======
+  const VS_PAGINA_TABELA = 15;
+  let vsLimiteTabela = VS_PAGINA_TABELA;
+  const vfIds = ['vfBusca', 'vfDe', 'vfAte', 'vfCras', 'vfMotivo', 'vfEntrev'];
+
+  function vsPopularFiltros(data){
+    const fill = (id, primeiro, pares) => {
+      const sel = document.getElementById(id);
+      if (!sel) return;
+      const atual = sel.value;
+      sel.innerHTML = `<option value="">${primeiro}</option>` +
+        pares.map(([v, t]) => `<option value="${escapeHtml(v)}">${escapeHtml(t)}</option>`).join('');
+      sel.value = atual;
+      if (sel.value !== atual) sel.value = '';
+    };
+    const porNome = (m) => Object.entries(m || {}).sort((a, b) => String(a[1]).localeCompare(String(b[1]), 'pt-BR'));
+    fill('vfCras', 'Todos os CRAS', porNome(typeof mapaCrasFluxo !== 'undefined' ? mapaCrasFluxo : {}));
+    fill('vfEntrev', 'Todos os entrevistadores', porNome(typeof mapaFuncFluxo !== 'undefined' ? mapaFuncFluxo : {}));
+    const antigos = [...new Set((data || []).map(v => v.motivo).filter(m => m && !VS_MOTIVOS.includes(m)))].sort();
+    fill('vfMotivo', 'Todos os motivos', [...VS_MOTIVOS, ...antigos].map(m => [m, m]));
+  }
+
+  function vsFiltrosAtivos(){
+    return vfIds.some(id => document.getElementById(id).value) ||
+      document.getElementById('vfUrgente').checked || document.getElementById('vfReag').checked;
+  }
+
+  function vsFiltrarVisitas(lista){
+    const g = (id) => document.getElementById(id).value;
+    const busca = vsNorm(g('vfBusca').trim());
+    const digitos = g('vfBusca').replace(/\D/g, '');
+    const de = g('vfDe'), ate = g('vfAte'), cras = g('vfCras'), motivo = g('vfMotivo'), entrev = g('vfEntrev');
+    const soUrg = document.getElementById('vfUrgente').checked;
+    const soReag = document.getElementById('vfReag').checked;
+    return lista.filter(v => {
+      if (busca) {
+        const cpf = String(v.cpf || '').replace(/\D/g, '');
+        if (!(vsNorm(v.nome_responsavel).includes(busca) || (digitos && cpf.includes(digitos)))) return false;
+      }
+      const d = String(v.data_agendada || '').slice(0, 10);
+      if (de && d < de) return false;
+      if (ate && d > ate) return false;
+      if (cras && String(v.cras_id) !== cras) return false;
+      if (motivo && v.motivo !== motivo) return false;
+      if (entrev && !(v.entrevistadores || []).map(String).includes(entrev)) return false;
+      if (soUrg && !v.urgente) return false;
+      if (soReag && !(Array.isArray(v.historico_reagendamentos) && v.historico_reagendamentos.length)) return false;
+      return true;
+    });
+  }
+
+  function vsRenderTabela(){
+    const tbody = document.getElementById('vsLista');
+    if (!tbody) return;
+    const filtrando = vsFiltrosAtivos();
+    const filtradas = vsFiltrarVisitas(vsTabelaCache || []);
+    const pagina = filtradas.slice(0, vsLimiteTabela);
+    const fmtDia = (d) => d ? String(d).slice(0, 10).split('-').reverse().join('/') : '—';
+
+    tbody.innerHTML = pagina.length ? pagina.map(v => `
+            <tr data-id="${escapeHtml(v.id)}" class="${[v.urgente ? 'vs-urgente' : '', String(v.id) === String(editandoVisitaId) ? 'vs-editando' : ''].filter(Boolean).join(' ')}">
+              <td class="vs-col-data">
+                <div class="vs-data">${fmtDia(v.data_agendada)}</div>
+                <div class="vs-hora">${v.hora_prevista ? escapeHtml(String(v.hora_prevista).slice(0, 5)) : '—'}</div>
+                ${Array.isArray(v.historico_reagendamentos) && v.historico_reagendamentos.length ? `<div class="vs-reag-tag">↻ Reagendada ${v.historico_reagendamentos.length}×</div>` : ''}
+              </td>
+              <td class="vs-nome">${escapeHtml(v.nome_responsavel)}${v.urgente ? '<span class="vs-badge-urg">Urgente</span>' : ''}</td>
+              <td class="vs-cras">${escapeHtml(v.cras && v.cras.nome) || '—'}</td>
+              <td class="vs-motivo">
+                <div>${escapeHtml(v.motivo)}</div>
+                ${v.beneficio ? `<span class="vs-tag">Benefício: ${escapeHtml(v.beneficio)}</span>` : ''}
+                ${v.observacao ? `<div class="vs-obs">${escapeHtml(v.observacao)}</div>` : ''}
+              </td>
+              <td>${v.entrevistadores_nomes.length
+                ? `<div class="vs-chips">${v.entrevistadores_nomes.map(n => `<span class="vs-chip">${escapeHtml(n)}</span>`).join('')}</div>`
+                : '<span class="vs-vazio">—</span>'}</td>
+              <td class="vs-col-acoes">
+                <div class="vs-acoes">
+                  <button type="button" class="vs-btn-icon reagendar" data-acao="reagendar" data-id="${escapeHtml(v.id)}" title="Reagendar (${Array.isArray(v.historico_reagendamentos) ? v.historico_reagendamentos.length : 0}/3)" aria-label="Reagendar visita">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="17.5" cy="17.5" r="4.5"/><path d="M17.5 15.5v2l1.2 1"/></svg>
+                    ${Array.isArray(v.historico_reagendamentos) && v.historico_reagendamentos.length ? `<span class="vs-reag-badge">${v.historico_reagendamentos.length}</span>` : ''}
+                  </button>
+                  <button type="button" class="vs-btn-icon editar" data-acao="editar" data-id="${escapeHtml(v.id)}" title="Editar" aria-label="Editar visita">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                  </button>
+                  <button type="button" class="vs-btn-icon excluir" data-acao="excluir" data-id="${escapeHtml(v.id)}" title="Excluir" aria-label="Excluir visita">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `).join('') : `<tr><td colspan="6" class="vs-vazio" style="text-align:center;padding:24px">${filtrando ? 'Nenhuma visita encontrada com esses filtros.' : 'Nenhuma entrevista domiciliar registrada ainda.'}</td></tr>`;
+
+    const resumo = document.getElementById('vsResumo');
+    if (resumo) {
+      const total = (vsTabelaCache || []).length;
+      resumo.textContent = filtrando
+        ? `${filtradas.length} de ${total} ${total === 1 ? 'registro' : 'registros'}`
+        : `${total} ${total === 1 ? 'registro' : 'registros'}`;
+    }
+    const mais = document.getElementById('vsMaisWrap');
+    if (mais) {
+      mais.style.display = filtradas.length > pagina.length ? '' : 'none';
+      document.getElementById('vsMaisBtn').textContent = `Ver mais (${filtradas.length - pagina.length} restantes)`;
+    }
+    document.getElementById('vfLimpar').disabled = !filtrando;
+  }
+
+  function vsAplicarFiltros(){ vsLimiteTabela = VS_PAGINA_TABELA; vsRenderTabela(); }
+
+  (function ligarFiltrosVisitas(){
+    let t = null;
+    document.getElementById('vfBusca').addEventListener('input', () => { clearTimeout(t); t = setTimeout(vsAplicarFiltros, 150); });
+    ['vfDe', 'vfAte', 'vfCras', 'vfMotivo', 'vfEntrev', 'vfUrgente', 'vfReag'].forEach(id =>
+      document.getElementById(id).addEventListener('change', vsAplicarFiltros));
+    document.getElementById('vfLimpar').addEventListener('click', () => {
+      vfIds.forEach(id => { document.getElementById(id).value = ''; });
+      document.getElementById('vfUrgente').checked = false;
+      document.getElementById('vfReag').checked = false;
+      vsAplicarFiltros();
+    });
+    document.getElementById('vsMaisBtn').addEventListener('click', () => { vsLimiteTabela += VS_PAGINA_TABELA; vsRenderTabela(); });
+  })();
+
+  // ====== REAGENDAMENTO (histórico de até 3) ======
+  const VS_MAX_REAG = 3;
+  let reagVisitaId = null;
+  const reagHist = (v) => Array.isArray(v.historico_reagendamentos) ? v.historico_reagendamentos : [];
+  const reagDia = (d) => d ? String(d).slice(0, 10).split('-').reverse().join('/') : '—';
+  const reagQuando = (iso) => {
+    const d = new Date(iso);
+    return isNaN(d) ? '' : d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  };
+  const reagHoraTxt = (h) => h ? ` às <b>${escapeHtml(String(h).slice(0, 5))}</b>` : ' <span class="vs-vazio">(sem horário)</span>';
+
+  function vsFecharReag(){
+    const ov = document.getElementById('vsReagOverlay');
+    if (ov) ov.style.display = 'none';
+    reagVisitaId = null;
+  }
+
+  function vsGarantirModalReag(){
+    let ov = document.getElementById('vsReagOverlay');
+    if (ov) return ov;
+    ov = document.createElement('div');
+    ov.id = 'vsReagOverlay';
+    ov.className = 'vs-modal-overlay';
+    ov.style.display = 'none';
+    ov.innerHTML = `
+      <div class="vs-modal" role="dialog" aria-modal="true" aria-labelledby="vsReagTitulo">
+        <div class="vs-modal-head">
+          <div><h3 id="vsReagTitulo">Reagendar visita</h3><p id="vsReagSub"></p></div>
+          <button type="button" class="vs-modal-x" id="vsReagX" aria-label="Fechar">&times;</button>
+        </div>
+        <div class="vs-modal-body">
+          <div class="vs-reag-count" id="vsReagCount"></div>
+          <ol class="vs-reag-timeline" id="vsReagHist"></ol>
+          <div class="vs-reag-form" id="vsReagForm">
+            <h4>Novo reagendamento</h4>
+            <div class="vs-reag-grid">
+              <div class="field"><label>Nova data *</label><input type="date" id="vsReagData"></div>
+              <div class="field"><label>Novo horário</label><input type="time" id="vsReagHora"></div>
+              <div class="field" style="grid-column:1/-1"><label>Motivo do reagendamento</label><input type="text" id="vsReagMotivo" placeholder="Opcional — ex.: família pediu outro dia"></div>
+            </div>
+          </div>
+          <div class="vs-reag-limite" id="vsReagLimite" style="display:none">Limite de ${VS_MAX_REAG} reagendamentos atingido para esta visita.</div>
+        </div>
+        <div class="vs-modal-foot">
+          <button type="button" class="btn-ghost" id="vsReagFechar">Fechar</button>
+          <button type="button" class="btn-primary" id="vsReagConfirmar">Confirmar reagendamento</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    ov.addEventListener('click', (e) => { if (e.target === ov) vsFecharReag(); });
+    document.getElementById('vsReagX').addEventListener('click', vsFecharReag);
+    document.getElementById('vsReagFechar').addEventListener('click', vsFecharReag);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && ov.style.display !== 'none') vsFecharReag(); });
+    document.getElementById('vsReagConfirmar').addEventListener('click', vsConfirmarReag);
+    return ov;
+  }
+
+  function vsRenderReag(v){
+    const hist = reagHist(v);
+    const cheio = hist.length >= VS_MAX_REAG;
+    document.getElementById('vsReagSub').textContent = v.nome_responsavel || '';
+    const cont = document.getElementById('vsReagCount');
+    cont.textContent = `Reagendamentos: ${hist.length} de ${VS_MAX_REAG}`;
+    cont.classList.toggle('cheio', cheio);
+
+    const item = (rotulo, data, hora, extra, atual) => `
+      <li class="${atual ? 'atual' : ''}">
+        <div class="vs-reag-label">${rotulo}</div>
+        <div class="vs-reag-when"><b>${reagDia(data)}</b>${reagHoraTxt(hora)}${atual ? '<span class="vs-reag-atual">Atual</span>' : ''}</div>
+        ${extra || ''}
+      </li>`;
+
+    // O agendamento original é o "de" do primeiro reagendamento; sem histórico, é a data atual
+    const orig = hist.length ? { d: hist[0].de_data, h: hist[0].de_hora } : { d: v.data_agendada, h: v.hora_prevista };
+    let html = item('Agendamento original', orig.d, orig.h, '', !hist.length);
+    hist.forEach((h, i) => {
+      const meta = `<div class="vs-reag-meta">Registrado em ${escapeHtml(reagQuando(h.em))}${h.motivo ? ' · ' + escapeHtml(h.motivo) : ''}</div>`;
+      html += item(`${i + 1}º reagendamento`, h.para_data, h.para_hora, meta, i === hist.length - 1);
+    });
+    document.getElementById('vsReagHist').innerHTML = html;
+
+    document.getElementById('vsReagForm').style.display = cheio ? 'none' : '';
+    document.getElementById('vsReagLimite').style.display = cheio ? '' : 'none';
+    document.getElementById('vsReagConfirmar').style.display = cheio ? 'none' : '';
+  }
+
+  function vsAbrirReag(v){
+    const ov = vsGarantirModalReag();
+    reagVisitaId = v.id;
+    vsRenderReag(v);
+    const hojeLocal = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    const inData = document.getElementById('vsReagData');
+    inData.min = hojeLocal;
+    inData.value = ''; document.getElementById('vsReagHora').value = ''; document.getElementById('vsReagMotivo').value = '';
+    ov.style.display = 'flex';
+    if (reagHist(v).length < VS_MAX_REAG) inData.focus();
+  }
+
+  async function vsConfirmarReag(){
+    const v = vsTabelaCache.find(x => String(x.id) === String(reagVisitaId));
+    if (!v) return;
+    const hist = reagHist(v);
+    if (hist.length >= VS_MAX_REAG){ showToast('⚠️ Limite de ' + VS_MAX_REAG + ' reagendamentos atingido'); return; }
+
+    const novaData = document.getElementById('vsReagData').value;
+    const novaHora = document.getElementById('vsReagHora').value;
+    const motivo = document.getElementById('vsReagMotivo').value.trim();
+    const hojeLocal = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+
+    if (!novaData){ showToast('⚠️ Informe a nova data'); return; }
+    if (novaData < hojeLocal){ showToast('⚠️ A nova data não pode ser no passado'); return; }
+    const dataAtual = String(v.data_agendada).slice(0, 10);
+    const horaAtual = v.hora_prevista ? String(v.hora_prevista).slice(0, 5) : '';
+    if (novaData === dataAtual && novaHora === horaAtual){ showToast('⚠️ Escolha uma data ou horário diferente do atual'); return; }
+
+    const entrada = {
+      de_data: dataAtual, de_hora: horaAtual || null,
+      para_data: novaData, para_hora: novaHora || null,
+      motivo: motivo || null, em: new Date().toISOString()
+    };
+    const btn = document.getElementById('vsReagConfirmar');
+    btn.disabled = true; btn.textContent = 'Salvando...';
+    try {
+      const { data: up, error } = await sbClient.from('visitas_domiciliares').update({
+        data_agendada: novaData,
+        hora_prevista: novaHora || null,
+        historico_reagendamentos: [...hist, entrada]
+      }).eq('id', v.id).select('id');
+      if (error) throw error;
+      if (!up || !up.length) throw new Error('o banco bloqueou a alteração (falta política de UPDATE no RLS)');
+      showToast('✅ Visita reagendada');
+      await loadVisitas();
+      const atualizada = vsTabelaCache.find(x => String(x.id) === String(v.id));
+      if (atualizada){
+        vsRenderReag(atualizada);
+        document.getElementById('vsReagData').value = ''; document.getElementById('vsReagHora').value = ''; document.getElementById('vsReagMotivo').value = '';
+      } else vsFecharReag();
+    } catch (err) {
+      console.error('Erro ao reagendar:', err);
+      showToast('❌ Não foi possível reagendar: ' + (err.message || 'erro'));
+    } finally {
+      btn.disabled = false; btn.textContent = 'Confirmar reagendamento';
+    }
+  }
+
+  document.getElementById('vsLista').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-acao]');
+    if (!btn) return;
+    const v = vsTabelaCache.find(x => String(x.id) === btn.dataset.id);
+    if (!v) return;
+    if (btn.dataset.acao === 'editar') vsEditar(v);
+    else if (btn.dataset.acao === 'excluir') vsExcluir(v);
+    else if (btn.dataset.acao === 'reagendar') vsAbrirReag(v);
+  });
+
+  // ====== FUNÇÕES DE CARREGAMENTO DE LISTAS ======
+  async function loadAtendimentos() {
+    try {
+      const { data } = await sbClient
+        .from('atendimentos')
+        .select('*, cras:cras_id(nome), usuarios:entrevistadores(*)')
+        .order('data', { ascending: false })
+        .limit(14);
+      
+      if (data) {
+        const tbody = document.querySelector('#panel-atendimentos table tbody') || document.getElementById('atLista');
+        if (tbody) {
+          tbody.innerHTML = data.map(a => `
+            <tr>
+              <td>${new Date(a.data).toLocaleDateString('pt-BR')}</td>
+              <td>${a.hora_atendimento || '—'}</td>
+              <td>${a.nome_responsavel}</td>
+              <td>${a.cras?.nome || '—'}</td>
+              <td>${a.motivo}</td>
+              <td>${a.usuarios?.map(u => u.nome).join(', ') || '—'}</td>
+              <td><a href="#" onclick="return false" style="color:var(--blue);cursor:pointer">Ver</a></td>
+            </tr>
+          `).join('');
+        }
+      }
+    } catch (e) {
+      console.log('Não foi possível carregar atendimentos:', e.message);
+    }
+  }
+
+  async function loadVisitas() {
+    try {
+      const { data, error } = await sbClient
+        .from('visitas_domiciliares')
+        .select('*, cras:cras_id(nome)')
+        .order('data_agendada', { ascending: false })
+        .limit(300);
+
+      if (error) throw error;
+
+      if (data) {
+        // Nomes dos entrevistadores vêm do mapa já carregado em popularSelectCras()
+        // (entrevistadores é um array de UUIDs, não dá pra usar embed do Supabase nele)
+        data.forEach(v => {
+          v.entrevistadores_nomes = (v.entrevistadores || [])
+            .map(id => (typeof mapaFuncFluxo !== 'undefined' ? mapaFuncFluxo[id] : null))
+            .filter(Boolean);
+        });
+
+        if (typeof vsDatasComVisita !== 'undefined') {
+          vsDatasComVisita = new Set(data.map(v => v.data_agendada));
+          vsDatasUrgentes = new Set(data.filter(v => v.urgente).map(v => v.data_agendada));
+          const histDe = (v) => Array.isArray(v.historico_reagendamentos) ? v.historico_reagendamentos : [];
+          vsDatasReagendadas = new Set(data.filter(v => histDe(v).length).map(v => v.data_agendada));
+          vsDatasOrigemReag = new Set(data.flatMap(v => histDe(v).map(h => h.de_data)).filter(Boolean));
+          if (typeof renderVsCalendar === 'function') renderVsCalendar();
+        }
+        if (typeof vsVisitasCache !== 'undefined') vsVisitasCache = data;
+        if (typeof renderVsMiniList === 'function') renderVsMiniList();
+        vsTabelaCache = data;
+        vsPopularFiltros(data);
+        vsRenderTabela();
+      }
+    } catch (e) {
+      console.log('Não foi possível carregar visitas:', e.message);
+      const box = document.getElementById('vsMiniList');
+      if (box) box.innerHTML = '<p class="hint" style="margin:0">Não foi possível carregar as visitas. Recarregue a página.</p>';
+    }
+  }
+
+  // Carregar dados iniciais
+  loadAtendimentos();
+  loadVisitas();
+
+  const familiaData = {
+    'Família Silva': { unidade: 'CRAS Centro', bairro: 'Vila Nova', situacao: 'Alugada', renda: 'R$ 1.200,00',
+      membros: ['Maria Silva · Responsável', 'João Silva · Cônjuge', 'Pedro Silva · Filho, 15 anos'],
+      timeline: [
+        { tipo: 'encaminhamento', data: '12 de setembro', titulo: 'Encaminhamento — Saúde', desc: 'Encaminhada ao posto de saúde de Vila Nova. Aguardando retorno.' },
+        { tipo: 'atendimento', data: '02 de setembro', titulo: 'Atendimento inicial', desc: 'Dificuldade financeira e insegurança alimentar. Necessidades: alimentação, renda.' }
+      ] },
+    'Família Costa': { unidade: 'CRAS Norte', bairro: 'Centro', situacao: 'Cedida', renda: 'R$ 900,00',
+      membros: ['Beatriz Costa · Responsável', 'Lucas Costa · Filho, 10 anos'],
+      timeline: [
+        { tipo: 'encaminhamento', data: '05 de setembro', titulo: 'Encaminhamento — CRAS Norte', desc: 'Transferência de cadastro entre unidades, em acompanhamento.' }
+      ] },
+    'Família Oliveira': { unidade: 'CRAS Sul', bairro: 'Boa Vista', situacao: 'Própria', renda: 'R$ 1.500,00',
+      membros: ['Carla Oliveira · Responsável', 'Rafael Oliveira · Cônjuge'],
+      timeline: [
+        { tipo: 'visita', data: 'Amanhã, 14h', titulo: 'Retorno de acompanhamento', desc: 'Visita domiciliar de retorno agendada.' },
+        { tipo: 'encaminhamento', data: '28 de agosto', titulo: 'Encaminhamento — Assistência jurídica', desc: 'Caso concluído.' }
+      ] },
+    'Família Souza': { unidade: 'CRAS Leste', bairro: 'Vila Nova', situacao: 'Alugada', renda: 'R$ 1.100,00',
+      membros: ['Diego Souza · Responsável', 'Ana Souza · Cônjuge', 'Bia Souza · Filha, 6 anos'],
+      timeline: [
+        { tipo: 'beneficio', data: '02 de setembro', titulo: 'Benefício entregue', desc: 'Cesta básica, quantidade 2 — entregue.' },
+        { tipo: 'beneficio', data: '11 de setembro', titulo: 'Benefício entregue', desc: 'Cesta básica — entregue.' }
+      ] }
+  };
+
+  const tipoInfo = {
+    atendimento: { cor: 'var(--blue)' },
+    encaminhamento: { cor: 'var(--coral)' },
+    visita: { cor: 'var(--cyan)' },
+    beneficio: { cor: 'var(--green)' }
+  };
+
+  function calcIdade(dataNasc){
+    if (!dataNasc) return null;
+    const d = new Date(dataNasc + 'T00:00:00');
+    const hoje = new Date();
+    let idade = hoje.getFullYear() - d.getFullYear();
+    if (hoje < new Date(hoje.getFullYear(), d.getMonth(), d.getDate())) idade--;
+    return idade;
+  }
+
+  async function renderFichaReal(id){
+    document.getElementById('fichaNome').textContent = 'Carregando...';
+    const { data, error } = await sbClient
+      .from('familias')
+      .select('id, nome_responsavel, bairro, situacao_habitacional, renda_familiar, beneficios, vulnerabilidades, observacoes, cras:cras_id(nome), membros_familia(nome, data_nascimento, parentesco)')
+      .eq('id', id)
+      .single();
+    if (error || !data){
+      console.error('Erro ao carregar ficha:', error);
+      document.getElementById('fichaNome').textContent = 'Não foi possível carregar a ficha';
+      return;
+    }
+    const unidade = data.cras ? data.cras.nome : '—';
+    const renda = data.renda_familiar != null
+      ? Number(data.renda_familiar).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+      : '—';
+    document.getElementById('fichaNome').textContent = data.nome_responsavel;
+    document.getElementById('fichaSub').textContent = unidade + ' · ' + (data.bairro || '—');
+    document.getElementById('fichaSummary').innerHTML = `
+      <div class="summary-chip">Unidade<b>${escapeHtml(unidade)}</b></div>
+      <div class="summary-chip">Bairro<b>${escapeHtml(data.bairro || '—')}</b></div>
+      <div class="summary-chip">Situação habitacional<b>${escapeHtml(data.situacao_habitacional || '—')}</b></div>
+      <div class="summary-chip">Renda familiar<b>${escapeHtml(renda)}</b></div>
+    `;
+    const membros = data.membros_familia || [];
+    document.getElementById('fichaMembros').innerHTML = membros.length
+      ? membros.map(m => {
+          const idade = calcIdade(m.data_nascimento);
+          return `<div class="member-badge">${escapeHtml(m.nome)} · ${escapeHtml(m.parentesco || '')}${idade != null ? ', ' + idade + ' anos' : ''}</div>`;
+        }).join('')
+      : '<div class="member-badge">Sem integrantes cadastrados</div>';
+    // Linha do tempo: será preenchida quando Atendimentos/Encaminhamentos/Visitas/Benefícios forem ligados ao banco
+    document.getElementById('fichaTimeline').innerHTML =
+      '<p class="tl-desc">Nenhum registro de atendimento, encaminhamento, visita ou benefício ainda.</p>';
+  }
+
+  function renderFicha(nome, contexto){
+    const real = familiasCache.find(f => f.nome === nome);
+    if (real){ renderFichaReal(real.id); return; }
+    const data = familiaData[nome] || {
+      unidade: 'CRAS Centro', bairro: '—', situacao: '—', renda: '—',
+      membros: ['Responsável pela família'],
+      timeline: [{ tipo: 'atendimento', data: 'Recente', titulo: nome, desc: contexto || 'Sem mais detalhes registrados ainda.' }]
+    };
+    document.getElementById('fichaNome').textContent = nome;
+    document.getElementById('fichaSub').textContent = data.unidade + ' · ' + data.bairro;
+
+    document.getElementById('fichaSummary').innerHTML = `
+      <div class="summary-chip">Unidade<b>${data.unidade}</b></div>
+      <div class="summary-chip">Bairro<b>${data.bairro}</b></div>
+      <div class="summary-chip">Situação habitacional<b>${data.situacao}</b></div>
+      <div class="summary-chip">Renda familiar<b>${data.renda}</b></div>
+    `;
+
+    document.getElementById('fichaMembros').innerHTML = data.membros.map(m =>
+      `<div class="member-badge">${m}</div>`
+    ).join('');
+
+    document.getElementById('fichaTimeline').innerHTML = data.timeline.map(t => `
+      <div class="tl-item">
+        <div class="tl-dot" style="--dot:${tipoInfo[t.tipo].cor}"></div>
+        <div class="tl-date">${t.data}</div>
+        <div class="tl-title">${t.titulo}</div>
+        <p class="tl-desc">${t.desc}</p>
+      </div>
+    `).join('');
+  }
+
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest('.family-link');
+    if (!link) return;
+    renderFicha(link.dataset.family, link.dataset.context);
+    showPanel('panel-ficha');
+    navItems.forEach(i => i.classList.remove('active'));
+  });
+
+  document.getElementById('fichaBackBtn').addEventListener('click', () => {
+    showPanel('panel-geral');
+    navItems.forEach(i => i.classList.remove('active'));
+    document.querySelector('.nav-item[data-panel="panel-geral"]').classList.add('active');
+  });
+
+  // ---- Busca com autocompletar ----
+  const familiaNomes = [
+    'Família Silva', 'Família Costa', 'Família Oliveira', 'Família Souza',
+    'Família Martins', 'Família Rocha', 'Família Nunes', 'Família Ramos', 'Família Pires'
+  ];
+
+  function normalizeText(s){
+    return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+
+  const getNomesFamilias = () => familiasCache.map(f => f.nome);
+
+  function attachAutocomplete(input, items, onSelect){
+    if (!input) return;
+    const getItems = typeof items === 'function' ? items : () => items;
+    const wrap = input.parentElement;
+    const list = document.createElement('div');
+    list.className = 'ac-list';
+    list.style.display = 'none';
+    wrap.appendChild(list);
+
+    function renderList(matches){
+      if (!matches.length){ list.style.display = 'none'; return; }
+      list.innerHTML = matches.map(m => `<div class="ac-item">${escapeHtml(m)}</div>`).join('');
+      list.style.display = 'block';
+    }
+
+    input.addEventListener('input', () => {
+      const q = normalizeText(input.value.trim());
+      if (!q){ list.style.display = 'none'; return; }
+      renderList(getItems().filter(i => normalizeText(i).includes(q)).slice(0, 6));
+    });
+
+    input.addEventListener('focus', () => {
+      if (input.value.trim()) input.dispatchEvent(new Event('input'));
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!wrap.contains(e.target)) list.style.display = 'none';
+    });
+
+    list.addEventListener('click', (e) => {
+      const item = e.target.closest('.ac-item');
+      if (!item) return;
+      input.value = item.textContent;
+      list.style.display = 'none';
+      if (onSelect) onSelect(item.textContent);
+    });
+  }
+
+  attachAutocomplete(document.getElementById('buscaFamiliaAtendimento'), getNomesFamilias);
+  attachAutocomplete(document.getElementById('buscaFamiliaVisita'), getNomesFamilias);
+  attachAutocomplete(document.getElementById('buscaFamiliaBeneficio'), getNomesFamilias);
+
+  // ====== CARREGAMENTO DE CRAS E TÉCNICOS ======
+  // (populado por popularSelectCras(), que usa a tabela real "funcionarios")
+
+  // ====== RESTRIÇÃO DE ENTREVISTADORES PARA VISITAS ======
+  const vsEntrevSelect = document.getElementById('vsEntrev');
+  if (vsEntrevSelect) {
+    vsEntrevSelect.addEventListener('change', (e) => {
+      if (vsEntrevSelect.querySelectorAll('input:checked').length > 2) {
+        e.target.checked = false;
+        alert('Máximo de 2 técnicos responsáveis por visita domiciliar.');
+      }
+    });
+  }
+
+  // Motivos de Atendimentos/Agenda ED já são carregados a partir de MOTIVOS/SUBMOTIVOS (ver acima)
+  // Dados de CRAS e técnicos já são carregados por popularSelectCras()
+
+  const statusGroups = [
+    { order: ['aguardando', 'acompanhamento', 'concluido'],
+      label: { aguardando: 'Aguardando retorno', acompanhamento: 'Em acompanhamento', concluido: 'Concluído' } },
+    { order: ['agendada', 'realizada', 'naolocalizada'],
+      label: { agendada: 'Agendada', realizada: 'Realizada', naolocalizada: 'Não localizada' } },
+    { order: ['solicitado', 'aprovado', 'entregue'],
+      label: { solicitado: 'Solicitado', aprovado: 'Aprovado', entregue: 'Entregue' } }
+  ];
+  document.querySelectorAll('.status-pill').forEach(pill => {
+    pill.addEventListener('click', async () => {
+      const group = statusGroups.find(g => g.order.some(s => pill.classList.contains(s)));
+      if (!group) return;
+      const current = group.order.find(s => pill.classList.contains(s));
+      const next = group.order[(group.order.indexOf(current) + 1) % group.order.length];
+      
+      // Atualizar status no banco se tiver um benefício associado
+      const row = pill.closest('.enc-row');
+      if (row && row.dataset.family) {
+        try {
+          await sbClient.from('beneficios')
+            .update({ status: next })
+            .match({ id: row.dataset.id });
+        } catch (e) {
+          console.log('Status atualizado apenas visualmente');
+        }
+      }
+      
+      pill.classList.remove(current);
+      pill.classList.add(next);
+      pill.innerHTML = `<span class="dot"></span>${group.label[next]}`;
+    });
+  });
+
+  // ====== VALIDAÇÃO E SALVAMENTO DE BENEFÍCIOS ======
+  document.getElementById('saveBeneficioBtn').addEventListener('click', async () => {
+    const familia = document.querySelector('#buscaFamiliaBeneficio').value;
+    const tipoBeneficio = document.querySelector('.panel-beneficios select:nth-of-type(1)').value;
+    const quantidade = document.querySelector('.panel-beneficios input[type="number"]').value;
+    const profissional = document.querySelector('.panel-beneficios select:nth-of-type(2)').value;
+    const dataSolicitacao = document.querySelector('.panel-beneficios input[type="date"]:nth-of-type(1)').value;
+    const motivo = document.querySelector('.panel-beneficios textarea').value;
+    const dataEntrega = document.querySelector('.panel-beneficios input[type="date"]:nth-of-type(2)').value;
+    const observacoes = document.querySelector('.panel-beneficios input[type="text"]:nth-of-type(2)').value;
+
+    if (!familia || !tipoBeneficio || !quantidade || !profissional || !dataSolicitacao) {
+      showToast('⚠️ Preencha todos os campos obrigatórios');
+      return;
+    }
+
+    const btnBeneficio = document.getElementById('saveBeneficioBtn');
+    const textoOriginalBeneficio = btnBeneficio.textContent;
+    btnBeneficio.disabled = true;
+    btnBeneficio.textContent = 'Salvando...';
+
+    try {
+      // Buscar ID da família
+      const { data: familiaData } = await sbClient
+        .from('familias')
+        .select('id')
+        .ilike('nome_responsavel', `%${familia}%`)
+        .limit(1)
+        .single();
+
+      if (!familiaData) {
+        showToast('❌ Família não encontrada');
+        return;
+      }
+
+      const { error } = await sbClient.from('beneficios').insert({
+        familia_id: familiaData.id,
+        tipo: tipoBeneficio,
+        quantidade: parseInt(quantidade),
+        profissional_responsavel: profissional,
+        data_solicitacao: dataSolicitacao,
+        motivo: motivo,
+        data_entrega_prevista: dataEntrega || null,
+        observacoes: observacoes || null,
+        status: 'solicitado',
+        data_criacao: new Date().toISOString()
+      });
+
+      if (error) throw error;
+
+      showToast('✅ Benefício registrado com sucesso!');
+      // Limpar formulário
+      document.querySelector('#buscaFamiliaBeneficio').value = '';
+      document.querySelector('.panel-beneficios textarea').value = '';
+      document.querySelector('.panel-beneficios input[type="number"]').value = '';
+      loadBeneficios();
+    } catch (err) {
+      console.error('Erro:', err);
+      showToast('❌ Erro ao registrar benefício: ' + err.message);
+    } finally {
+      btnBeneficio.disabled = false;
+      btnBeneficio.textContent = textoOriginalBeneficio;
+    }
+  });
+
+  async function loadBeneficios() {
+    try {
+      const { data } = await sbClient
+        .from('beneficios')
+        .select('id, familia:familia_id(nome_responsavel), tipo, quantidade, status, data_criacao')
+        .order('data_criacao', { ascending: false })
+        .limit(10);
+      
+      if (data) {
+        const container = document.querySelector('.panel-beneficios .enc-list');
+        if (container) {
+          const listDiv = container.querySelector('[id^="beneficios"]') || document.createElement('div');
+          listDiv.innerHTML = data.map(b => `
+            <div class="enc-row" data-id="${b.id}" data-family="${b.familia.nome_responsavel}">
+              <div><h5>${b.familia.nome_responsavel}</h5><p>${b.tipo} · qtd ${b.quantidade}</p></div>
+              <div><p>Registro: ${new Date(b.data_criacao).toLocaleDateString('pt-BR')}</p></div>
+              <div class="status-pill ${b.status}"><span class="dot"></span>${statusGroups[2].label[b.status] || b.status}</div>
+            </div>
+          `).join('');
+          if (!container.querySelector('[id^="beneficios"]')) {
+            container.appendChild(listDiv);
+          }
+        }
+      }
+    } catch (e) {
+      console.log('Benefícios carregados do mock');
+    }
+  }
+
+  loadBeneficios();
+
+  const logoSlot = document.getElementById('logoSlot');
+  const logoInput = document.getElementById('logoInput');
+  logoSlot.addEventListener('click', () => logoInput.click());
+  logoInput.addEventListener('change', () => {
+    const file = logoInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      logoSlot.innerHTML = '';
+      logoSlot.style.border = 'none';
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      logoSlot.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  });
+</script>
+
+</body>
+</html>
