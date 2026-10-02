@@ -1598,7 +1598,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
     <div class="topbar">
       <div class="top-icons" style="margin-left:auto">
-        <div class="icon-btn"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></i></div>
+        <div style="position:relative"><div class="icon-btn" id="sinoBtn" title="Lembretes" style="position:relative"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></i><span id="sinoBadge" style="display:none;position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--coral);color:#fff;font-size:11px;font-weight:700;align-items:center;justify-content:center;box-sizing:border-box"></span></div><div id="sinoPainel" style="display:none;position:absolute;right:0;top:46px;width:340px;max-width:calc(100vw - 32px);max-height:70vh;overflow-y:auto;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(14,27,51,.16);z-index:60"></div></div>
         <div class="avatar">AS</div>
       </div>
     </div>
@@ -1607,7 +1607,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <div class="hero-blob"></div>
       <div class="hero-blob two"></div>
       <h2>Bom trabalho por aqui, Ana!</h2>
-      <p>Cada atendimento registrado aproxima uma família de mais autonomia. As 5 unidades estão conectadas em um só lugar.</p>
+      <p id="msgDoDia">Cada atendimento registrado aproxima uma família de mais autonomia.</p>
     </div>
 
     <div class="form-panel panel-atendimentos" style="display:none">
@@ -1673,7 +1673,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <div class="field-grid" style="margin-top:16px">
         <div class="field"><label>Nome *</label><input type="text" id="usuNome"></div>
         <div class="field"><label>E-mail *</label><input type="email" id="usuEmail" autocomplete="off"></div>
-        <div class="field"><label>Senha temporária * (mín. 6)</label><input type="password" id="usuSenha" autocomplete="new-password"></div>
+        <div class="field"><label>Senha temporária * (mín. 10, com letras e números)</label><input type="password" id="usuSenha" autocomplete="new-password"></div>
         <div class="field"><label>Cargo</label><input type="text" id="usuCargo"></div>
         <div class="field"><label>Nível *</label><select id="usuNivel"></select></div>
         <div class="field"><label>Unidade</label><select id="usuCras"></select></div>
@@ -2139,6 +2139,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if (configCargo) configCargo.textContent = (f.cargo || ({ adm: 'Administrador(a)', coordenador: 'Coordenador(a)', atendente: 'Atendente' }[f.role] || f.role)) + ' · ' + f.cras_nome;
     const greeting = document.querySelector('.hero h2');
     if (greeting) greeting.textContent = 'Bom trabalho por aqui, ' + f.nome.split(' ')[0] + '!';
+    mostrarMensagemDoDia();
   }
 
   function escapeHtml(v){
@@ -2213,6 +2214,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         if (window.Outbox) Outbox.iniciar();       // reenvia o que ficou guardado
         carregarFamilias();                        // segundo plano: não segura mais a tela
         iniciarPresenca();                         // aparece como online para a coordenação
+        [3000, 9000].forEach(ms => setTimeout(desenharSino, ms));   // selo do sininho (as visitas chegam depois)
       }, 0);
     } else {
       // Sem internet e o token venceu: não manda para o login, abre com o perfil guardado
@@ -3123,6 +3125,137 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if (canalPresenca){ try { sbClient.removeChannel(canalPresenca); } catch (e) {} canalPresenca = null; }
   }
 
+  // ---- Mensagem do dia (30 mensagens: uma por dia, repetem sozinhas na mesma ordem) ----
+  const MENSAGENS_DIA = [
+    "Cada atendimento registrado aproxima uma família de mais autonomia.",
+    "Seu cuidado faz diferença na vida de quem chega até aqui.",
+    "Escutar com atenção já é uma forma de acolher.",
+    "Respire fundo: um passo de cada vez também é progresso.",
+    "O que você faz hoje será lembrado por quem foi ajudado.",
+    "Você não precisa dar conta de tudo hoje. Faça o que está ao seu alcance, com carinho.",
+    "Pequenos gestos de respeito mudam o dia de alguém.",
+    "Cuidar de pessoas também exige cuidar de si. Beba água e faça uma pausa.",
+    "Seu trabalho constrói dignidade, um atendimento por vez.",
+    "Há força em quem escolhe estar ao lado do outro.",
+    "Hoje é um bom dia para ser a boa notícia de alguém.",
+    "Nem todo resultado aparece na hora, mas o seu cuidado deixa marcas boas.",
+    "Equipe unida atende melhor. Conte com seus colegas.",
+    "Gratidão pelo que você entrega, mesmo nos dias difíceis.",
+    "Acolher sem julgar é um dom. Você tem esse dom.",
+    "Cada família tem uma história, e você ajuda a escrevê-la com mais esperança.",
+    "Seja gentil com você: está fazendo o seu melhor.",
+    "Um sorriso na recepção pode ser o primeiro alívio do dia de alguém.",
+    "Dias cansativos passam, e o seu trabalho permanece.",
+    "A paciência que você tem hoje abre portas amanhã.",
+    "Você faz parte de uma rede que protege e cuida.",
+    "Ouvir é o primeiro passo para ajudar de verdade.",
+    "Valorize o que já foi conquistado esta semana.",
+    "Confie no seu preparo: você sabe o que está fazendo.",
+    "Cada registro bem feito protege os direitos de uma família.",
+    "Que hoje você encontre motivos para se orgulhar do seu trabalho.",
+    "Pedir ajuda também é força. Nenhuma equipe caminha sozinha.",
+    "O cuidado que você oferece volta em forma de esperança.",
+    "Fazer o bem com constância transforma comunidades.",
+    "Termine o dia reconhecendo: você fez a diferença."
+  ];
+  function mostrarMensagemDoDia(){
+    const el1 = document.getElementById('msgDoDia'); if (!el1) return;
+    const dias = Math.floor((Date.now() - new Date().getTimezoneOffset() * 60000) / 86400000);   // dia local
+    el1.textContent = MENSAGENS_DIA[dias % MENSAGENS_DIA.length];
+  }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) mostrarMensagemDoDia(); });
+
+  // ---- Lembretes no sininho ----
+  // Para mudar textos, prazos ou criar lembretes novos, edite só esta lista.
+  //   a_cada: depois de visto, o aviso só volta após esses dias | quem: 'todos' ou 'gestao'
+  //   quando: (opcional) janela em que o aviso vale | cor: (opcional) cor da barrinha
+  const diasAteSexta = (d) => (5 - d.getDay() + 7) % 7;
+  const fimDeSemana = (d) => d.getDay() === 6 || d.getDay() === 0;
+  const LEMBRETES = [
+    { id: 'backup-semanal', quem: 'gestao', a_cada: 7, titulo: 'Backup da semana',
+      cor: d => fimDeSemana(d) ? 'var(--coral)' : 'var(--orange)',
+      texto: d => { const n = diasAteSexta(d);
+        return 'Exporte as tabelas e guarde na pasta da coordenação. Prazo: sexta-feira ('
+          + (fimDeSemana(d) ? 'já passou, faça agora' : n === 0 ? 'é hoje' : n === 1 ? 'amanhã' : 'faltam ' + n + ' dias') + ').'; } },
+    { id: 'rotina-do-mes', quem: 'gestao', a_cada: 25, titulo: 'Rotina do mês', quando: d => d.getDate() >= 25,
+      texto: () => 'Limpe o histórico antigo da auditoria (SQL Editor) e confira o tamanho do banco no Supabase.' },
+    { id: 'fechamento-mes', quem: 'todos', a_cada: 20, titulo: 'Fechamento do mês', quando: d => d.getDate() >= 26,
+      texto: () => 'Confira se todos os atendimentos e visitas do mês foram lançados.' },
+    { id: 'visitas-semana', quem: 'todos', a_cada: 7, titulo: 'Visitas da semana', quando: d => d.getDay() >= 1 && d.getDay() <= 3,
+      texto: () => 'Revise as visitas agendadas para esta semana e reagende o que for preciso.' }
+  ];
+
+  const hojeIsoLocal = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+
+  // Avisos que dependem do que está acontecendo agora (envio pendente, internet, visitas)
+  function lembretesDinamicos(){
+    const out = [];
+    try {
+      const pend = window.Outbox ? Outbox.total() : 0;
+      if (pend > 0) out.push({ id: 'dyn-pendentes', fixo: true, titulo: 'Aguardando envio', cor: 'var(--coral)',
+        texto: pend + ' registro(s) guardado(s) neste computador. Mantenha a página aberta com internet para enviar.' });
+      if (navigator.onLine === false) out.push({ id: 'dyn-offline', fixo: true, titulo: 'Sem internet', cor: 'var(--orange)',
+        texto: 'O que você salvar fica guardado e será enviado quando a conexão voltar.' });
+      const hoje = hojeIsoLocal(), meu = currentFuncionario.id, gestao = podeGerir();
+      const abertas = (vsTabelaCache || []).filter(v => VS_ST_ABERTO.includes(v.status || 'agendada') && v.data_agendada
+        && (gestao || (v.entrevistadores || []).includes(meu)));
+      const atras = abertas.filter(v => v.data_agendada < hoje).length;
+      const hojeN = abertas.filter(v => v.data_agendada === hoje).length;
+      if (atras) out.push({ id: 'dyn-vs-atrasadas', a_cada: 1, titulo: 'Visitas atrasadas', cor: 'var(--coral)',
+        texto: atras + ' visita(s) ' + (gestao ? 'em aberto' : 'sua(s)') + ' com data já passada. Atualize o status ou reagende.' });
+      if (hojeN) out.push({ id: 'dyn-vs-hoje', a_cada: 1, titulo: 'Visitas de hoje', cor: 'var(--blue)',
+        texto: hojeN + ' visita(s) agendada(s) para hoje.' });
+    } catch (e) {}
+    return out;
+  }
+
+  // "Visto" fica guardado neste navegador (não usa o banco)
+  const CHAVE_LEMB = () => 'cras_lembretes_v1_' + currentFuncionario.id;
+  function lerVistos(){ try { return JSON.parse(localStorage.getItem(CHAVE_LEMB()) || '{}') || {}; } catch (e) { return {}; } }
+  function gravarVistos(v){ try { localStorage.setItem(CHAVE_LEMB(), JSON.stringify(v)); } catch (e) {} }
+
+  function lembretesAtivos(){
+    if (!currentFuncionario) return [];
+    const agora = new Date(), gestao = podeGerir(), vistos = lerVistos();
+    const estaticos = LEMBRETES.filter(l => (l.quem !== 'gestao' || gestao) && (!l.quando || l.quando(agora)))
+      .map(l => ({ id: l.id, a_cada: l.a_cada || 7, titulo: l.titulo, texto: l.texto(agora),
+                   cor: typeof l.cor === 'function' ? l.cor(agora) : (l.cor || 'var(--blue)') }));
+    return [...lembretesDinamicos(), ...estaticos]
+      .filter(l => l.fixo || !vistos[l.id] || (agora - new Date(vistos[l.id])) >= l.a_cada * 86400000);
+  }
+
+  let sinoAberto = false, sinoMostrados = [];
+  function desenharSino(){
+    const b = document.getElementById('sinoBadge'); if (!b) return;
+    const n = lembretesAtivos().length;
+    b.textContent = n; b.style.display = (n && !sinoAberto) ? 'flex' : 'none';
+  }
+  function abrirSino(){
+    const lista = lembretesAtivos();
+    const itens = lista.map(l => `<div class="notif-item" style="padding:11px 14px;border-bottom:1px solid var(--line)">
+      <div class="notif-dot" style="background:${l.cor}"></div>
+      <div class="notif-text"><p><b>${escapeHtml(l.titulo)}</b></p><span>${escapeHtml(l.texto)}</span>
+      ${l.fixo ? '' : '<div style="margin-top:4px;font-size:11.5px;font-weight:600;color:var(--green)">✓ Visualizado</div>'}</div></div>`).join('');
+    document.getElementById('sinoPainel').innerHTML =
+      '<div style="padding:12px 14px;font-weight:600;border-bottom:1px solid var(--line)">Lembretes</div>'
+      + (itens || '<div style="padding:18px 14px;color:var(--muted);font-size:13px">Tudo em dia por aqui.</div>');
+    const v = lerVistos(), agora = new Date().toISOString();
+    lista.forEach(l => { if (!l.fixo) v[l.id] = agora; });   // visto agora: só volta depois do prazo do aviso
+    gravarVistos(v);
+    document.getElementById('sinoPainel').style.display = 'block';
+    sinoAberto = true; desenharSino();
+  }
+  function fecharSino(){
+    if (!sinoAberto) return;
+    sinoAberto = false; document.getElementById('sinoPainel').style.display = 'none'; desenharSino();
+  }
+  document.getElementById('sinoBtn').addEventListener('click', (e) => { e.stopPropagation(); sinoAberto ? fecharSino() : abrirSino(); });
+  document.getElementById('sinoPainel').addEventListener('click', (e) => e.stopPropagation());
+  document.addEventListener('click', fecharSino);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharSino(); });
+  window.addEventListener('online', desenharSino); window.addEventListener('offline', desenharSino);
+  setInterval(() => { if (currentFuncionario && !sinoAberto) desenharSino(); }, 60000);
+
   // ---- Níveis de acesso e usuários ----
   const ROTULOS = { adm: 'Administrador(a)', coordenador: 'Coordenador(a)', atendente: 'Atendente' };
   const podeGerir = () => !!currentFuncionario && ['adm', 'coordenador'].includes(currentFuncionario.role);
@@ -3156,7 +3289,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   el('usuCriarBtn').addEventListener('click', async () => {
     const b = { nome: el('usuNome').value.trim(), email: el('usuEmail').value.trim(), senha: el('usuSenha').value,
                 cargo: el('usuCargo').value.trim(), role: el('usuNivel').value, cras_id: el('usuCras').value };
-    if (!b.nome || !b.email || b.senha.length < 6){ showToast('Informe nome, e-mail e senha (mínimo 6 caracteres)'); return; }
+    if (!b.nome || !b.email){ showToast('Informe nome e e-mail'); return; }
+    if (b.senha.length < 10 || !/[A-Za-z]/.test(b.senha) || !/\d/.test(b.senha)){ showToast('A senha precisa ter no mínimo 10 caracteres, com letras e números'); return; }
     const btn = el('usuCriarBtn'); btn.disabled = true; btn.textContent = 'Criando...';
     const { error } = await sbClient.functions.invoke('criar-usuario', { body: b });
     btn.disabled = false; btn.textContent = 'Criar usuário';
