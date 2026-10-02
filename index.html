@@ -1576,7 +1576,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></i>
       </div>
       <input type="file" id="logoInput" accept="image/*" style="display:none">
-      <strong class="side-text">CRAS</strong>
+      <strong class="side-text" id="brandNome" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">CRAS</strong>
     </div>
 
     <div class="side-label side-text">PAINEL</div>
@@ -1669,7 +1669,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     </div>
 
     <div class="form-panel panel-usuarios" style="display:none">
-      <div class="section-head"><div><h3>Usuários</h3><p class="hint">Cadastre novos usuários e defina o nível de acesso.</p></div></div>
+      <div class="section-head"><div><h3>Usuários</h3><p class="hint">Cadastre novos usuários e defina o nível de acesso.</p><p class="hint" id="usuOnlineResumo" style="margin-top:4px;font-weight:600"></p></div></div>
       <div class="field-grid" style="margin-top:16px">
         <div class="field"><label>Nome *</label><input type="text" id="usuNome"></div>
         <div class="field"><label>E-mail *</label><input type="email" id="usuEmail" autocomplete="off"></div>
@@ -1681,7 +1681,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <div class="form-actions"><button class="btn-primary" id="usuCriarBtn">Criar usuário</button></div>
       <div style="overflow-x:auto;margin-top:16px">
         <table style="width:100%;border-collapse:collapse;font-size:13.5px">
-          <thead><tr style="text-align:left;color:var(--muted)"><th>Nome</th><th>Cargo</th><th>Nível</th><th>Unidade</th></tr></thead>
+          <thead><tr style="text-align:left;color:var(--muted)"><th>Status</th><th>Nome</th><th>Cargo</th><th>Nível</th><th>Unidade</th></tr></thead>
           <tbody id="usuLista"></tbody>
         </table>
       </div>
@@ -2129,6 +2129,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   }
 
   function aplicarFuncionarioNaTela(f){
+    const brand = document.getElementById('brandNome');
+    if (brand){ brand.textContent = f.cras_nome || 'CRAS'; brand.title = f.cras_nome || 'CRAS'; } // unidade do usuário logado
     const iniciais = f.nome.split(' ').filter(Boolean).slice(0,2).map(p => p[0]).join('').toUpperCase();
     document.querySelectorAll('.avatar').forEach(el => el.textContent = iniciais);
     const configNome = document.querySelector('.config-block div[style*="font-weight:600"]');
@@ -2193,7 +2195,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   }
 
   let usuarioCarregado = null, modoOffline = false;
-  window.addEventListener('online', () => { if (modoOffline && currentFuncionario){ modoOffline = false; popularSelectCras(); carregarFamilias(); } });
+  window.addEventListener('online', () => { if (modoOffline && currentFuncionario){ modoOffline = false; popularSelectCras(); carregarFamilias(); iniciarPresenca(); } });
   sbClient.auth.onAuthStateChange((event, session) => {
     if (session && session.user){
       // Evita refazer todo o carregamento quando o Supabase reemite o evento (volta de aba, renovação de token)
@@ -2210,6 +2212,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         popularSelectCras();                       // dispara listas, visitas e relatório
         if (window.Outbox) Outbox.iniciar();       // reenvia o que ficou guardado
         carregarFamilias();                        // segundo plano: não segura mais a tela
+        iniciarPresenca();                         // aparece como online para a coordenação
       }, 0);
     } else {
       // Sem internet e o token venceu: não manda para o login, abre com o perfil guardado
@@ -2226,6 +2229,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           }
         } catch (e) {}
       }
+      pararPresenca();
       usuarioCarregado = null;
       currentFuncionario = null;
       familiasCache = [];
@@ -3094,15 +3098,41 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     return `${d}/${m}`;
   }
 
+  // ---- Quem está online (Realtime Presence: fica só na memória do Supabase, não usa espaço do banco) ----
+  let canalPresenca = null;
+  const BOLA = (cor, brilho) => `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${cor};margin-right:7px;${brilho ? 'box-shadow:0 0 0 3px rgba(34,197,94,.25)' : ''}"></span>`;
+  function atualizarPresenca(){
+    if (!podeGerir()) return;                               // só coordenador e adm enxergam
+    const on = canalPresenca ? new Set(Object.keys(canalPresenca.presenceState())) : new Set();
+    let qtd = 0;
+    document.querySelectorAll('#usuLista [data-uid]').forEach(td => {
+      const ligado = on.has(td.dataset.uid); if (ligado) qtd++;
+      td.innerHTML = ligado ? BOLA('#22c55e', true) + '<b style="color:#15803d">Online</b>'
+                            : BOLA('#c5ccd3', false) + '<span style="color:var(--muted)">Offline</span>';
+    });
+    const r = document.getElementById('usuOnlineResumo');
+    if (r) r.textContent = qtd + ' usuário(s) online agora';
+  }
+  function iniciarPresenca(){
+    if (canalPresenca || !currentFuncionario || !sbClient.channel) return;
+    canalPresenca = sbClient.channel('presenca-cras', { config: { presence: { key: currentFuncionario.id } } });
+    canalPresenca.on('presence', { event: 'sync' }, atualizarPresenca)
+      .subscribe((st) => { if (st === 'SUBSCRIBED') canalPresenca.track({ em: new Date().toISOString() }); });
+  }
+  function pararPresenca(){
+    if (canalPresenca){ try { sbClient.removeChannel(canalPresenca); } catch (e) {} canalPresenca = null; }
+  }
+
   // ---- Níveis de acesso e usuários ----
   const ROTULOS = { adm: 'Administrador(a)', coordenador: 'Coordenador(a)', atendente: 'Atendente' };
   const podeGerir = () => !!currentFuncionario && ['adm', 'coordenador'].includes(currentFuncionario.role);
 
   async function carregarUsuarios(){
-    const { data, error } = await sbClient.from('funcionarios').select('nome, cargo, role, cras:cras_id(nome)').order('nome');
+    const { data, error } = await sbClient.from('funcionarios').select('id, nome, cargo, role, cras:cras_id(nome)').order('nome');
     if (error){ console.error(error); return; }
-    el('usuLista').innerHTML = (data || []).map(u => `<tr><td>${escapeHtml(u.nome)}</td><td>${escapeHtml(u.cargo || '')}</td>
+    el('usuLista').innerHTML = (data || []).map(u => `<tr><td data-uid="${u.id}"></td><td>${escapeHtml(u.nome)}</td><td>${escapeHtml(u.cargo || '')}</td>
       <td>${escapeHtml(ROTULOS[u.role] || u.role)}</td><td>${escapeHtml(u.cras && u.cras.nome)}</td></tr>`).join('');
+    atualizarPresenca();
   }
 
   function aplicarPerfil(){
@@ -3145,10 +3175,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   async function verificarCpfDuplicado(){
     const box = el('atDupBox');
     const cpf = el('atCpf').value.replace(/\D/g, '');
-    if (cpf.length !== 11){ box.style.display = 'none'; return []; }
+    if (cpf.length !== 11 || navigator.onLine === false){ box.style.display = 'none'; return []; } // offline: pula a checagem
     let q = sbClient.from('atendimentos').select(SEL_ATEND)
       .or(`cpf_atendido.eq.${cpf},cpf_atendido.eq.${fmtCpf(cpf)}`)
-      .order('data_atendimento', { ascending: false }).limit(20);
+      .order('data_atendimento', { ascending: false }).limit(20).retry(false); // sem repetir 3x quando a rede está ruim
     if (editandoId) q = q.neq('id', editandoId);
     const { data, error } = await q;
     if (error){ console.error(error); return []; }
