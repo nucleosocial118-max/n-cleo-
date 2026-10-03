@@ -2361,10 +2361,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   const VS_ST_LISTA = ['agendada', 'caderno', 'relatorio', 'tres_tentativas', 'reagendada'];
   // Status que ainda contam como visita pendente
   const VS_ST_ABERTO = ['agendada', 'reagendada'];
-  function vsOpcoesStatus(atual){
+  function vsOpcoesStatus(atual, dataVisita){
     let ops = VS_ST_LISTA.slice();
     if (atual && !ops.includes(atual)) ops.push(atual); // status antigo (ex.: realizada): mantém para não perder a informação
-    return ops.map(k => `<option value="${k}"${k === atual ? ' selected' : ''}>${escapeHtml(VS_ST_LABEL[k] || k)}</option>`).join('');
+    const passou = !!dataVisita && String(dataVisita).slice(0, 10) < hojeIsoLocal();   // o banco não aceita "agendada" com data passada
+    return ops.map(k => `<option value="${k}"${k === atual ? ' selected' : ''}${(passou && k === 'agendada' && atual !== 'agendada') ? ' disabled title="Data já passou: reagende para uma data futura"' : ''}>${escapeHtml(VS_ST_LABEL[k] || k)}</option>`).join('');
   }
   const VS_MOTIVO_OUTROS = 'Outros atendimentos e demandas específicas';
   el('vsStatus').innerHTML = vsOpcoesStatus('agendada');
@@ -3648,6 +3649,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if (code === '23503') return 'Este registro está ligado a outros dados e não pode ser alterado assim.';
     if (code === '23502') return 'Falta preencher um campo obrigatório.';
     if (code === '23514') return 'Algum dado não é aceito pelo sistema. Confira os campos.';
+    if (code === 'P0001' && /passado/i.test(msg) && /agendada/i.test(msg)) return 'Esta visita tem data que já passou, então não pode ficar como "Em aberto/Agendada". Reagende para uma data futura (ícone do relógio) ou escolha outro status.';
     if (code === 'P0001' && msg) return msg; // regras do sistema já vêm em português (ex.: data no passado)
     return 'Algo deu errado. Tente de novo; se repetir, avise o suporte.';
   }
@@ -4087,7 +4089,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
               <td>${v.entrevistadores_nomes.length
                 ? `<div class="vs-chips">${v.entrevistadores_nomes.map(n => `<span class="vs-chip">${escapeHtml(n)}</span>`).join('')}</div>`
                 : '<span class="vs-vazio">—</span>'}</td>
-              <td class="vs-col-status"><select class="vs-st-sel st-${escapeHtml(v.status || 'agendada')}" data-status-id="${escapeHtml(v.id)}" aria-label="Status da visita">${vsOpcoesStatus(v.status || 'agendada')}</select></td>
+              <td class="vs-col-status"><select class="vs-st-sel st-${escapeHtml(v.status || 'agendada')}" data-status-id="${escapeHtml(v.id)}" aria-label="Status da visita">${vsOpcoesStatus(v.status || 'agendada', v.data_agendada)}</select></td>
               <td class="vs-col-acoes">
                 <div class="vs-acoes">
                   <button type="button" class="vs-btn-icon reagendar" data-acao="reagendar" data-id="${escapeHtml(v.id)}" title="Reagendar (${Array.isArray(v.historico_reagendamentos) ? v.historico_reagendamentos.length : 0}/3)" aria-label="Reagendar visita">
