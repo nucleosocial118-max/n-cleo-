@@ -2279,7 +2279,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           }
         } catch (e) {}
       }
-      pararPresenca();
+      if (typeof pararPresenca === 'function') pararPresenca();
       usuarioCarregado = null;
       currentFuncionario = null;
       familiasCache = [];
@@ -3419,7 +3419,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   // ---- Excluir / desativar / reativar usuário (feito no servidor pela função "excluir-usuario") ----
   async function usuarioAcao(id, acao){
-    const { data, error } = await sbClient.functions.invoke('excluir-usuario', { body: { id, acao } });
+    const { data, error } = await sbClient.functions.invoke('excluir-usuario-ts', { body: { id, acao } });
     if (!error) return { ok: true, data };
     let j = {}; try { j = await error.context.json(); } catch (_) {}
     return { ok: false, erro: j.error || error.message, tem_historico: !!j.tem_historico };
