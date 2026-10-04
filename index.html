@@ -1714,7 +1714,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <div class="form-actions"><button class="btn-primary" id="usuCriarBtn">Criar usuário</button></div>
       <div style="overflow-x:auto;margin-top:16px">
         <table style="width:100%;border-collapse:collapse;font-size:13.5px">
-          <thead><tr style="text-align:left;color:var(--muted)"><th>Status</th><th>Nome</th><th>Cargo</th><th>Nível</th><th>Unidade</th></tr></thead>
+          <thead><tr style="text-align:left;color:var(--muted)"><th>Status</th><th>Nome</th><th>Cargo</th><th>Nível</th><th>Unidade</th><th>Ações</th></tr></thead>
           <tbody id="usuLista"></tbody>
         </table>
       </div>
@@ -2201,10 +2201,15 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     try { localStorage.setItem('cras_familias_v1', JSON.stringify(familiasCache)); } catch (e) {}
   }
 
+  async function listarFuncs(){
+    let r = await sbClient.from('funcionarios').select('id, nome, ativo').order('nome');
+    if (r.error) r = await sbClient.from('funcionarios').select('id, nome').order('nome');   // antes de existir a coluna "ativo"
+    return r;
+  }
   async function popularSelectCras(){
     let [c, f] = await Promise.all([
       sbClient.from('cras').select('id, nome').order('nome'),
-      sbClient.from('funcionarios').select('id, nome').order('nome')
+      listarFuncs()
     ]);
     if (!c.error && !f.error && c.data && f.data){
       try { localStorage.setItem('cras_listas_v1', JSON.stringify({ c: c.data, f: f.data })); } catch (e) {}
@@ -2216,10 +2221,12 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('fCras').innerHTML = opt(c.data, '<option value="">Todos</option>');
     document.getElementById('fluxoCras').innerHTML = opt(c.data, '<option value="">Todos</option>');
     document.getElementById('vsCras').innerHTML = opt(c.data, '<option value="">Selecione</option>');
-    document.getElementById('atEntrev').innerHTML = opt(f.data);
-    document.getElementById('fEntrev').innerHTML = opt(f.data, '<option value="">Todos</option>');
+    const optF = (l, first, bloquear) => (first || '') + (l || []).map(x => { const off = x.ativo === false;
+      return `<option value="${x.id}"${off && bloquear ? ' disabled' : ''}>${escapeHtml(x.nome)}${off ? ' (desativado)' : ''}</option>`; }).join('');
+    document.getElementById('atEntrev').innerHTML = optF(f.data, '', true);
+    document.getElementById('fEntrev').innerHTML = optF(f.data, '<option value="">Todos</option>', false);
     document.getElementById('vsEntrev').innerHTML = (f.data || []).map(x =>
-      `<label><input type="checkbox" value="${x.id}"><span>${escapeHtml(x.nome)}</span></label>`).join('');
+      `<label><input type="checkbox" value="${x.id}"${x.ativo === false ? ' disabled' : ''}><span>${escapeHtml(x.nome)}${x.ativo === false ? ' (desativado)' : ''}</span></label>`).join('');
     mapaCrasFluxo = Object.fromEntries((c.data || []).map(x => [x.id, x.nome]));
     mapaFuncFluxo = Object.fromEntries((f.data || []).map(x => [x.id, x.nome]));
     if (currentFuncionario && currentFuncionario.cras_id) document.getElementById('atCras').value = currentFuncionario.cras_id;
@@ -2391,6 +2398,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   const hoje = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
   const fmtData = (d) => d ? d.split('-').reverse().join('/') : '';
+  // O sistema antigo (dump de 22/09/2026, importado em 23/09) trouxe 40 atendimentos com data POSTERIOR à própria carga
+  // (02/10, 02/12, 06/12, 09/12, 19/12/2026 e 08/04/2027). Esses dias nunca aconteceram: as telas não os mostram.
+  // O banco NÃO é alterado. Regra: o que foi criado até 23/09/2026 não pode ter data depois de 23/09/2026; ninguém tem data futura.
+  const CARGA_ANTIGA_ATE = '2026-09-23';
+  const FILTRO_DATA_POSSIVEL = `data_atendimento.lte.${CARGA_ANTIGA_ATE},created_at.gt.${CARGA_ANTIGA_ATE}T23:59:59-03:00`;
 
   // ---- Calendário do painel Agenda ED ----
   const MESES_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -2648,7 +2660,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if (!box) return;
     carregarPgResumoAtendimentos();
     const { data, error } = await sbClient.from('atendimentos').select(SEL_ATEND)
-      .lte('data_atendimento', hoje())
+      .or(FILTRO_DATA_POSSIVEL).lte('data_atendimento', hoje())
       .order('data_atendimento', { ascending: false })
       .order('horario', { ascending: false, nullsFirst: false })
       .order('created_at', { ascending: false })
@@ -2684,7 +2696,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   async function carregarPgResumoAtendimentos(){
     const { data, error } = await sbClient.from('atendimentos').select('id, motivo')
-      .eq('data_atendimento', hoje()).limit(1000);
+      .eq('data_atendimento', hoje()).or(FILTRO_DATA_POSSIVEL).limit(1000);
     if (error){ console.error(error); return; }
     const cont = {};
     (data || []).forEach(a => { const m = a.motivo || 'Sem motivo'; cont[m] = (cont[m] || 0) + 1; });
@@ -2833,7 +2845,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       const [at, vs, semLista] = await Promise.all([
         rpBuscar(() => { let q = sbClient.from('atendimentos')
           .select('id, data_atendimento, motivo, submotivo, cras:cras_origem_id(nome), ents:atendimento_entrevistadores(func:funcionario_id(nome))')
-          .gte('data_atendimento', de).lte('data_atendimento', ate).order('data_atendimento').order('id');
+          .gte('data_atendimento', de).lte('data_atendimento', ate).or(FILTRO_DATA_POSSIVEL).lte('data_atendimento', hoje()).order('data_atendimento').order('id');
           return cras ? q.eq('cras_origem_id', cras) : q; }),
         rpBuscar(() => { let q = sbClient.from('visitas_domiciliares')
           .select('id, data_agendada, motivo, status, urgente, entrevistadores, historico_reagendamentos, cras:cras_id(nome)')
@@ -2905,7 +2917,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const dataLocal = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
     const ini = new Date(); ini.setDate(ini.getDate() - 7);
     const { data, error } = await sbClient.from('atendimentos').select(SEL_ATEND)
-      .gte('data_atendimento', dataLocal(ini)).lte('data_atendimento', hoje())
+      .gte('data_atendimento', dataLocal(ini)).lte('data_atendimento', hoje()).or(FILTRO_DATA_POSSIVEL)
       .order('data_atendimento', { ascending: false })
       .order('horario', { ascending: false, nullsFirst: false })
       .order('created_at', { ascending: false }).limit(14);
@@ -2919,7 +2931,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const fEnt = el('fEntrev').value;
     const sel = 'id, data_atendimento, horario, nome_atendido, motivo, cras:cras_origem_id(nome), ents:atendimento_entrevistadores(func:funcionario_id(nome))'
       + (fEnt ? ', filtro:atendimento_entrevistadores!inner(funcionario_id)' : '');
-    let q = sbClient.from('atendimentos').select(sel, { count: 'exact' });
+    let q = sbClient.from('atendimentos').select(sel, { count: 'exact' }).or(FILTRO_DATA_POSSIVEL).lte('data_atendimento', hoje());
     if (el('fCras').value) q = q.eq('cras_origem_id', el('fCras').value);
     if (fEnt) q = q.eq('filtro.funcionario_id', fEnt);
     if (el('fIni').value) q = q.gte('data_atendimento', el('fIni').value);
@@ -3051,7 +3063,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       .from('atendimentos')
       .select('motivo')
       .gte('data_atendimento', inicioMes)
-      .lte('data_atendimento', hojeStr);
+      .lte('data_atendimento', hojeStr).or(FILTRO_DATA_POSSIVEL);
 
     if (error){ console.error('Erro ao carregar relatório do mês:', error); return; }
 
@@ -3149,7 +3161,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if (!podeGerir()) return;                               // só coordenador e adm enxergam
     const on = canalPresenca ? new Set(Object.keys(canalPresenca.presenceState())) : new Set();
     let qtd = 0;
-    document.querySelectorAll('#usuLista [data-uid]').forEach(td => {
+    document.querySelectorAll('#usuLista [data-uid]:not([data-inativo])').forEach(td => {
       const ligado = on.has(td.dataset.uid); if (ligado) qtd++;
       td.innerHTML = ligado ? BOLA('#22c55e', true) + '<b style="color:#15803d">Online</b>'
                             : BOLA('#c5ccd3', false) + '<span style="color:var(--muted)">Offline</span>';
@@ -3341,10 +3353,22 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   const podeGerir = () => !!currentFuncionario && ['adm', 'coordenador'].includes(currentFuncionario.role);
 
   async function carregarUsuarios(){
-    const { data, error } = await sbClient.from('funcionarios').select('id, nome, cargo, role, cras:cras_id(nome)').order('nome');
-    if (error){ console.error(error); return; }
-    el('usuLista').innerHTML = (data || []).map(u => `<tr><td data-uid="${u.id}"></td><td>${escapeHtml(u.nome)}</td><td>${escapeHtml(u.cargo || '')}</td>
-      <td>${escapeHtml(ROTULOS[u.role] || u.role)}</td><td>${escapeHtml(u.cras && u.cras.nome)}</td></tr>`).join('');
+    let r = await sbClient.from('funcionarios').select('id, nome, cargo, role, ativo, cras:cras_id(nome)').order('nome');
+    if (r.error) r = await sbClient.from('funcionarios').select('id, nome, cargo, role, cras:cras_id(nome)').order('nome');   // antes de existir a coluna "ativo"
+    if (r.error){ console.error(r.error); return; }
+    const eu = currentFuncionario.id, souAdm = currentFuncionario.role === 'adm';
+    const lnk = (cor) => `background:none;border:none;padding:0 8px 0 0;cursor:pointer;font:inherit;text-decoration:underline;color:${cor}`;
+    el('usuLista').innerHTML = (r.data || []).map(u => {
+      const inativo = u.ativo === false;
+      const pode = u.id !== eu && (souAdm || u.role !== 'adm');   // coordenador não mexe em administrador; ninguém mexe em si mesmo
+      const dados = `data-id="${u.id}" data-nome="${escapeHtml(u.nome)}"`;
+      const acoes = !pode ? '' :
+        (inativo ? `<button type="button" style="${lnk('var(--green, #1E7F45)')}" data-usu-acao="reativar" ${dados}>Reativar</button>` : '')
+        + `<button type="button" style="${lnk('#DC2626')}" data-usu-acao="excluir" ${dados}>Excluir</button>`;
+      return `<tr${inativo ? ' style="opacity:.6"' : ''}><td data-uid="${u.id}"${inativo ? ' data-inativo="1"' : ''}>${inativo ? '<span style="color:var(--muted)">Desativado</span>' : ''}</td>
+        <td>${escapeHtml(u.nome)}</td><td>${escapeHtml(u.cargo || '')}</td>
+        <td>${escapeHtml(ROTULOS[u.role] || u.role)}</td><td>${escapeHtml(u.cras && u.cras.nome)}</td><td style="white-space:nowrap">${acoes}</td></tr>`;
+    }).join('');
     atualizarPresenca();
   }
 
@@ -3393,6 +3417,30 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     showToast('Usuário criado'); carregarUsuarios();
   });
 
+  // ---- Excluir / desativar / reativar usuário (feito no servidor pela função "excluir-usuario") ----
+  async function usuarioAcao(id, acao){
+    const { data, error } = await sbClient.functions.invoke('excluir-usuario', { body: { id, acao } });
+    if (!error) return { ok: true, data };
+    let j = {}; try { j = await error.context.json(); } catch (_) {}
+    return { ok: false, erro: j.error || error.message, tem_historico: !!j.tem_historico };
+  }
+  el('usuLista').addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-usu-acao]'); if (!b) return;
+    const { id, nome } = b.dataset, acao = b.dataset.usuAcao;
+    if (acao === 'excluir' && !confirm('Excluir o usuário "' + nome + '"?\n\nEssa ação não pode ser desfeita.')) return;
+    if (acao === 'reativar' && !confirm('Reativar o acesso de "' + nome + '"?')) return;
+    b.disabled = true;
+    let r = await usuarioAcao(id, acao);
+    if (!r.ok && r.tem_historico && acao === 'excluir'){
+      if (confirm(r.erro + '\n\nPara não perder o histórico, ele não pode ser excluído.\nDesativar o acesso dele em vez disso? (o nome continua nos atendimentos e ele não consegue mais entrar)')){
+        r = await usuarioAcao(id, 'desativar');
+      } else { b.disabled = false; return; }
+    }
+    if (!r.ok){ showToast('❌ ' + r.erro, 6000); b.disabled = false; return; }
+    showToast({ excluido: 'Usuário excluído', desativado: 'Acesso desativado', reativado: 'Acesso reativado' }[r.data && r.data.modo] || 'Pronto');
+    carregarUsuarios(); popularSelectCras();
+  });
+
   // ---- Aviso de CPF duplicado ----
   const fmtCpf = (d) => d.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
 
@@ -3400,7 +3448,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const box = el('atDupBox');
     const cpf = el('atCpf').value.replace(/\D/g, '');
     if (cpf.length !== 11 || navigator.onLine === false){ box.style.display = 'none'; return []; } // offline: pula a checagem
-    let q = sbClient.from('atendimentos').select(SEL_ATEND)
+    let q = sbClient.from('atendimentos').select(SEL_ATEND).or(FILTRO_DATA_POSSIVEL).lte('data_atendimento', hoje())
       .or(`cpf_atendido.eq.${cpf},cpf_atendido.eq.${fmtCpf(cpf)}`)
       .order('data_atendimento', { ascending: false }).limit(20).retry(false); // sem repetir 3x quando a rede está ruim
     if (editandoId) q = q.neq('id', editandoId);
@@ -3562,7 +3610,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     }
     el('fluxoResumo').textContent = 'Buscando...';
     el('fluxoResultado').querySelectorAll('.tl-item, p').forEach(n => n.remove());
-    let q = sbClient.from('atendimentos').select(SEL_ATEND);
+    let q = sbClient.from('atendimentos').select(SEL_ATEND).or(FILTRO_DATA_POSSIVEL).lte('data_atendimento', hoje());
     if (busca) q = q.or(`nome_atendido.ilike.%${busca}%,cpf_atendido.ilike.%${busca}%`);
     if (cras) q = q.eq('cras_origem_id', cras);
     if (ini) q = q.gte('data_atendimento', ini);
