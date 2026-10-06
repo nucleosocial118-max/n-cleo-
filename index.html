@@ -411,6 +411,16 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .pg-rs-barra span{ display:block; height:100%; background:var(--cyan); }
   .rp-grid{ display:grid; grid-template-columns:repeat(3,1fr) auto; gap:12px; align-items:end; }
   .rp-btns{ display:flex; gap:8px; }
+  .rp-multi{ position:relative; }
+  .rp-multi-btn{ width:100%; text-align:left; position:relative; font-family:'Inter',sans-serif; font-size:13.5px; padding:9px 34px 9px 12px; border:1px solid var(--line); border-radius:9px; background:var(--page-bg); color:var(--ink); cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .rp-multi-btn::after{ content:''; position:absolute; right:14px; top:50%; width:6px; height:6px; border-right:2px solid currentColor; border-bottom:2px solid currentColor; transform:translateY(-70%) rotate(45deg); }
+  .rp-multi-panel{ position:absolute; z-index:30; left:0; top:calc(100% + 6px); min-width:100%; width:max-content; max-width:340px; max-height:320px; overflow:auto; background:var(--card); border:1px solid var(--line); border-radius:12px; box-shadow:0 12px 30px rgba(0,0,0,.14); padding:6px; }
+  .rp-multi-panel[hidden]{ display:none; }
+  .rp-multi-op{ display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:8px; font-size:13.5px; font-weight:400; cursor:pointer; }
+  .rp-multi-op:hover{ background:var(--page-bg); }
+  .field .rp-multi-op input{ width:16px; height:16px; padding:0; margin:0; border-radius:4px; flex:none; accent-color:var(--blue); }
+  .rp-multi-all{ font-weight:600; border-bottom:1px solid var(--line); border-radius:8px 8px 0 0; margin-bottom:4px; }
+  .rp-multi-op.off{ opacity:.65; cursor:default; }
   .rp-titulo{ font-size:15px; font-weight:700; margin:22px 0 10px; }
   .rp-kpis{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; margin-bottom:14px; }
   .rp-kpi{ border:1px solid var(--line); border-top:3px solid var(--blue); border-radius:12px; padding:12px 14px; }
@@ -636,7 +646,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .visita-two-col .field textarea{ width:100%; min-width:0; box-sizing:border-box; font:inherit; padding:10px 12px; border:1px solid #D5DAE6; border-radius:10px; resize:vertical; }
   .vs-table .vs-sub{ font-size:12px; color:var(--muted); margin-top:2px; font-weight:400; }
   .vs-table .vs-obs{ display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; white-space:pre-line; }
-  .vs-table .vs-st-sel{ font:inherit; font-size:12.5px; font-weight:600; padding:5px 8px; border-radius:8px; border:1px solid #D5DAE6; cursor:pointer; max-width:140px; background:#E8F0FE; color:#2050B0; }
+  .vs-table .vs-st-sel{ font:inherit; font-size:12.5px; font-weight:600; padding:5px 8px; border-radius:8px; border:1px solid #D5DAE6; cursor:pointer; max-width:175px; background:#E8F0FE; color:#2050B0; }
   .vs-table .vs-st-sel.st-agendada{ background:#E8F0FE; color:#2050B0; border-color:#BFD2F8; }
   .vs-table .vs-st-sel.st-caderno{ background:#FEF1E4; color:#A6621E; border-color:#F6D3AE; }
   .vs-table .vs-st-sel.st-relatorio{ background:#E7F7ED; color:#1E7F45; border-color:#B5E3C6; }
@@ -644,6 +654,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .vs-table .vs-st-sel.st-reagendada{ background:#FFF7DB; color:#8A6100; border-color:#F0DC93; }
   .vs-table .vs-st-sel.st-realizada{ background:#E7F7ED; color:#1E7F45; border-color:#B5E3C6; }
   .vs-table .vs-st-sel.st-naolocalizada{ background:#F1F1F1; color:#6B6B6B; border-color:#D9D9D9; }
+  .vs-table .vs-st-sel.st-concluido{ background:#DDF3E6; color:#17653A; border-color:#9FD8B5; }
+  .vs-table .vs-st-sel.st-averiguacao_caderno{ background:#F0EAFB; color:#5B3FA3; border-color:#D3C5F0; }
   .vs-table .vs-st-sel:disabled{ opacity:.6; cursor:wait; }
   .vs-table .vs-btn-icon.reagendar:hover{ background:#FFF7ED; color:#C2410C; border-color:#FED7AA; }
   .vs-reag-badge{
@@ -1933,7 +1945,15 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <div class="rp-grid">
           <div class="field"><label>De</label><input type="date" id="rpDe"></div>
           <div class="field"><label>Até</label><input type="date" id="rpAte"></div>
-          <div class="field"><label>CRAS</label><select id="rpCras"><option value="">Todos os CRAS</option></select></div>
+          <div class="field"><label>CRAS</label>
+            <div class="rp-multi" id="rpCrasBox">
+              <button type="button" class="rp-multi-btn" id="rpCrasBtn" aria-haspopup="listbox" aria-expanded="false">Todos os CRAS</button>
+              <div class="rp-multi-panel" id="rpCrasPanel" hidden>
+                <label class="rp-multi-op rp-multi-all"><input type="checkbox" id="rpCrasTodos" checked><span>Selecionar todos</span></label>
+                <div id="rpCrasLista"></div>
+              </div>
+            </div>
+          </div>
           <div class="rp-btns"><button type="button" class="btn-primary" id="rpFiltrar">Filtrar</button><button type="button" class="btn-ghost" id="rpMes">Mês atual</button></div>
         </div>
       </div>
@@ -2106,6 +2126,13 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { global: { fetch: fetchComTimeout } });
 
   let currentFuncionario = null;   // { id, nome, cargo, role, cras_id, cras_nome }
+
+  // ---- Escopo por unidade: coordenação/adm veem todos os CRAS; atendente só o seu ----
+  // Falha "fechada": se o perfil não for coordenador/adm, o filtro por unidade é aplicado.
+  // (Se o atendente estiver sem unidade, cras_id é nulo e a consulta não devolve nada.)
+  const veTodosCras = () => !!currentFuncionario && ['adm', 'coordenador'].includes(currentFuncionario.role);
+  const escoparAt = (q) => veTodosCras() ? q : q.eq('cras_origem_id', currentFuncionario ? currentFuncionario.cras_id : null);
+  const escoparVs = (q) => veTodosCras() ? q : q.eq('cras_id', currentFuncionario ? currentFuncionario.cras_id : null);
   let familiasCache = [];          // [{ id, nome_responsavel }]
   let mapaCrasFluxo = {};          // { [cras_id]: nome } — usado pra traduzir ids no comparador de edições
   let mapaFuncFluxo = {};          // { [funcionario_id]: nome }
@@ -2362,10 +2389,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     'Outros atendimentos e demandas específicas'
   ];
   // Situações da visita (Agenda ED). "agendada" = Em aberto.
-  const VS_ST_LABEL = { agendada: 'Em aberto', caderno: 'Com caderno', relatorio: 'Com relatório', tres_tentativas: '3 tentativas', reagendada: 'Reagendada', realizada: 'Realizada', naolocalizada: 'Não localizada' };
-  const VS_ST_OK = ['realizada', 'caderno', 'relatorio'];
+  const VS_ST_LABEL = { agendada: 'Em aberto', caderno: 'Com caderno', relatorio: 'Com relatório', tres_tentativas: '3 tentativas', reagendada: 'Reagendada', realizada: 'Realizada', naolocalizada: 'Não localizada', concluido: 'Concluído', averiguacao_caderno: 'Averiguação c/Caderno' };
+  const VS_ST_OK = ['realizada', 'caderno', 'relatorio', 'concluido', 'averiguacao_caderno'];
   // Lista de Status que o usuário escolhe no formulário e na tabela (salva na coluna "status" do Supabase)
-  const VS_ST_LISTA = ['agendada', 'caderno', 'relatorio', 'tres_tentativas', 'reagendada'];
+  const VS_ST_LISTA = ['agendada', 'caderno', 'relatorio', 'tres_tentativas', 'reagendada', 'concluido', 'averiguacao_caderno'];
   // Status que ainda contam como visita pendente
   const VS_ST_ABERTO = ['agendada', 'reagendada'];
   function vsOpcoesStatus(atual, dataVisita){
@@ -2659,7 +2686,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const box = document.getElementById('pgUltAtendimentos');
     if (!box) return;
     carregarPgResumoAtendimentos();
-    const { data, error } = await sbClient.from('atendimentos').select(SEL_ATEND)
+    const { data, error } = await escoparAt(sbClient.from('atendimentos').select(SEL_ATEND))
       .or(FILTRO_DATA_POSSIVEL).lte('data_atendimento', hoje())
       .order('data_atendimento', { ascending: false })
       .order('horario', { ascending: false, nullsFirst: false })
@@ -2695,7 +2722,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   let pgAtendHoje = null; // { total, motivos: [[motivo, qtd], ...] }
 
   async function carregarPgResumoAtendimentos(){
-    const { data, error } = await sbClient.from('atendimentos').select('id, motivo')
+    const { data, error } = await escoparAt(sbClient.from('atendimentos').select('id, motivo'))
       .eq('data_atendimento', hoje()).or(FILTRO_DATA_POSSIVEL).limit(1000);
     if (error){ console.error(error); return; }
     const cont = {};
@@ -2782,6 +2809,15 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const ini = (m, ...pre) => pre.some(x => String(m || '').startsWith(x));
     const dias = rpCont(at, a => a.data_atendimento).sort((x, y) => x[0].localeCompare(y[0]));
     const nEnc = at.filter(a => ['Atend N efetuado', 'ED N localizada'].includes(a.motivo)).length;
+    // Submotivos (ED não localizada): "não localizados" separados em dois blocos + demais submotivos
+    // (os valores gravados no banco não mudam; só o rótulo exibido aqui)
+    const cSub = (n) => at.filter(a => a.submotivo === n).length;
+    const totSub = SUBMOTIVOS.reduce((t, n) => t + cSub(n), 0);
+    const blocoNL = (rot, n) => `<div style="flex:1;min-width:140px;padding:10px 12px;border-radius:12px;background:var(--page-bg);border-top:3px solid var(--coral)">
+      <div style="font-size:12.5px;color:var(--muted)">${rot}</div><div style="font-size:24px;font-weight:700;margin-top:2px">${n}</div>
+      <div style="font-size:11.5px;color:var(--muted)">${totSub ? Math.round(n / totSub * 100) + '% dos submotivos' : 'Sem dados no período'}</div></div>`;
+    const subNaoLoc = `<div style="display:flex;gap:10px;flex-wrap:wrap">${blocoNL('Pessoa não localizada', cSub('Pessoa não localizada'))}${blocoNL('Endereço (rua e/ou nº) não encontrado', cSub('Endereço não localizado'))}</div>`;
+    const subOutros = SUBMOTIVOS.filter(n => n !== 'Pessoa não localizada' && n !== 'Endereço não localizado').map(n => [n, cSub(n)]).sort((x, y) => y[1] - x[1]);
     const htmlAt = `
       <div class="rp-titulo">Atendimentos</div>
       <div class="rp-kpis">
@@ -2801,7 +2837,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         ${rpCard('Por motivo', rpBarras(rpCont(at, a => a.motivo || 'Sem motivo'), at.length, 'var(--blue)'))}
         ${rpCard('Por CRAS', rpBarras(rpCont(at, a => a.cras && a.cras.nome || 'Sem CRAS'), at.length, 'var(--cyan)'))}
         ${rpCard('Por entrevistador (top 10)', rpBarras(rpCont(at, a => (a.ents || []).map(e => e.func && e.func.nome).filter(Boolean)).slice(0, 10), 0, 'var(--blue)'))}
-        ${rpCard('Submotivos (ED não localizada)', rpBarras(SUBMOTIVOS.map(n => [n, at.filter(a => a.submotivo === n).length]).sort((x, y) => y[1] - x[1]), 0, 'var(--coral)'))}
+        ${rpCard('Submotivos (ED não localizada)', subNaoLoc + '<div style="font-size:12.5px;color:var(--muted);margin:14px 0 8px">Outros submotivos</div>' + rpBarras(subOutros, 0, 'var(--coral)'))}
       </div>`;
 
     const st = (k) => vs.filter(v => v.status === k).length;
@@ -2821,6 +2857,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         ${rpKpi('Em aberto', emAberto, vencidas ? vencidas + ' com data vencida' : '', 'var(--orange)')}
         ${rpKpi('Com caderno', st('caderno'), '', 'var(--green)')}
         ${rpKpi('Com relatório', st('relatorio'), '', 'var(--green)')}
+        ${rpKpi('Concluídas', st('concluido'), pct(st('concluido'), vs.length) + ' do total', 'var(--green)')}
+        ${rpKpi('Averiguação c/ caderno', st('averiguacao_caderno'), pct(st('averiguacao_caderno'), vs.length) + ' do total', 'var(--cyan)')}
         ${rpKpi('3 tentativas', st('tres_tentativas'), '', 'var(--coral)')}
         ${rpKpi('Reagendadas', reagAbertas, 'reagendadas e ainda em aberto', 'var(--orange)')}
         ${rpKpi('Não localizadas', st('naolocalizada'), pct(st('naolocalizada'), vs.length) + ' do total', 'var(--coral)')}
@@ -2838,26 +2876,34 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   async function rpGerar(){
     const box = el('rpConteudo');
-    const de = el('rpDe').value, ate = el('rpAte').value, cras = el('rpCras').value;
+    const de = el('rpDe').value, ate = el('rpAte').value;
     if (!de || !ate || de > ate){ showToast('⚠️ Confira o período'); return; }
+    rpCrasMontar();
+    const marcados = rpCrasIds(), totalCras = el('rpCrasLista').querySelectorAll('input').length;
+    if (veTodosCras() && totalCras && !marcados.length){ showToast('⚠️ Selecione ao menos um CRAS'); return; }
+    // null = sem filtro (todos); caso contrário, só os CRAS marcados
+    const cras = (veTodosCras() && marcados.length && marcados.length < totalCras) ? marcados : null;
     box.innerHTML = skelKpis(8);
     try {
       const [at, vs, semLista] = await Promise.all([
         rpBuscar(() => { let q = sbClient.from('atendimentos')
           .select('id, data_atendimento, motivo, submotivo, cras:cras_origem_id(nome), ents:atendimento_entrevistadores(func:funcionario_id(nome))')
           .gte('data_atendimento', de).lte('data_atendimento', ate).or(FILTRO_DATA_POSSIVEL).lte('data_atendimento', hoje()).order('data_atendimento').order('id');
-          return cras ? q.eq('cras_origem_id', cras) : q; }),
+          return escoparAt(cras ? q.in('cras_origem_id', cras) : q); }),
         rpBuscar(() => { let q = sbClient.from('visitas_domiciliares')
           .select('id, data_agendada, motivo, status, urgente, entrevistadores, historico_reagendamentos, cras:cras_id(nome)')
           .gte('data_agendada', de).lte('data_agendada', ate).order('data_agendada').order('id');
-          return cras ? q.eq('cras_id', cras) : q; }),
+          return escoparVs(cras ? q.in('cras_id', cras) : q); }),
         // Visitas sem data: não entram no filtro por período, então são buscadas à parte
         rpBuscar(() => { let q = sbClient.from('visitas_domiciliares')
           .select('id, data_agendada, motivo, status, urgente, entrevistadores, historico_reagendamentos, cras:cras_id(nome)')
           .is('data_agendada', null).order('id');
-          return cras ? q.eq('cras_id', cras) : q; }).catch(() => null)
+          return escoparVs(cras ? q.in('cras_id', cras) : q); }).catch(() => null)
       ]);
-      box.innerHTML = rpMontar(at, vs, semLista);
+      // cabeçalho que também sai na impressão (o painel de filtros fica oculto no PDF)
+      const nomesCras = el('rpCrasLista') ? [...el('rpCrasLista').querySelectorAll('input:checked + span')].map(x => x.textContent) : [];
+      const unidades = !veTodosCras() ? ((currentFuncionario && currentFuncionario.cras_nome) || 'Minha unidade') : (cras ? nomesCras.join(', ') : 'Todos os CRAS');
+      box.innerHTML = `<p class="hint" style="margin:0 0 4px"><b>Unidade(s):</b> ${escapeHtml(unidades)} &nbsp;·&nbsp; <b>Período:</b> ${fmtData(de)} a ${fmtData(ate)}</p>` + rpMontar(at, vs, semLista);
     } catch (e){
       console.error(e);
       console.error(e);
@@ -2872,14 +2918,46 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     el('rpAte').value = h;
   }
 
+  // ---- Filtro de CRAS dos Relatórios: lista com caixas de seleção ----
+  const rpCrasIds = () => [...el('rpCrasLista').querySelectorAll('input:checked')].map(i => i.value);
+  function rpCrasAtualizar(){
+    const todos = [...el('rpCrasLista').querySelectorAll('input')], marc = todos.filter(i => i.checked);
+    el('rpCrasTodos').checked = todos.length > 0 && marc.length === todos.length;
+    el('rpCrasTodos').indeterminate = marc.length > 0 && marc.length < todos.length;
+    let t;
+    if (!veTodosCras()) t = (currentFuncionario && currentFuncionario.cras_nome) || 'Minha unidade';
+    else if (!marc.length) t = 'Nenhum selecionado';
+    else if (marc.length === todos.length) t = 'Todos os CRAS';
+    else if (marc.length === 1) t = marc[0].nextElementSibling.textContent;
+    else t = marc.length + ' CRAS selecionados';
+    el('rpCrasBtn').textContent = t;
+  }
+  function rpCrasMontar(){
+    const lista = el('rpCrasLista'); if (!lista || !el('atCras')) return;
+    const ops = [...el('atCras').options].filter(o => o.value);
+    if (lista.children.length === ops.length && ops.length) return;   // já montada
+    const travado = !veTodosCras();
+    const antes = new Set(rpCrasIds()), primeira = !lista.children.length;
+    lista.innerHTML = ops.map(o => `<label class="rp-multi-op${travado ? ' off' : ''}"><input type="checkbox" value="${o.value}"${(primeira || travado || antes.has(o.value)) ? ' checked' : ''}${travado ? ' disabled' : ''}><span>${escapeHtml(o.textContent)}</span></label>`).join('');
+    el('rpCrasTodos').disabled = travado;
+    el('rpCrasTodos').closest('label').classList.toggle('off', travado);
+    rpCrasAtualizar();
+  }
+  (function ligarCrasMulti(){
+    const btn = el('rpCrasBtn'), painel = el('rpCrasPanel');
+    const abrir = (v) => { painel.hidden = !v; btn.setAttribute('aria-expanded', String(v)); };
+    btn.addEventListener('click', () => { if (!veTodosCras()) return; rpCrasMontar(); abrir(painel.hidden); });
+    document.addEventListener('click', (e) => { if (!el('rpCrasBox').contains(e.target)) abrir(false); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') abrir(false); });
+    el('rpCrasTodos').addEventListener('change', (e) => { el('rpCrasLista').querySelectorAll('input').forEach(i => i.checked = e.target.checked); rpCrasAtualizar(); });
+    el('rpCrasLista').addEventListener('change', rpCrasAtualizar);
+  })();
+
   (function ligarRelatorios(){
     const nav = document.querySelector('.nav-item[data-panel="panel-relatorios"]');
     if (!nav) return;
     nav.addEventListener('click', () => {
-      const sel = el('rpCras');
-      if (sel.options.length <= 1 && el('atCras')) {
-        [...el('atCras').options].filter(o => o.value).forEach(o => sel.add(new Option(o.textContent, o.value)));
-      }
+      rpCrasMontar();
       if (!el('rpDe').value) rpMesAtual();
       rpGerar();
     });
@@ -2916,7 +2994,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     carregarPgUltimosAtendimentos();
     const dataLocal = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
     const ini = new Date(); ini.setDate(ini.getDate() - 7);
-    const { data, error } = await sbClient.from('atendimentos').select(SEL_ATEND)
+    const { data, error } = await escoparAt(sbClient.from('atendimentos').select(SEL_ATEND))
       .gte('data_atendimento', dataLocal(ini)).lte('data_atendimento', hoje()).or(FILTRO_DATA_POSSIVEL)
       .order('data_atendimento', { ascending: false })
       .order('horario', { ascending: false, nullsFirst: false })
@@ -2931,7 +3009,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const fEnt = el('fEntrev').value;
     const sel = 'id, data_atendimento, horario, nome_atendido, motivo, cras:cras_origem_id(nome), ents:atendimento_entrevistadores(func:funcionario_id(nome))'
       + (fEnt ? ', filtro:atendimento_entrevistadores!inner(funcionario_id)' : '');
-    let q = sbClient.from('atendimentos').select(sel, { count: 'exact' }).or(FILTRO_DATA_POSSIVEL).lte('data_atendimento', hoje());
+    let q = escoparAt(sbClient.from('atendimentos').select(sel, { count: 'exact' })).or(FILTRO_DATA_POSSIVEL).lte('data_atendimento', hoje());
     if (el('fCras').value) q = q.eq('cras_origem_id', el('fCras').value);
     if (fEnt) q = q.eq('filtro.funcionario_id', fEnt);
     if (el('fIni').value) q = q.gte('data_atendimento', el('fIni').value);
@@ -3059,9 +3137,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   async function carregarRelatorioMes(){
     const hojeStr = hoje();
     const inicioMes = hojeStr.slice(0, 8) + '01';
-    const { data, error } = await sbClient
+    const { data, error } = await escoparAt(sbClient
       .from('atendimentos')
-      .select('motivo')
+      .select('motivo'))
       .gte('data_atendimento', inicioMes)
       .lte('data_atendimento', hojeStr).or(FILTRO_DATA_POSSIVEL);
 
@@ -3383,6 +3461,12 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       el('usuCras').value = currentFuncionario.cras_id || '';
       carregarUsuarios();
     } else {
+      // atendente: só enxerga a própria unidade (filtros e cadastro travados nela)
+      const minhaUnid = currentFuncionario.cras_id || '', nomeUnid = escapeHtml(currentFuncionario.cras_nome || 'Minha unidade');
+      const soMinha = (id, valor) => { const s = el(id); if (!s) return; s.innerHTML = `<option value="${valor}">${nomeUnid}</option>`; s.value = valor; s.disabled = true; s.title = 'Você visualiza apenas a sua unidade'; };
+      soMinha('atCras', minhaUnid);       // novo atendimento sempre na própria unidade
+      soMinha('fCras', '');               // vazio = sem filtro extra; o escopo já é aplicado na consulta
+      soMinha('fluxoCras', '');
       // atendente: o filtro de entrevistador mostra só ele mesmo
       el('fEntrev').innerHTML = `<option value="">Todos</option><option value="${currentFuncionario.id}">${escapeHtml(currentFuncionario.nome)}</option>`;
       // e, ao registrar um atendimento, o campo Entrevistador(es) traz só ele (já selecionado)
@@ -3448,7 +3532,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const box = el('atDupBox');
     const cpf = el('atCpf').value.replace(/\D/g, '');
     if (cpf.length !== 11 || navigator.onLine === false){ box.style.display = 'none'; return []; } // offline: pula a checagem
-    let q = sbClient.from('atendimentos').select(SEL_ATEND).or(FILTRO_DATA_POSSIVEL).lte('data_atendimento', hoje())
+    let q = escoparAt(sbClient.from('atendimentos').select(SEL_ATEND)).or(FILTRO_DATA_POSSIVEL).lte('data_atendimento', hoje())
       .or(`cpf_atendido.eq.${cpf},cpf_atendido.eq.${fmtCpf(cpf)}`)
       .order('data_atendimento', { ascending: false }).limit(20).retry(false); // sem repetir 3x quando a rede está ruim
     if (editandoId) q = q.neq('id', editandoId);
@@ -3610,7 +3694,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     }
     el('fluxoResumo').textContent = 'Buscando...';
     el('fluxoResultado').querySelectorAll('.tl-item, p').forEach(n => n.remove());
-    let q = sbClient.from('atendimentos').select(SEL_ATEND).or(FILTRO_DATA_POSSIVEL).lte('data_atendimento', hoje());
+    let q = escoparAt(sbClient.from('atendimentos').select(SEL_ATEND)).or(FILTRO_DATA_POSSIVEL).lte('data_atendimento', hoje());
     if (busca) q = q.or(`nome_atendido.ilike.%${busca}%,cpf_atendido.ilike.%${busca}%`);
     if (cras) q = q.eq('cras_origem_id', cras);
     if (ini) q = q.gte('data_atendimento', ini);
@@ -3740,8 +3824,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       if (d === ultimoBuscado) return;
       ultimoBuscado = d;
       try {
-        const { data, error } = await sbClient.from('visitas_domiciliares')
-          .select('nome_responsavel, endereco, bairro, telefone, data_criacao')
+        const { data, error } = await escoparVs(sbClient.from('visitas_domiciliares')
+          .select('nome_responsavel, endereco, bairro, telefone, data_criacao'))
           .eq('cpf', d).order('data_criacao', { ascending: false, nullsFirst: false }).limit(1);
         if (error) throw error;
         const v = data && data[0];
@@ -4527,8 +4611,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   var vsAssinatura = null;
   async function vsChecarMudanca(){
     try {
-      const { data, count, error } = await sbClient.from('visitas_domiciliares')
-        .select('updated_at', { count: 'exact' })
+      const { data, count, error } = await escoparVs(sbClient.from('visitas_domiciliares')
+        .select('updated_at', { count: 'exact' }))
         .order('updated_at', { ascending: false, nullsFirst: false }).limit(1);
       if (error) return true;
       const ass = count + '|' + ((data && data[0] && data[0].updated_at) || '');
@@ -4545,9 +4629,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       // Janela de carga: últimos 45 dias em diante + visitas sem data (fila).
       // O histórico mais antigo continua no banco e aparece nos Relatórios.
       const desde = new Date(Date.now() - 45 * 86400000 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-      const { data, error } = await sbClient
+      const { data, error } = await escoparVs(sbClient
         .from('visitas_domiciliares')
-        .select('*, cras:cras_id(nome)')
+        .select('*, cras:cras_id(nome)'))
         .or(`data_agendada.gte.${desde},data_agendada.is.null`)
         .order('data_agendada', { ascending: false, nullsFirst: false })
         .limit(1000);
