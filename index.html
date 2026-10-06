@@ -1594,9 +1594,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 <body>
 
 <div id="loginScreen">
-  <div class="login-card">
+  <div class="login-card" id="loginEtapa1">
     <h2>Sistema CRAS</h2>
-    <p class="hint">Entre com o e-mail e senha da sua unidade.</p>
+    <p class="hint"><b>Etapa 1 de 2</b> · Entre com seu e-mail e senha.</p>
     <div class="field">
       <label>E-mail</label>
       <input type="email" id="loginEmail" placeholder="seuemail@exemplo.org">
@@ -1607,6 +1607,17 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     </div>
     <button id="loginBtn">Entrar</button>
     <p class="login-error" id="loginError">E-mail ou senha incorretos.</p>
+  </div>
+  <div class="login-card" id="loginEtapa2" style="display:none">
+    <h2>Onde você está hoje?</h2>
+    <p class="hint"><b>Etapa 2 de 2</b> · Escolha o CRAS em que você está atendendo agora.</p>
+    <div class="field">
+      <label>CRAS</label>
+      <select id="loginCras" style="width:100%;padding:11px 12px;border:1px solid #d9e2df;border-radius:10px;font:inherit;background:#fff"></select>
+    </div>
+    <button id="loginCrasBtn">Continuar</button>
+    <p class="login-error" id="loginCrasErro"></p>
+    <p class="hint" style="margin-top:12px"><a href="#" id="loginCrasSair">Voltar e entrar com outra conta</a></p>
   </div>
 </div>
 
@@ -2270,6 +2281,40 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if (typeof aplicarPerfil === 'function') aplicarPerfil();
   }
 
+  // ---- Etapa 2 do login: SEMPRE que a pessoa entra (ou reabre o sistema) escolhe em qual CRAS está; coordenador e adm pulam ----
+  async function escolherUnidade(f){
+    if (['adm', 'coordenador'].includes(f.role)) return true;
+    const sel = document.getElementById('loginCras'), erro = document.getElementById('loginCrasErro'), btn = document.getElementById('loginCrasBtn');
+    const carregarLista = async () => {
+      const r = await sbClient.from('cras').select('id, nome').order('nome');
+      if (r.error || !(r.data || []).length) return false;
+      sel.innerHTML = r.data.map(c => `<option value="${c.id}">${escapeHtml(c.nome)}</option>`).join('');
+      if (f.cras_id) sel.value = f.cras_id;
+      return true;
+    };
+    const ok = await carregarLista();
+    if (!ok && navigator.onLine === false) return true;   // sem internet: abre com a unidade do cadastro
+    document.getElementById('loginEtapa1').style.display = 'none';
+    document.getElementById('loginEtapa2').style.display = '';
+    const falhaLista = () => { erro.textContent = 'Não foi possível carregar a lista de CRAS. Toque em Continuar para tentar de novo.'; erro.style.display = 'block'; };
+    if (!ok) falhaLista(); else erro.style.display = 'none';
+    return new Promise(resolve => {
+      btn.onclick = async () => {
+        btn.disabled = true; erro.style.display = 'none';
+        if (!sel.value){ const ok2 = await carregarLista(); btn.disabled = false; if (!ok2) falhaLista(); return; }
+        const nome = sel.options[sel.selectedIndex].textContent;
+        const { error } = await sbClient.rpc('definir_cras_atual', { p_cras_id: sel.value });   // grava no banco: as regras de acesso passam a usar este CRAS
+        btn.disabled = false;
+        if (error){ console.error(error); erro.textContent = 'Não foi possível registrar a unidade. Tente de novo.'; erro.style.display = 'block'; return; }
+        f.cras_id = sel.value; f.cras_nome = nome;
+        document.getElementById('loginEtapa2').style.display = 'none';
+        document.getElementById('loginEtapa1').style.display = '';
+        resolve(true);
+      };
+      document.getElementById('loginCrasSair').onclick = async (e) => { e.preventDefault(); await sbClient.auth.signOut(); resolve(false); };
+    });
+  }
+
   let usuarioCarregado = null, modoOffline = false;
   window.addEventListener('online', () => { if (modoOffline && currentFuncionario){ modoOffline = false; popularSelectCras(); carregarFamilias(); iniciarPresenca(); } });
   sbClient.auth.onAuthStateChange((event, session) => {
@@ -2281,6 +2326,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       setTimeout(async () => {
         const f = await carregarFuncionario(session.user.id);
         if (!f){ usuarioCarregado = null; return; }
+        if (!(await escolherUnidade(f))){ usuarioCarregado = null; return; }   // etapa 2 do login
         currentFuncionario = f;
         aplicarFuncionarioNaTela(f);
         loginScreen.style.display = 'none';
@@ -2307,6 +2353,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         } catch (e) {}
       }
       if (typeof pararPresenca === 'function') pararPresenca();
+      document.getElementById('loginEtapa1').style.display = ''; document.getElementById('loginEtapa2').style.display = 'none';
       usuarioCarregado = null;
       currentFuncionario = null;
       familiasCache = [];
@@ -3237,10 +3284,12 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   const BOLA = (cor, brilho) => `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${cor};margin-right:7px;${brilho ? 'box-shadow:0 0 0 3px rgba(34,197,94,.25)' : ''}"></span>`;
   function atualizarPresenca(){
     if (!podeGerir()) return;                               // só coordenador e adm enxergam
-    const on = canalPresenca ? new Set(Object.keys(canalPresenca.presenceState())) : new Set();
+    const estado = canalPresenca ? canalPresenca.presenceState() : {}, on = new Set(Object.keys(estado));
     let qtd = 0;
     document.querySelectorAll('#usuLista [data-uid]:not([data-inativo])').forEach(td => {
       const ligado = on.has(td.dataset.uid); if (ligado) qtd++;
+      const tc = document.querySelector(`#usuLista [data-ucras="${td.dataset.uid}"]`);
+      if (tc){ const hoje = ligado ? (((estado[td.dataset.uid] || [])[0]) || {}).cras : ''; tc.innerHTML = hoje && hoje !== tc.dataset.orig ? '<b>' + escapeHtml(hoje) + '</b> <small style="color:var(--muted)">(cadastro: ' + escapeHtml(tc.dataset.orig) + ')</small>' : escapeHtml(hoje || tc.dataset.orig); }
       td.innerHTML = ligado ? BOLA('#22c55e', true) + '<b style="color:#15803d">Online</b>'
                             : BOLA('#c5ccd3', false) + '<span style="color:var(--muted)">Offline</span>';
     });
@@ -3251,7 +3300,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if (canalPresenca || !currentFuncionario || !sbClient.channel) return;
     canalPresenca = sbClient.channel('presenca-cras', { config: { presence: { key: currentFuncionario.id } } });
     canalPresenca.on('presence', { event: 'sync' }, atualizarPresenca)
-      .subscribe((st) => { if (st === 'SUBSCRIBED') canalPresenca.track({ em: new Date().toISOString() }); });
+      .subscribe((st) => { if (st === 'SUBSCRIBED') canalPresenca.track({ em: new Date().toISOString(), cras: currentFuncionario.cras_nome || '' }); });
   }
   function pararPresenca(){
     if (canalPresenca){ try { sbClient.removeChannel(canalPresenca); } catch (e) {} canalPresenca = null; }
@@ -3445,7 +3494,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         + `<button type="button" style="${lnk('#DC2626')}" data-usu-acao="excluir" ${dados}>Excluir</button>`;
       return `<tr${inativo ? ' style="opacity:.6"' : ''}><td data-uid="${u.id}"${inativo ? ' data-inativo="1"' : ''}>${inativo ? '<span style="color:var(--muted)">Desativado</span>' : ''}</td>
         <td>${escapeHtml(u.nome)}</td><td>${escapeHtml(u.cargo || '')}</td>
-        <td>${escapeHtml(ROTULOS[u.role] || u.role)}</td><td>${escapeHtml(u.cras && u.cras.nome)}</td><td style="white-space:nowrap">${acoes}</td></tr>`;
+        <td>${escapeHtml(ROTULOS[u.role] || u.role)}</td><td data-ucras="${u.id}" data-orig="${escapeHtml(u.cras && u.cras.nome)}">${escapeHtml(u.cras && u.cras.nome)}</td><td style="white-space:nowrap">${acoes}</td></tr>`;
     }).join('');
     atualizarPresenca();
   }
