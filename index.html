@@ -656,6 +656,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .vs-table .vs-st-sel.st-naolocalizada{ background:#F1F1F1; color:#6B6B6B; border-color:#D9D9D9; }
   .vs-table .vs-st-sel.st-concluido{ background:#DDF3E6; color:#17653A; border-color:#9FD8B5; }
   .vs-table .vs-st-sel.st-averiguacao_caderno{ background:#F0EAFB; color:#5B3FA3; border-color:#D3C5F0; }
+  .vs-table .vs-st-sel.st-pessoa_nao_localizada{ background:#F1F1F1; color:#6B6B6B; border-color:#D9D9D9; }
+  .vs-table .vs-st-sel.st-endereco_nao_localizado{ background:#F1F1F1; color:#6B6B6B; border-color:#D9D9D9; }
   .vs-table .vs-st-sel:disabled{ opacity:.6; cursor:wait; }
   .vs-table .vs-btn-icon.reagendar:hover{ background:#FFF7ED; color:#C2410C; border-color:#FED7AA; }
   .vs-reag-badge{
@@ -1644,6 +1646,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     <div class="nav-item" data-panel="panel-fluxos" title="Fluxos"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.3"/><circle cx="6" cy="18" r="2.3"/><path d="M6 8.3V15.7"/><path d="M8.5 6H15a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3H9a3 3 0 0 0-3 3v0"/><path d="M17 9.5l2-2.3-2-2.3"/></svg></i><span class="side-text">Fluxos</span></div>
     <div class="nav-item" data-panel="panel-visitas" title="Visitas domiciliares"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.5 7-11a7 7 0 0 0-14 0c0 4.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></i><span class="side-text">Visitas domiciliares</span></div>
     <div class="nav-item" data-panel="panel-relatorios" title="Relatórios"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M8 17v-5M13 17V8M18 17v-9"/></svg></i><span class="side-text">Relatórios</span></div>
+    <div class="nav-item" id="navFormulario" data-panel="panel-formulario" title="Formulário de campo (imprimir)"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></i><span class="side-text">Formulário</span></div>
 
     <div class="side-label side-text">SISTEMA</div>
     <div class="nav-item" id="navDados" data-panel="panel-dados" title="Dados" style="display:none"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg></i><span class="side-text">Dados</span></div>
@@ -1867,6 +1870,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <div class="section-head">
           <h3>Últimas entrevistas domiciliares</h3>
           <span class="status-hint" id="vsResumo"></span>
+          <button type="button" class="btn-ghost" id="fcAbrirBranco" title="Preencher e imprimir o formulário de campo (Anexo II)">Formulário</button>
         </div>
         <div class="vs-filtros" id="vsFiltros">
           <div class="vs-filtros-grid">
@@ -1969,6 +1973,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         </div>
       </div>
       <div id="rpConteudo"><div class="skel-kpis"><span class="skel skel-kpi"></span><span class="skel skel-kpi"></span><span class="skel skel-kpi"></span><span class="skel skel-kpi"></span><span class="skel skel-kpi"></span><span class="skel skel-kpi"></span><span class="skel skel-kpi"></span><span class="skel skel-kpi"></span></div></div>
+    </div>
+
+    <div class="panel-formulario" style="display:none">
+      <div class="form-panel" id="fcPagina"></div>
     </div>
 
     <div class="panel-config" style="display:none">
@@ -2370,7 +2378,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     sidebar.classList.toggle('collapsed');
   });
 
-  const allPanels = ['panel-geral', 'panel-cadastro', 'panel-atendimentos', 'panel-fluxos', 'panel-visitas', 'panel-config', 'panel-ficha', 'panel-usuarios', 'panel-relatorios', 'panel-dados'];
+  const allPanels = ['panel-geral', 'panel-cadastro', 'panel-atendimentos', 'panel-fluxos', 'panel-visitas', 'panel-config', 'panel-ficha', 'panel-usuarios', 'panel-relatorios', 'panel-dados', 'panel-formulario'];
   function showPanel(target){
     allPanels.forEach(p => {
       document.querySelectorAll('.' + p).forEach(el => {
@@ -2406,7 +2414,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   // ---- Atendimentos ----
   const el = (id) => document.getElementById(id);
-  const MOTIVOS = ['Agenda ED p/ Atualizacao','Agenda ED p/ Inclusao','Atend N efetuado','Atualização','Atualização c/ED','Consulta','ED N localizada','Exclusão família','Inclusão','Inclusão c/ED','Reagenda ED','Transferência'];
+  const MOTIVOS = ['Agenda ED p/ Atualizacao','Agenda ED p/ Inclusao','Atend N efetuado','Atualização','Atualização c/ED','Consulta','ED N localizada','Endereço não localizado','Exclusão família','Inclusão','Inclusão c/ED','Pessoa não localizada','Reagenda ED','Transferência'];
   const SUBMOTIVOS = ['Endereço não localizado','Falta de documento','Impossibilidade de chegar no local','Mudou-se','Pessoa não localizada','Recusa'];
   const POR_PAGINA = 10;
   let paginaAt = 1;
@@ -2436,10 +2444,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     'Outros atendimentos e demandas específicas'
   ];
   // Situações da visita (Agenda ED). "agendada" = Em aberto.
-  const VS_ST_LABEL = { agendada: 'Em aberto', caderno: 'Com caderno', relatorio: 'Com relatório', tres_tentativas: '3 tentativas', reagendada: 'Reagendada', realizada: 'Realizada', naolocalizada: 'Não localizada', concluido: 'Concluído', averiguacao_caderno: 'Averiguação c/Caderno' };
+  const VS_ST_LABEL = { agendada: 'Em aberto', caderno: 'Com caderno', relatorio: 'Com relatório', tres_tentativas: '3 tentativas', reagendada: 'Reagendada', realizada: 'Realizada', naolocalizada: 'Não localizada', concluido: 'Concluído', averiguacao_caderno: 'Averiguação c/Caderno', pessoa_nao_localizada: 'Pessoa não localizada', endereco_nao_localizado: 'Endereço não localizado' };
   const VS_ST_OK = ['realizada', 'caderno', 'relatorio', 'concluido', 'averiguacao_caderno'];
   // Lista de Status que o usuário escolhe no formulário e na tabela (salva na coluna "status" do Supabase)
-  const VS_ST_LISTA = ['agendada', 'caderno', 'relatorio', 'tres_tentativas', 'reagendada', 'concluido', 'averiguacao_caderno'];
+  const VS_ST_LISTA = ['agendada', 'caderno', 'relatorio', 'tres_tentativas', 'reagendada', 'concluido', 'averiguacao_caderno', 'pessoa_nao_localizada', 'endereco_nao_localizado'];
   // Status que ainda contam como visita pendente
   const VS_ST_ABERTO = ['agendada', 'reagendada'];
   function vsOpcoesStatus(atual, dataVisita){
@@ -2797,7 +2805,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const restantes = dia.filter(v => VS_ST_ABERTO.includes(v.status));
     const urgentes = restantes.filter(v => v.urgente);
     const feitas = dia.filter(v => VS_ST_OK.includes(v.status)).length;
-    const naoLoc = dia.filter(v => v.status === 'naolocalizada' || v.status === 'tres_tentativas').length;
+    const naoLoc = dia.filter(v => ['naolocalizada', 'tres_tentativas', 'pessoa_nao_localizada', 'endereco_nao_localizado'].includes(v.status)).length;
 
     document.getElementById('pgRsVisitas').textContent = restantes.length;
     document.getElementById('pgRsVisitasTxt').textContent = plural(restantes.length, 'visita restante', 'visitas restantes');
@@ -2909,6 +2917,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         ${rpKpi('3 tentativas', st('tres_tentativas'), '', 'var(--coral)')}
         ${rpKpi('Reagendadas', reagAbertas, 'reagendadas e ainda em aberto', 'var(--orange)')}
         ${rpKpi('Não localizadas', st('naolocalizada'), pct(st('naolocalizada'), vs.length) + ' do total', 'var(--coral)')}
+        ${rpKpi('Pessoa não localizada', st('pessoa_nao_localizada'), pct(st('pessoa_nao_localizada'), vs.length) + ' do total', 'var(--coral)')}
+        ${rpKpi('Endereço não localizado', st('endereco_nao_localizado'), pct(st('endereco_nao_localizado'), vs.length) + ' do total', 'var(--coral)')}
         ${rpKpi('Urgentes', vs.filter(v => v.urgente).length, '', '#DC2626')}
         ${rpKpi('Taxa de conclusão', pct(vs.length - abertas, vs.length), '(total − em aberto) ÷ total')}
       </div>
@@ -4277,6 +4287,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="17.5" cy="17.5" r="4.5"/><path d="M17.5 15.5v2l1.2 1"/></svg>
                     ${Array.isArray(v.historico_reagendamentos) && v.historico_reagendamentos.length ? `<span class="vs-reag-badge">${v.historico_reagendamentos.length}</span>` : ''}
                   </button>
+                  <button type="button" class="vs-btn-icon" data-acao="formulario" data-id="${escapeHtml(v.id)}" title="Formulário de campo (imprimir)" aria-label="Formulário de campo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></button>
                   <button type="button" class="vs-btn-icon editar" data-acao="editar" data-id="${escapeHtml(v.id)}" title="Editar" aria-label="Editar visita">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                   </button>
@@ -4530,7 +4541,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       `${reagDia(v.data_agendada)}${v.hora_prevista ? ' · ' + String(v.hora_prevista).slice(0, 5) : ''} · ${v.motivo || ''}`;
 
     const tags = [];
-    const cls = VS_ST_OK.includes(v.status) ? 'ok' : (v.status === 'naolocalizada' || v.status === 'tres_tentativas') ? 'nl' : '';
+    const cls = VS_ST_OK.includes(v.status) ? 'ok' : ['naolocalizada', 'tres_tentativas', 'pessoa_nao_localizada', 'endereco_nao_localizado'].includes(v.status) ? 'nl' : '';
     tags.push(`<span class="vs-ck-tag ${cls}">${escapeHtml(CK_STATUS[v.status] || v.status || '')}</span>`);
     if (v.urgente) tags.push('<span class="vs-ck-tag urg">Urgente</span>');
     if (v.cras && v.cras.nome) tags.push(`<span class="vs-ck-tag">${escapeHtml(v.cras.nome)}</span>`);
@@ -4652,7 +4663,81 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if (btn.dataset.acao === 'editar') vsEditar(v);
     else if (btn.dataset.acao === 'excluir') vsExcluir(v);
     else if (btn.dataset.acao === 'reagendar') vsAbrirReag(v);
+    else if (btn.dataset.acao === 'formulario') abrirFormularioCampo(v);
   });
+
+  // ====== FORMULÁRIO DE CAMPO (Anexo II): preencher na tela e imprimir ======
+  const FC_M = ['FAMÍLIA UNIPESSOAL','AÇÃO DE QUALIFICAÇÃO CADASTRAL DO GOVERNO FEDERAL (AVERIGUAÇÃO E REVISÃO CADASTRAL)','FAMÍLIAS COM DIFICULDADE DE LOCOMOÇÃO','APURAÇÃO DE INDÍCIOS DE IRREGULARIDADES','OUTRO(S). QUAL(IS)?'];
+  const FC_E = ['ENCAMINHAMENTO PARA ATUALIZAÇÃO OU INCLUSÃO NO CRAS/POSTO DO CADASTRO ÚNICO','ENCAMINHAMENTO PARA OS SERVIÇOS NO CRAS/CREAS','ENCAMINHAMENTO PARA OS SERVIÇOS DE DOCUMENTAÇÃO','COMUNICAÇÃO A GESTORES DE PROGRAMAS USUÁRIOS DOS QUAIS A FAMÍLIA OU MEMBRO FAMILIAR É BENEFICIÁRIO (MUNICIPAL, ESTADUAL E FEDERAL)','OUTRO(S). QUAL(IS)','NENHUM.'];
+  const FC_R = [['c31','3.1','ENTREVISTA REALIZADA'],['c32','3.2','ENTREVISTA NÃO REALIZADA. MOTIVO:'],['c321','3.2.1','FAMÍLIA NÃO LOCALIZADA'],['c321a','a)','ENDEREÇO INEXISTENTE'],['c321b','b)','DOMICÍLIO NÃO LOCALIZADO'],['c322','3.2.2','FAMÍLIA LOCALIZADA'],['c322a','a)','RUF NÃO LOCALIZADO'],['c322b','b)','RUF RECUSOU A PRESTAR INFORMAÇÃO'],['c322c','c)','AMEAÇA OU RISCO À EQUIPE'],['c323','3.2.3','OUTRO(S) MOTIVO(S)']];
+  function fcHtml(d){
+    const e = escapeHtml, cb = x => x ? '[X]' : '[]';
+    const dt = d.data ? d.data.split('-').reverse().join('/') : '';
+    const L = (t, v) => `<tr><td>${t} <b>${e(v || '')}</b></td></tr>`;
+    const lin = (txt, min) => { const a = String(txt || '').split('\n'); while (a.length < min) a.push(''); return a.map(x => `<div class="ln">${e(x)}</div>`).join(''); };
+    const mot = FC_M.map((t, i) => `<p>2.${i + 1} ${cb(d.m[i])} ${t}${i === 4 ? ' <b>' + e(d.mOutro) + '</b>' : ''}</p>`).join('');
+    const ent = FC_R.map(([k, n, t]) => `<p class="${['c321a','c321b','c322a','c322b','c322c'].includes(k) ? 'sub' : ''}">${n} ${/^[abc]\)$/.test(n) ? '' : cb(d[k]) + ' '}${t}${k === 'c32' ? ' <b>' + e(d.c32t) + '</b>' : ''}${k === 'c323' ? ' <b>' + e(d.c323t) + '</b>' : ''}</p>`).join('');
+    const enc = FC_E.map((t, i) => `<p>6.${i + 1} ${cb(d.enc[i])} ${t}${i === 4 ? ' <b>' + e(d.encOutro) + '</b>' : ''}</p>`).join('');
+    return `<!DOCTYPE html><html lang="pt-br"><head><meta charset="utf-8"><title>Formulário de Campo</title><style>
+@page{size:A4;margin:14mm 12mm}body{font-family:'Times New Roman',Times,serif;font-size:12pt;color:#000;margin:0}
+h1,h2{text-align:center;margin:0;font-size:15pt}h2{margin-bottom:6px}
+table{width:100%;border-collapse:collapse;border:1.5px solid #000}td{border-top:1px solid #000;padding:3px 6px;vertical-align:top}
+tr.h td{font-weight:bold;border-top:1.5px solid #000}tr.h small{font-weight:normal;font-size:11pt}
+.o p{margin:0 0 12px}.o p.sub{margin-left:0}.ln{border-bottom:1px solid #000;min-height:21px;line-height:21px;padding:0 4px}.pb{page-break-after:always}
+</style></head><body>
+<h1>ANEXO II</h1><h2>MODELO DE FORMULÁRIO DE CAMPO</h2>
+<table><tr><td><b>Data da Entrevista:</b> <b>${e(dt)}</b></td></tr>
+<tr class="h"><td>1.&nbsp;&nbsp;&nbsp;SOBRE A FAMÍLIA</td></tr>
+${L('1.1 NOME DO RESPONSÁVEL PELA UNIDADE FAMILIAR (RUF):', d.nome)}${L('1.2 CPF DO RUF:', d.cpf)}${L('1.3 CÓDIGO FAMILIAR:', d.cod)}${L('1.4 ENDEREÇO:', d.end)}${L('1.5 COMPLEMENTO:', d.comp)}${L('1.6 CEP:', d.cep)}${L('1.7 MUNICÍPIO/UF:', d.mun)}${L('1.8 TELEFONE:', d.tel)}
+<tr class="h"><td>2.&nbsp;&nbsp;&nbsp;MOTIVO DE CADASTRO EM DOMICÍLIO<br><br><small>(PODE-SE MARCAR MAIS DE UMA OPÇÃO)</small></td></tr>
+<tr><td class="o" style="padding-top:8px">${mot}</td></tr>
+<tr class="h"><td>3.&nbsp;&nbsp;&nbsp;INFORMAÇÕES SOBRE A REALIZAÇÃO DA ENTREVISTA</td></tr>
+<tr><td class="o" style="padding-top:8px">${ent}</td></tr></table>
+<div class="pb"></div>
+<table><tr class="h"><td>4.&nbsp;&nbsp;&nbsp;INFORMAÇÕES COLETADAS EM ENTREVISTA DOMICILIAR<br><small>(DESCREVER DE FORMA OBJETIVA INFORMAÇÕES ADICIONAIS SOBRE CONDIÇÕES DE MORADIA, COMPOSIÇÃO FAMILIAR, RENDA E DEMAIS OBSERVAÇÕES RELEVANTES, COMO POSSÍVEIS INCONSISTÊNCIAS DURANTE A ENTREVISTA)</small></td></tr>
+<tr><td style="padding:0">${lin(d.t4, 6)}</td></tr>
+<tr class="h"><td>5.&nbsp;&nbsp;&nbsp;CONCLUSÕES</td></tr><tr><td style="padding:0">${lin(d.t5, 4)}</td></tr>
+<tr class="h"><td>6.&nbsp;&nbsp;&nbsp;ENCAMINHAMENTOS<br><br><small>(PODE-SE MARCAR MAIS DE UMA OPÇÃO)</small></td></tr>
+<tr><td class="o" style="padding-top:8px">${enc}</td></tr>
+<tr class="h"><td>7.&nbsp;&nbsp;&nbsp;IDENTIFICAÇÃO DO(A) ENTREVISTADOR(A) SOCIAL</td></tr>
+${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIADA:', d.enUn)}${L('7.4 TELEFONE INSTITUCIONAL:', d.enTel)}${L('7.5 E-MAIL INSTITUCIONAL:', d.enMail)}</table></body></html>`;
+  }
+  function abrirFormularioCampo(v){
+    v = v || {};
+    const cpfF = String(v.cpf || '').replace(/\D/g, '').replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+    const I = (id, t, val, type, cls) => `<div class="field ${cls || ''}"><label>${t}</label><input id="fc_${id}" type="${type || 'text'}" value="${escapeHtml(val || '')}"></div>`;
+    const K = (id, t, on) => `<label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0;font-weight:400"><input type="checkbox" id="fc_${id}" ${on ? 'checked' : ''} style="margin-top:3px"><span>${t}</span></label>`;
+    const T = (id, t, rows) => `<div class="field"><label>${t}</label><textarea id="fc_${id}" rows="${rows}"></textarea></div>`;
+    const S = t => `<h4 style="margin:18px 0 6px;font-size:14px">${t}</h4>`;
+    const ov = document.getElementById('fcPagina');
+    ov.innerHTML = `<div style="max-width:860px;margin:0 auto">
+      <h3 style="margin:0 0 4px">Formulário de campo (Anexo II)</h3><p class="status-hint" style="margin:0 0 8px">Preencha e imprima. O que ficar em branco sai em branco para escrever à mão.</p>
+      ${S('Data e 1. Sobre a família')}${I('data', 'Data da entrevista', v.data_agendada ? String(v.data_agendada).slice(0, 10) : '', 'date')}${I('nome', '1.1 Nome do responsável (RUF)', v.nome_responsavel)}${I('cpf', '1.2 CPF do RUF', cpfF)}${I('cod', '1.3 Código familiar', '')}${I('end', '1.4 Endereço', [v.endereco, v.bairro].filter(Boolean).join(' - '))}${I('comp', '1.5 Complemento', '')}${I('cep', '1.6 CEP', '')}${I('mun', '1.7 Município/UF', 'Alvorada/RS')}${I('tel', '1.8 Telefone', v.telefone)}
+      ${S('2. Motivo de cadastro em domicílio')}${FC_M.map((t, i) => K('m' + i, `2.${i + 1} ${t}`)).join('')}${I('mOutro', 'Outro(s). Qual(is)?', '')}
+      ${S('3. Informações sobre a realização da entrevista')}${FC_R.map(([k, n, t]) => K(k, `${n} ${t}`)).join('')}${I('c32t', 'Motivo (3.2)', '')}${I('c323t', 'Outro(s) motivo(s) (3.2.3)', '')}
+      ${S('4 e 5. Informações coletadas e conclusões')}${T('t4', '4. Informações coletadas em entrevista domiciliar', 5)}${T('t5', '5. Conclusões', 3)}
+      ${S('6. Encaminhamentos')}${FC_E.map((t, i) => K('e' + i, `6.${i + 1} ${t}`)).join('')}${I('encOutro', 'Outro(s). Qual(is)', '')}
+      ${S('7. Entrevistador(a) social')}${I('enNome', '7.1 Nome', (v.entrevistadores_nomes || [])[0])}${I('enCpf', '7.2 CPF', '')}${I('enUn', '7.3 Unidade referenciada', v.cras && v.cras.nome)}${I('enTel', '7.4 Telefone institucional', '')}${I('enMail', '7.5 E-mail institucional', '')}
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px"><button type="button" class="btn-ghost" id="fcLimpar">Limpar</button><button type="button" id="fcImprimir" style="background:#1f6b57;color:#fff;border:0;border-radius:10px;padding:10px 18px;font:inherit;font-weight:600;cursor:pointer">Imprimir</button></div></div>`;
+    // abre a página do Formulário (mesmo comportamento dos outros botões do menu)
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.toggle('active', i.id === 'navFormulario'));
+    showPanel('panel-formulario');
+    window.scrollTo(0, 0);
+    const g = id => document.getElementById('fc_' + id), ck = id => !!g(id).checked;
+    ov.querySelector('#fcLimpar').onclick = () => abrirFormularioCampo(null);
+    ov.querySelector('#fcImprimir').onclick = () => {
+      const d = { m: FC_M.map((_, i) => ck('m' + i)), enc: FC_E.map((_, i) => ck('e' + i)) };
+      ['data','nome','cpf','cod','end','comp','cep','mun','tel','mOutro','c32t','c323t','t4','t5','encOutro','enNome','enCpf','enUn','enTel','enMail'].forEach(k => d[k] = g(k).value);
+      FC_R.forEach(([k]) => d[k] = ck(k));
+      const fr = document.createElement('iframe');
+      fr.style.cssText = 'position:fixed;width:0;height:0;border:0;right:0;bottom:0';
+      document.body.appendChild(fr);
+      fr.contentDocument.open(); fr.contentDocument.write(fcHtml(d)); fr.contentDocument.close();
+      setTimeout(() => { fr.contentWindow.focus(); fr.contentWindow.print(); setTimeout(() => fr.remove(), 60000); }, 300);
+    };
+  }
+  document.getElementById('fcAbrirBranco').addEventListener('click', () => abrirFormularioCampo(null));
+  document.getElementById('navFormulario').addEventListener('click', () => { if (!document.getElementById('fc_nome')) abrirFormularioCampo(null); });
 
   // ====== FUNÇÕES DE CARREGAMENTO DE LISTAS ======
   // Verificação leve (poucos bytes) para saber se as visitas mudaram no banco,
