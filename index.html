@@ -1682,7 +1682,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <div class="field"><label>CPF *</label><input type="text" id="atCpf" placeholder="000.000.000-00"></div>
         <div class="field"><label>CRAS *</label><select id="atCras"></select></div>
         <div class="field"><label>Motivo *</label><select id="atMotivo"></select></div>
-        <div class="field" id="atSubBox" style="display:none"><label>Submotivo</label><select id="atSub"></select></div>
+        <div class="field" id="atSubBox" style="display:none"><label>Submotivo</label><select id="atSub"></select><input type="text" id="atSubOutros" maxlength="120" placeholder="Escreva o que aconteceu" style="display:none;margin-top:8px"></div>
         <div class="field span-2"><label id="atEntrevLabel">Entrevistador(es) * (clique para selecionar; Ctrl para vários)</label><select id="atEntrev" multiple style="height:120px;width:100%"></select></div>
       </div>
       <div id="atDupBox" style="display:none;margin-top:14px;padding:12px 14px;border-radius:12px;background:#fff4e5;border:1px solid #f5b971;color:#7a4a00;font-size:13.5px"></div>
@@ -2415,7 +2415,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   // ---- Atendimentos ----
   const el = (id) => document.getElementById(id);
   const MOTIVOS = ['Agenda ED p/ Atualizacao','Agenda ED p/ Inclusao','Atend N efetuado','Atualização','Atualização c/ED','Consulta','ED N localizada','Endereço não localizado','Exclusão família','Inclusão','Inclusão c/ED','Pessoa não localizada','Reagenda ED','Transferência'];
-  const SUBMOTIVOS = ['Endereço não localizado','Falta de documento','Impossibilidade de chegar no local','Mudou-se','Pessoa não localizada','Recusa'];
+  // Submotivos por motivo: "ED N localizada" e "Atend N efetuado" (não efetivada no CRAS)
+  const SUBMOTIVOS_ED = ['Endereço não localizado','Falta de documento','Impossibilidade de chegar no local','Mudou-se','Pessoa não localizada','Recusa','Outros'];
+  const SUBMOTIVOS_CRAS = ['Falta de documento','Usuário negou prestar informações','Problemas no CPF','Sem perfil','Outros'];
+  const SUBMOTIVOS = [...new Set([...SUBMOTIVOS_ED, ...SUBMOTIVOS_CRAS])];
+  const SUBS_POR_MOTIVO = { 'ED N localizada': SUBMOTIVOS_ED, 'Atend N efetuado': SUBMOTIVOS_CRAS };
   const POR_PAGINA = 10;
   let paginaAt = 1;
   let editandoId = null, editandoEntrevs = [];
@@ -2423,10 +2427,28 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   el('atMotivo').innerHTML = '<option value="">Selecione</option>' + optsHtml(MOTIVOS);
   el('atSub').innerHTML = '<option value="">Selecione</option>' + optsHtml(SUBMOTIVOS);
   el('fMotivo').innerHTML = optsHtml(MOTIVOS);
+  // "Outros": o texto escrito é gravado junto no submotivo ("Outros: texto"), sem mudar o banco
+  const subValor = () => {
+    const v = el('atSub').value;
+    if (v !== 'Outros') return v || null;
+    const t = el('atSubOutros').value.trim();
+    return t ? 'Outros: ' + t : 'Outros';
+  };
+  const subMostrarOutros = () => {
+    const o = el('atSub').value === 'Outros';
+    el('atSubOutros').style.display = o ? '' : 'none';
+    if (!o) el('atSubOutros').value = '';
+  };
+  el('atSub').addEventListener('change', subMostrarOutros);
   el('atMotivo').addEventListener('change', () => {
-    const ed = el('atMotivo').value === 'ED N localizada';
-    el('atSubBox').style.display = ed ? '' : 'none';
-    if (!ed) el('atSub').value = '';
+    const lista = SUBS_POR_MOTIVO[el('atMotivo').value];
+    el('atSubBox').style.display = lista ? '' : 'none';
+    if (!lista){ el('atSub').value = ''; subMostrarOutros(); return; }
+    if (el('atSub').dataset.lista !== el('atMotivo').value){   // trocou de motivo: recarrega as opções
+      el('atSub').innerHTML = '<option value="">Selecione</option>' + optsHtml(lista);
+      el('atSub').dataset.lista = el('atMotivo').value;
+      subMostrarOutros();
+    }
   });
 
   // ---- Agenda ED / Visitas domiciliares (mesma tabela de atendimentos) ----
@@ -2661,8 +2683,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     editandoId = null; editandoEntrevs = [];
     el('atDupBox').style.display = 'none';
     el('saveAtendimentoBtn').textContent = 'Salvar atendimento'; el('atLimparBtn').textContent = 'Limpar';
-    el('atNome').value = ''; el('atCpf').value = ''; el('atData').value = hoje();
-    el('atMotivo').value = ''; el('atSub').value = ''; el('atSubBox').style.display = 'none';
+    el('atNome').value = ''; el('atCpf').value = ''; el('atData').value = hoje(); if (window.atCpfAtualizar) window.atCpfAtualizar();
+    el('atMotivo').value = ''; el('atSub').value = ''; subMostrarOutros(); el('atSubBox').style.display = 'none';
     [...el('atEntrev').options].forEach(o => o.selected = !!currentFuncionario && o.value === currentFuncionario.id);
     if (currentFuncionario && currentFuncionario.cras_id) el('atCras').value = currentFuncionario.cras_id;
   }
@@ -2678,18 +2700,21 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if (!el('atData').value) faltando.push('data');
     if (!nome) faltando.push('nome');
     if (!cpf) faltando.push('CPF');
+    else if (cpf.length !== 11) faltando.push('CPF completo (11 números)');
     if (!el('atCras').value) faltando.push('CRAS');
     if (!el('atMotivo').value) faltando.push('motivo');
     if (!entrevs.length) faltando.push('entrevistador (clique no nome para selecionar)');
     if (faltando.length){ showToast('Falta preencher: ' + faltando.join(', ')); return; }
+    if (!cpfValido(cpf) && !confirm('O CPF ' + fmtCpf(cpf) + ' não é válido (os dígitos verificadores não conferem).\n\nSalvar mesmo assim?')){ el('atCpf').focus(); return; }
     const dups = await Promise.race([verificarCpfDuplicado(), new Promise(r => setTimeout(() => r([]), 4000))]);
     if (dups.length && !confirm(`Já existe(m) ${dups.length} atendimento(s) com este CPF.\n\nSalvar mesmo assim, em duplicidade?`)) return;
+    if (el('atSub').value === 'Outros' && !el('atSubOutros').value.trim()){ showToast('⚠️ Escreva o que aconteceu em "Outros"'); el('atSubOutros').focus(); return; }
     btn.disabled = true; btn.textContent = 'Salvando...';
     try {
       if (editandoId){
         const { data: up, error: eu } = await sbClient.from('atendimentos').update({
           data_atendimento: el('atData').value, nome_atendido: nome, cpf_atendido: cpf,
-          cras_origem_id: el('atCras').value, motivo: el('atMotivo').value, submotivo: el('atSub').value || null
+          cras_origem_id: el('atCras').value, motivo: el('atMotivo').value, submotivo: subValor()
         }).eq('id', editandoId).select('id');
         if (eu) throw eu;
         if (!up || !up.length) throw new Error('o banco bloqueou a alteração (falta política de UPDATE no RLS)');
@@ -2714,7 +2739,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         reg: {
           data_atendimento: el('atData').value, horario: new Date().toTimeString().slice(0, 8), nome_atendido: nome, cpf_atendido: cpf,
           cras_origem_id: el('atCras').value, motivo: el('atMotivo').value,
-          submotivo: el('atSub').value || null, profissional_id: currentFuncionario.id
+          submotivo: subValor(), profissional_id: currentFuncionario.id
         },
         ents: entrevs
       });
@@ -2726,15 +2751,33 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     } finally { btn.disabled = false; btn.textContent = editandoId ? 'Salvar alterações' : 'Salvar atendimento'; }
   });
 
-  const SEL_ATEND = 'id, data_atendimento, horario, nome_atendido, motivo, cras:cras_origem_id(nome), ents:atendimento_entrevistadores(func:funcionario_id(nome))';
+  const SEL_ATEND = 'id, data_atendimento, horario, nome_atendido, motivo, submotivo, cras:cras_origem_id(nome), ents:atendimento_entrevistadores(func:funcionario_id(nome))';
   function linhasAtendimento(data){
-    return (data || []).map(a => `<tr>
+    return (data || []).map(a => `<tr class="at-linha" style="cursor:pointer" title="Clique para ver o submotivo" data-sub="${escapeHtml(a.submotivo || '')}">
       <td>${fmtData(a.data_atendimento)}</td><td>${a.horario ? a.horario.slice(0, 5) : '—'}</td><td>${escapeHtml(a.nome_atendido)}</td>
       <td>${escapeHtml(a.cras && a.cras.nome)}</td><td>${escapeHtml(a.motivo)}</td>
       <td>${escapeHtml((a.ents || []).map(e => e.func && e.func.nome).filter(Boolean).join(' / '))}</td>
       <td style="white-space:nowrap"><a href="#" class="at-edit" data-id="${a.id}" style="color:var(--blue);margin-right:12px">Editar</a><a href="#" class="at-del" data-id="${a.id}" style="color:var(--coral)">Excluir</a></td></tr>`).join('')
       || '<tr><td colspan="7" style="padding:12px">Nenhum atendimento encontrado.</td></tr>';
   }
+
+  // Clique na linha: abre/fecha uma linha abaixo com o submotivo (e o texto de "Outros")
+  function alternarDetalheAtendimento(e){
+    if (e.target.closest('a, button, input, select')) return;
+    const tr = e.target.closest('tr.at-linha');
+    if (!tr) return;
+    const prox = tr.nextElementSibling;
+    if (prox && prox.classList.contains('at-det')){ prox.remove(); return; }
+    const sub = tr.dataset.sub || '';
+    let html;
+    if (!sub) html = '<span style="color:var(--muted)">Sem submotivo registrado.</span>';
+    else if (/^Outros(:|$)/.test(sub)){
+      const txt = sub.replace(/^Outros:?\s*/, '').trim();
+      html = '<b>Submotivo:</b> Outros' + (txt ? ' — ' + escapeHtml(txt) : '');
+    } else html = '<b>Submotivo:</b> ' + escapeHtml(sub);
+    tr.insertAdjacentHTML('afterend', `<tr class="at-det"><td colspan="7" style="background:var(--bg-soft,#F5F8FF);padding:9px 14px;font-size:13.5px">${html}</td></tr>`);
+  }
+  ['atRecentes', 'atLista'].forEach(id => el(id).addEventListener('click', alternarDetalheAtendimento));
 
   // ====== PAINEL GERAL: ÚLTIMOS ATENDIMENTOS ======
   async function carregarPgUltimosAtendimentos(){
@@ -2866,13 +2909,27 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const nEnc = at.filter(a => ['Atend N efetuado', 'ED N localizada'].includes(a.motivo)).length;
     // Submotivos (ED não localizada): "não localizados" separados em dois blocos + demais submotivos
     // (os valores gravados no banco não mudam; só o rótulo exibido aqui)
-    const cSub = (n) => at.filter(a => a.submotivo === n).length;
-    const totSub = SUBMOTIVOS.reduce((t, n) => t + cSub(n), 0);
+    const MOTIVOS_OCULTOS_REL = ['Atualização c/ED', 'Agenda ED p/ Inclusao', 'Agenda ED p/ Inclusão', 'ED N localizada']; // não aparecem no gráfico "Por motivo"
+    const atEd = at.filter(a => a.motivo === 'ED N localizada');           // submotivos da ED não localizada
+    const atNe = at.filter(a => a.motivo === 'Atend N efetuado');          // submotivos da não efetivada no CRAS
+    const cSubDe = (base, n) => base.filter(a => n === 'Outros' ? /^Outros(:|$)/.test(a.submotivo || '') : (a.submotivo === n || (n === 'Problemas no CPF' && a.submotivo === 'Pendências no CPF'))).length; // 'Pendências no CPF' = nome antigo, ainda contado
+    const cSub = (n) => atEd.filter(a => n === 'Outros' ? /^Outros(:|$)/.test(a.submotivo || '') : a.submotivo === n).length;
+    const totSub = SUBMOTIVOS_ED.reduce((t, n) => t + cSub(n), 0);
     const blocoNL = (rot, n) => `<div style="flex:1;min-width:140px;padding:10px 12px;border-radius:12px;background:var(--page-bg);border-top:3px solid var(--coral)">
       <div style="font-size:12.5px;color:var(--muted)">${rot}</div><div style="font-size:24px;font-weight:700;margin-top:2px">${n}</div>
       <div style="font-size:11.5px;color:var(--muted)">${totSub ? Math.round(n / totSub * 100) + '% dos submotivos' : 'Sem dados no período'}</div></div>`;
     const subNaoLoc = `<div style="display:flex;gap:10px;flex-wrap:wrap">${blocoNL('Pessoa não localizada', cSub('Pessoa não localizada'))}${blocoNL('Endereço (rua e/ou nº) não encontrado', cSub('Endereço não localizado'))}</div>`;
-    const subOutros = SUBMOTIVOS.filter(n => n !== 'Pessoa não localizada' && n !== 'Endereço não localizado').map(n => [n, cSub(n)]).sort((x, y) => y[1] - x[1]);
+    const subOutros = SUBMOTIVOS_ED.filter(n => n !== 'Pessoa não localizada' && n !== 'Endereço não localizado').map(n => [n, cSub(n)]).sort((x, y) => y[1] - x[1]);
+    // texto livre digitado em "Outros"
+    const subOutrosTxt = rpCont(atEd.filter(a => /^Outros:/.test(a.submotivo || '')), a => a.submotivo.replace(/^Outros:\s*/, '').trim() || null);
+    const cardSub = rpCard('Submotivos (ED não localizada)', subNaoLoc + '<div style="font-size:12.5px;color:var(--muted);margin:14px 0 8px">Outros submotivos</div>' + rpBarras(subOutros, 0, 'var(--coral)')
+      + `<div style="font-size:12.5px;color:var(--muted);margin-top:14px;border-top:1px solid var(--line);padding-top:10px">Com submotivo: <b>${totSub}</b> (${cSub('Pessoa não localizada') + cSub('Endereço não localizado')} não localizados + ${totSub - cSub('Pessoa não localizada') - cSub('Endereço não localizado')} nos demais)<br>Sem submotivo informado: <b>${atEd.length - totSub}</b> · Total de ED não localizada: <b>${atEd.length}</b></div>`);
+    // Não efetivada no CRAS: falta de documento, usuário negou prestar informações, problemas no CPF, sem perfil, outros
+    const neSem = atNe.filter(a => !a.submotivo).length;
+    const neOutrosTxt = rpCont(atNe.filter(a => /^Outros:/.test(a.submotivo || '')), a => a.submotivo.replace(/^Outros:\s*/, '').trim() || null);
+    const cardNe = rpCard('Não efetivada no CRAS — motivos', rpBarras(
+      SUBMOTIVOS_CRAS.map(n => [n, cSubDe(atNe, n)]).concat(neSem ? [['Sem motivo informado', neSem]] : []), atNe.length, 'var(--coral)')
+     );
     const htmlAt = `
       <div class="rp-titulo">Atendimentos</div>
       <div class="rp-kpis">
@@ -2881,18 +2938,16 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         ${rpKpi('Atualizações', at.filter(a => ini(a.motivo, 'Atualiza')).length, '', 'var(--cyan)')}
         ${rpKpi('Agendamentos ED', at.filter(a => ini(a.motivo, 'Agenda ED')).length, '', 'var(--orange)')}
         ${rpKpi('Reagendamentos ED', at.filter(a => a.motivo === 'Reagenda ED').length, '', 'var(--orange)')}
-        ${rpKpi('Inclusão c/ED', at.filter(a => a.motivo === 'Inclusão c/ED').length, '', 'var(--green)')}
-        ${rpKpi('Atualização c/ED', at.filter(a => a.motivo === 'Atualização c/ED').length, '', 'var(--green)')}
-        ${rpKpi('ED efetuadas', at.filter(a => ['Inclusão c/ED', 'Atualização c/ED'].includes(a.motivo)).length, 'Inclusão + Atualização c/ED', 'var(--green)')}
-        ${rpKpi('Não efetuados / ED não localizada', nEnc, pct(nEnc, at.length) + ' do total', 'var(--coral)')}
+        ${rpKpi('Não efetivada no CRAS', nEnc, pct(nEnc, at.length) + ' do total', 'var(--coral)')}
+        ${rpKpi('Consultas', at.filter(a => a.motivo === 'Consulta').length, '', 'var(--blue)')}
         ${rpKpi('Transferências', at.filter(a => a.motivo === 'Transferência').length, '', 'var(--muted)')}
       </div>
       <div class="rp-cards">
         ${rpCard('Atendimentos por dia', dias.length ? `<div class="rp-cols">${dias.map(([d, n]) => `<div class="rp-col" title="${fmtData(d)}: ${n}"><i style="height:${n / Math.max(...dias.map(x => x[1])) * 100}%"></i>${d.slice(8, 10)}</div>`).join('')}</div>` : '<p class="hint" style="margin:0">Sem dados no período.</p>')}
-        ${rpCard('Por motivo', rpBarras(rpCont(at, a => a.motivo || 'Sem motivo'), at.length, 'var(--blue)'))}
+        ${rpCard('Por motivo', rpBarras(rpCont(at.filter(a => !MOTIVOS_OCULTOS_REL.includes(a.motivo)), a => a.motivo || 'Sem motivo'), at.length, 'var(--blue)'))}
         ${rpCard('Por CRAS', rpBarras(rpCont(at, a => a.cras && a.cras.nome || 'Sem CRAS'), at.length, 'var(--cyan)'))}
         ${rpCard('Por entrevistador (top 10)', rpBarras(rpCont(at, a => (a.ents || []).map(e => e.func && e.func.nome).filter(Boolean)).slice(0, 10), 0, 'var(--blue)'))}
-        ${rpCard('Submotivos (ED não localizada)', subNaoLoc + '<div style="font-size:12.5px;color:var(--muted);margin:14px 0 8px">Outros submotivos</div>' + rpBarras(subOutros, 0, 'var(--coral)'))}
+        ${cardNe}
       </div>`;
 
     const st = (k) => vs.filter(v => v.status === k).length;
@@ -2927,6 +2982,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         ${rpCard('Por motivo', rpBarras(rpCont(vs, v => v.motivo || 'Sem motivo'), vs.length, 'var(--blue)'))}
         ${rpCard('Por CRAS', rpBarras(rpCont(vs, v => v.cras && v.cras.nome || 'Sem CRAS'), vs.length, 'var(--cyan)'))}
         ${rpCard('Por entrevistador (top 10)', rpBarras(rpCont(vs, v => (v.entrevistadores || []).map(nomeEnt).filter(Boolean)).slice(0, 10), 0, 'var(--blue)'))}
+        ${cardSub}
       </div>`;
     return htmlAt + htmlVs;
   }
@@ -3064,7 +3120,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   // Reaproveitada pela listagem em tela e pela exportação em PDF/Excel.
   function montarQueryFiltrada(){
     const fEnt = el('fEntrev').value;
-    const sel = 'id, data_atendimento, horario, nome_atendido, motivo, cras:cras_origem_id(nome), ents:atendimento_entrevistadores(func:funcionario_id(nome))'
+    const sel = 'id, data_atendimento, horario, nome_atendido, motivo, submotivo, cras:cras_origem_id(nome), ents:atendimento_entrevistadores(func:funcionario_id(nome))'
       + (fEnt ? ', filtro:atendimento_entrevistadores!inner(funcionario_id)' : '');
     let q = escoparAt(sbClient.from('atendimentos').select(sel, { count: 'exact' })).or(FILTRO_DATA_POSSIVEL).lte('data_atendimento', hoje());
     if (el('fCras').value) q = q.eq('cras_origem_id', el('fCras').value);
@@ -3074,7 +3130,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const ms = [...el('fMotivo').selectedOptions].map(o => o.value);
     if (ms.length) q = q.in('motivo', ms);
     const busca = el('fBusca').value.trim().replace(/[,()%*]/g, '');
-    if (busca) q = q.or(`nome_atendido.ilike.%${busca}%,cpf_atendido.ilike.%${busca}%`);
+    if (busca) q = q.or(filtroNomeCpf(busca));
     return q.order('data_atendimento', { ascending: false }).order('created_at', { ascending: false });
   }
 
@@ -3587,6 +3643,18 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   // ---- Aviso de CPF duplicado ----
   const fmtCpf = (d) => d.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
 
+  // Filtro de busca por nome ou CPF: com 3+ dígitos procura o CPF só com números e também com máscara
+  function filtroNomeCpf(busca){
+    const d = busca.replace(/\D/g, '');
+    const partes = [`nome_atendido.ilike.%${busca}%`];
+    if (d.length >= 3){
+      partes.push(`cpf_atendido.ilike.%${d}%`);
+      const m = d.slice(0, 3) + (d.length > 3 ? '.' + d.slice(3, 6) : '') + (d.length > 6 ? '.' + d.slice(6, 9) : '') + (d.length > 9 ? '-' + d.slice(9, 11) : '');
+      if (m !== d) partes.push(`cpf_atendido.ilike.%${m}%`);
+    } else if (d.length) partes.push(`cpf_atendido.ilike.%${d}%`);
+    return partes.join(',');
+  }
+
   async function verificarCpfDuplicado(){
     const box = el('atDupBox');
     const cpf = el('atCpf').value.replace(/\D/g, '');
@@ -3612,6 +3680,28 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   }
   el('atCpf').addEventListener('input', () => { if (el('atCpf').value.replace(/\D/g, '').length === 11) verificarCpfDuplicado(); else el('atDupBox').style.display = 'none'; });
   el('atCpf').addEventListener('blur', verificarCpfDuplicado);
+  (function mascaraCpfAtendimento(){
+    const inp = el('atCpf');
+    const msg = document.createElement('small');
+    msg.className = 'cpf-msg';
+    inp.insertAdjacentElement('afterend', msg);
+    inp.setAttribute('inputmode', 'numeric'); inp.setAttribute('maxlength', '14'); inp.setAttribute('autocomplete', 'off');
+    const atualizar = () => {
+      const d = inp.value.replace(/\D/g, '').slice(0, 11);
+      let o = d.slice(0, 3);
+      if (d.length > 3) o += '.' + d.slice(3, 6);
+      if (d.length > 6) o += '.' + d.slice(6, 9);
+      if (d.length > 9) o += '-' + d.slice(9, 11);
+      if (inp.value !== o) inp.value = o;
+      if (!d.length) msg.textContent = '';
+      else if (d.length < 11) msg.textContent = 'Faltam ' + (11 - d.length) + ' número(s)';
+      else msg.textContent = cpfValido(d) ? '✓ CPF válido' : '✗ CPF inválido (confira os números)';
+      msg.style.color = d.length === 11 ? (cpfValido(d) ? '#2e7d32' : '#c62828') : '';
+    };
+    inp.addEventListener('input', atualizar);
+    new MutationObserver(atualizar).observe(inp, { attributes: true, attributeFilter: ['value'] });
+    window.atCpfAtualizar = atualizar;
+  })();
 
   function abrirAba(hist){
     el('atTabForm').style.display = hist ? 'none' : '';
@@ -3645,11 +3735,13 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const garantir = (sel, v) => { if (v && ![...sel.options].some(o => o.value === v)) sel.add(new Option(v, v)); sel.value = v || ''; };
     el('atData').value = data.data_atendimento;
     el('atNome').value = data.nome_atendido || '';
-    el('atCpf').value = data.cpf_atendido || '';
+    el('atCpf').value = data.cpf_atendido || ''; if (window.atCpfAtualizar) window.atCpfAtualizar();
     el('atCras').value = data.cras_origem_id || '';
     garantir(el('atMotivo'), data.motivo);
     el('atMotivo').dispatchEvent(new Event('change'));
-    garantir(el('atSub'), data.submotivo);
+    if (/^Outros(:|$)/.test(data.submotivo || '')){
+      el('atSub').value = 'Outros'; el('atSubOutros').value = String(data.submotivo).replace(/^Outros:?\s*/, ''); subMostrarOutros();
+    } else { garantir(el('atSub'), data.submotivo); subMostrarOutros(); }
     editandoEntrevs = (data.atendimento_entrevistadores || []).map(x => x.funcionario_id);
     // atendente só vê a si mesmo na lista; ao editar um atendimento com outras pessoas, elas são mantidas para não se perderem ao salvar
     if (currentFuncionario && currentFuncionario.role === 'atendente'){
@@ -3754,7 +3846,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     el('fluxoResumo').textContent = 'Buscando...';
     el('fluxoResultado').querySelectorAll('.tl-item, p').forEach(n => n.remove());
     let q = escoparAt(sbClient.from('atendimentos').select(SEL_ATEND)).or(FILTRO_DATA_POSSIVEL).lte('data_atendimento', hoje());
-    if (busca) q = q.or(`nome_atendido.ilike.%${busca}%,cpf_atendido.ilike.%${busca}%`);
+    if (busca) q = q.or(filtroNomeCpf(busca));
     if (cras) q = q.eq('cras_origem_id', cras);
     if (ini) q = q.gte('data_atendimento', ini);
     if (fim) q = q.lte('data_atendimento', fim);
@@ -4683,7 +4775,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 h1,h2{text-align:center;margin:0;font-size:15pt}h2{margin-bottom:6px}
 table{width:100%;border-collapse:collapse;border:1.5px solid #000}td{border-top:1px solid #000;padding:3px 6px;vertical-align:top}
 tr.h td{font-weight:bold;border-top:1.5px solid #000}tr.h small{font-weight:normal;font-size:11pt}
-.o p{margin:0 0 12px}.o p.sub{margin-left:0}.ln{border-bottom:1px solid #000;min-height:21px;line-height:21px;padding:0 4px}.pb{page-break-after:always}
+.o p{margin:0 0 12px}.o p.sub{margin-left:0}.ln{border-bottom:1px solid #000;min-height:21px;line-height:21px;padding:0 4px}.pb{page-break-after:always}.rodape{margin-top:14px;text-align:center;font-size:11pt;page-break-inside:avoid}
 </style></head><body>
 <h1>ANEXO II</h1><h2>MODELO DE FORMULÁRIO DE CAMPO</h2>
 <table><tr><td><b>Data da Entrevista:</b> <b>${e(dt)}</b></td></tr>
@@ -4700,7 +4792,8 @@ ${L('1.1 NOME DO RESPONSÁVEL PELA UNIDADE FAMILIAR (RUF):', d.nome)}${L('1.2 CP
 <tr class="h"><td>6.&nbsp;&nbsp;&nbsp;ENCAMINHAMENTOS<br><br><small>(PODE-SE MARCAR MAIS DE UMA OPÇÃO)</small></td></tr>
 <tr><td class="o" style="padding-top:8px">${enc}</td></tr>
 <tr class="h"><td>7.&nbsp;&nbsp;&nbsp;IDENTIFICAÇÃO DO(A) ENTREVISTADOR(A) SOCIAL</td></tr>
-${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIADA:', d.enUn)}${L('7.4 TELEFONE INSTITUCIONAL:', d.enTel)}${L('7.5 E-MAIL INSTITUCIONAL:', d.enMail)}</table></body></html>`;
+${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIADA:', d.enUn)}${L('7.4 TELEFONE INSTITUCIONAL:', d.enTel)}${L('7.5 E-MAIL INSTITUCIONAL:', d.enMail)}</table>
+<div class="rodape"><b>Local Cadastro Único SMAS</b><br>Telefone: 51 3044-7111<br>Email: cadastro-unico@alvorada.rs.gov.br</div></body></html>`;
   }
   function abrirFormularioCampo(v){
     v = v || {};
