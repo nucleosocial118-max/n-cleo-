@@ -1560,6 +1560,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .field input:focus, .field select:focus, .field textarea:focus{ outline:none; border-color:var(--gold); background:var(--card); }
   body.dark .search, body.dark .field input, body.dark .field select, body.dark .field textarea{ background:#14201E; }
 
+  /* Últimos atendimentos: detalhe do submotivo aparece ao passar o mouse na linha */
+  #atRecentes tr .at-det, #atTabHist tr .at-det{ display:none; margin-top:3px; font-size:12px; color:var(--muted); }
+  #atRecentes tr:hover .at-det, #atTabHist tr:hover .at-det, #atRecentes tr:focus-within .at-det{ display:block; }
+  #atRecentes tr:hover td, #atTabHist tr:hover td{ background:var(--page-bg); }
+
   /* Modo escuro: Agenda ED e Últimas entrevistas (textos legíveis, destaques sem fundo claro) */
   body.dark .visita-two-col .vs-urgente-box:has(input:checked){ background:rgba(220,38,38,.18); border-color:#B94A4A; }
   body.dark .visita-two-col .vs-urgente-box:has(input:checked) b{ color:#FCA5A5; }
@@ -1720,7 +1725,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <div class="field"><label>Nome *</label><input type="text" id="atNome"></div>
         <div class="field"><label>CPF *</label><input type="text" id="atCpf" placeholder="000.000.000-00"></div>
         <div class="field"><label>CRAS *</label><select id="atCras"></select></div>
-        <div class="field"><label>Motivo *</label><select id="atMotivo"></select></div>
+        <div class="field"><label>Motivo * <small style="font-weight:400;color:var(--muted)">(digite o número para localizar)</small></label><select id="atMotivo"></select></div>
         <div class="field" id="atSubBox" style="display:none"><label>Submotivo</label><select id="atSub"></select><input type="text" id="atSubOutros" maxlength="120" placeholder="Escreva o que aconteceu" style="display:none;margin-top:8px"></div>
         <div class="field span-2"><label id="atEntrevLabel">Entrevistador(es) * (clique para selecionar; Ctrl para vários)</label><select id="atEntrev" multiple style="height:120px;width:100%"></select></div>
       </div>
@@ -2054,15 +2059,15 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <div class="field-grid">
             <div class="field">
               <label>Senha atual</label>
-              <input type="password" placeholder="••••••••">
+              <input type="password" id="cpSenhaAtual" autocomplete="current-password" placeholder="••••••••">
             </div>
             <div class="field">
-              <label>Nova senha</label>
-              <input type="password" placeholder="••••••••">
+              <label>Nova senha <small style="font-weight:400;color:var(--muted)">(mín. 10, com letras e números)</small></label>
+              <input type="password" id="cpSenhaNova" autocomplete="new-password" placeholder="••••••••">
             </div>
             <div class="field">
               <label>Confirmar nova senha</label>
-              <input type="password" placeholder="••••••••">
+              <input type="password" id="cpSenhaConf" autocomplete="new-password" placeholder="••••••••">
             </div>
           </div>
           <div class="form-actions" style="margin-top:6px">
@@ -2463,7 +2468,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   let paginaAt = 1;
   let editandoId = null, editandoEntrevs = [];
   const optsHtml = (l) => l.map(v => `<option>${escapeHtml(v)}</option>`).join('');
-  el('atMotivo').innerHTML = '<option value="">Selecione</option>' + optsHtml(MOTIVOS);
+  // Motivo numerado: digitar o número (ex.: 5 ou 12) com a lista aberta/focada já seleciona o motivo
+  el('atMotivo').innerHTML = '<option value="">Selecione</option>' + MOTIVOS.map((v, i) => `<option value="${escapeHtml(v)}">${i + 1} - ${escapeHtml(v)}</option>`).join('');
   el('atSub').innerHTML = '<option value="">Selecione</option>' + optsHtml(SUBMOTIVOS);
   el('fMotivo').innerHTML = optsHtml(MOTIVOS);
   // "Outros": o texto escrito é gravado junto no submotivo ("Outros: texto"), sem mudar o banco
@@ -2788,11 +2794,19 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     } finally { btn.disabled = false; btn.textContent = editandoId ? 'Salvar alterações' : 'Salvar atendimento'; }
   });
 
-  const SEL_ATEND = 'id, data_atendimento, horario, nome_atendido, motivo, cras:cras_origem_id(nome), ents:atendimento_entrevistadores(func:funcionario_id(nome))';
+  const SEL_ATEND = 'id, data_atendimento, horario, nome_atendido, motivo, submotivo, cras:cras_origem_id(nome), ents:atendimento_entrevistadores(func:funcionario_id(nome))';
+  // Ao passar o mouse na linha (ou tocar, no celular) aparece o submotivo; em "Outros", o texto escrito
+  function detalheSubmotivo(a){
+    const sub = String(a.submotivo || '').trim();
+    if (!sub) return '';
+    const m = sub.match(/^Outros:\s*(.*)$/);
+    const txt = m ? 'Outros — ' + (m[1] || 'sem descrição') : sub;
+    return `<div class="at-det">Submotivo: ${escapeHtml(txt)}</div>`;
+  }
   function linhasAtendimento(data){
     return (data || []).map(a => `<tr>
       <td>${fmtData(a.data_atendimento)}</td><td>${a.horario ? a.horario.slice(0, 5) : '—'}</td><td>${escapeHtml(a.nome_atendido)}</td>
-      <td>${escapeHtml(a.cras && a.cras.nome)}</td><td>${escapeHtml(a.motivo)}</td>
+      <td>${escapeHtml(a.cras && a.cras.nome)}</td><td>${escapeHtml(a.motivo)}${detalheSubmotivo(a)}</td>
       <td>${escapeHtml((a.ents || []).map(e => e.func && e.func.nome).filter(Boolean).join(' / '))}</td>
       <td style="white-space:nowrap"><a href="#" class="at-edit" data-id="${a.id}" style="color:var(--blue);margin-right:12px">Editar</a><a href="#" class="at-del" data-id="${a.id}" style="color:var(--coral)">Excluir</a></td></tr>`).join('')
       || '<tr><td colspan="7" style="padding:12px">Nenhum atendimento encontrado.</td></tr>';
@@ -3137,7 +3151,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   // Reaproveitada pela listagem em tela e pela exportação em PDF/Excel.
   function montarQueryFiltrada(){
     const fEnt = el('fEntrev').value;
-    const sel = 'id, data_atendimento, horario, nome_atendido, motivo, cras:cras_origem_id(nome), ents:atendimento_entrevistadores(func:funcionario_id(nome))'
+    const sel = 'id, data_atendimento, horario, nome_atendido, motivo, submotivo, cras:cras_origem_id(nome), ents:atendimento_entrevistadores(func:funcionario_id(nome))'
       + (fEnt ? ', filtro:atendimento_entrevistadores!inner(funcionario_id)' : '');
     let q = escoparAt(sbClient.from('atendimentos').select(sel, { count: 'exact' })).or(FILTRO_DATA_POSSIVEL).lte('data_atendimento', hoje());
     if (el('fCras').value) q = q.eq('cras_origem_id', el('fCras').value);
@@ -3867,10 +3881,37 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.body.classList.toggle('dark', e.target.checked);
   });
 
-  document.getElementById('changePasswordBtn').addEventListener('click', () => {
-    toast.textContent = 'Senha atualizada (exemplo — ainda sem conexão com o banco)';
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 2600);
+  // Alterar senha: confere a senha atual (em um cliente separado, sem mexer na sessão) e grava a nova no Supabase
+  document.getElementById('changePasswordBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('changePasswordBtn');
+    const atual = el('cpSenhaAtual').value, nova = el('cpSenhaNova').value, conf = el('cpSenhaConf').value;
+    if (!atual || !nova || !conf){ showToast('Preencha a senha atual, a nova senha e a confirmação'); return; }
+    if (nova.length < 10 || !/[A-Za-z]/.test(nova) || !/\d/.test(nova)){ showToast('A nova senha precisa ter no mínimo 10 caracteres, com letras e números'); return; }
+    if (nova !== conf){ showToast('A confirmação não é igual à nova senha'); return; }
+    if (nova === atual){ showToast('A nova senha precisa ser diferente da atual'); return; }
+    btn.disabled = true; const rotulo = btn.textContent; btn.textContent = 'Salvando...';
+    try {
+      const { data: ud, error: eu } = await sbClient.auth.getUser();
+      const email = ud && ud.user && ud.user.email;
+      if (eu || !email){ showToast('Sessão expirada. Entre novamente para trocar a senha.'); return; }
+      // 1) confere a senha atual sem alterar a sessão que está aberta
+      const tmp = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
+      const { error: ev } = await tmp.auth.signInWithPassword({ email, password: atual });
+      if (ev){ showToast('Senha atual incorreta'); return; }
+      // 2) grava a nova senha
+      const { error: ep } = await sbClient.auth.updateUser({ password: nova });
+      if (ep){
+        const m = String(ep.message || '');
+        showToast(/different from the old/i.test(m) ? 'A nova senha precisa ser diferente da atual'
+          : /weak|short|least/i.test(m) ? 'Senha fraca: use mais caracteres, com letras e números'
+          : 'Não foi possível alterar a senha: ' + m, 4500);
+        return;
+      }
+      ['cpSenhaAtual', 'cpSenhaNova', 'cpSenhaConf'].forEach(i => el(i).value = '');
+      showToast('✅ Senha alterada com sucesso');
+    } catch (err){
+      console.error(err); showToast('Erro ao alterar a senha. Verifique a conexão e tente de novo.');
+    } finally { btn.disabled = false; btn.textContent = rotulo; }
   });
 
   document.getElementById('logoutBtn').addEventListener('click', async () => {
@@ -4759,6 +4800,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 h1,h2{text-align:center;margin:0;font-size:15pt}h2{margin-bottom:6px}
 table{width:100%;border-collapse:collapse;border:1.5px solid #000}td{border-top:1px solid #000;padding:3px 6px;vertical-align:top}
 tr.h td{font-weight:bold;border-top:1.5px solid #000}tr.h small{font-weight:normal;font-size:11pt}
+.rodape{margin-top:14px;padding-top:8px;border-top:1px solid #000;font-size:11pt;page-break-inside:avoid}.rodape p{margin:2px 0}
 .o p{margin:0 0 12px}.o p.sub{margin-left:0}.ln{border-bottom:1px solid #000;min-height:21px;line-height:21px;padding:0 4px}.pb{page-break-after:always}
 </style></head><body>
 <h1>ANEXO II</h1><h2>MODELO DE FORMULÁRIO DE CAMPO</h2>
@@ -4776,7 +4818,8 @@ ${L('1.1 NOME DO RESPONSÁVEL PELA UNIDADE FAMILIAR (RUF):', d.nome)}${L('1.2 CP
 <tr class="h"><td>6.&nbsp;&nbsp;&nbsp;ENCAMINHAMENTOS<br><br><small>(PODE-SE MARCAR MAIS DE UMA OPÇÃO)</small></td></tr>
 <tr><td class="o" style="padding-top:8px">${enc}</td></tr>
 <tr class="h"><td>7.&nbsp;&nbsp;&nbsp;IDENTIFICAÇÃO DO(A) ENTREVISTADOR(A) SOCIAL</td></tr>
-${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIADA:', d.enUn)}${L('7.4 TELEFONE INSTITUCIONAL:', d.enTel)}${L('7.5 E-MAIL INSTITUCIONAL:', d.enMail)}</table></body></html>`;
+${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIADA:', d.enUn)}${L('7.4 TELEFONE INSTITUCIONAL:', d.enTel)}${L('7.5 E-MAIL INSTITUCIONAL:', d.enMail)}</table>
+<div class="rodape"><p><b>Local:</b> Cadastro Único - SMAS</p><p><b>Telefone:</b> 51 3044-7111</p><p><b>E-mail:</b> cadastro_unico@avorada.rs.gov.br</p></div></body></html>`;
   }
   function abrirFormularioCampo(v){
     v = v || {};
