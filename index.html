@@ -1578,6 +1578,21 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   body.dark .vs-detalhes>summary, body.dark .vs-table tbody td, body.dark .vs-modal{ color:var(--ink); }
   body.dark .vs-reag-timeline li::before{ background:var(--card); }
 
+  /* Agenda ED / filtros: contorno visível nos campos (modo claro e escuro) */
+  :root{ --campo-borda:#9DB8B2; }
+  body.dark{ --campo-borda:#52706A; }
+  .visita-two-col .field input:not([type=checkbox]):not([type=radio]),
+  .visita-two-col .field select,
+  .visita-two-col .field textarea,
+  .vs-filtros .field input:not([type=checkbox]):not([type=radio]),
+  .vs-filtros .field select{ border:1px solid var(--campo-borda); }
+  .visita-two-col .field input:not([type=checkbox]):not([type=radio]):focus,
+  .visita-two-col .field select:focus,
+  .visita-two-col .field textarea:focus,
+  .vs-filtros .field input:not([type=checkbox]):not([type=radio]):focus,
+  .vs-filtros .field select:focus{ border-color:var(--gold); }
+  .vs-detalhes, .visita-two-col .vs-urgente-box, .visita-two-col .field .chk-list{ border-color:var(--campo-borda); }
+
   /* Celular: cada entrevista vira um cartão; os botões de ação ficam logo abaixo do nome */
   @media (max-width:760px){
     .vs-table, .vs-table tbody{ display:block; width:100%; }
