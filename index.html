@@ -797,7 +797,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .vs-table .vs-btn-icon svg{ width:16px; height:16px; }
   .vs-table .vs-btn-icon.editar:hover{ background:#EEF2FF; color:#3B4FCB; border-color:#C7D2FE; }
   .vs-table .vs-btn-icon.excluir:hover{ background:#FEF2F2; color:#DC2626; border-color:#FECACA; }
-  .vs-detalhes{ grid-column:1/-1; border:1px solid var(--line); border-radius:12px; background:var(--page-bg); }
+  .vs-detalhes{ grid-column:1/-1; border:1px solid var(--line); border-radius:12px; background:var(--card); }
   .vs-detalhes>summary{ cursor:pointer; list-style:none; display:flex; align-items:center; gap:8px; padding:11px 14px; font-weight:600; font-size:13.5px; }
   .vs-detalhes>summary::-webkit-details-marker{ display:none; }
   .vs-detalhes>summary::after{ content:'+'; margin-left:auto; font-size:18px; line-height:1; color:var(--muted); }
@@ -1907,6 +1907,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
             <details class="vs-detalhes" id="vsDetalhes"><summary>Endereço, contato e observações</summary><div class="field-grid">
             <div class="field"><label>Benefício</label><input type="text" id="vsBeneficio" placeholder="Informe o benefício..."></div>
             <div class="field"><label>Status</label><select id="vsStatus"></select></div>
+            <div class="field"><label>CEP <small id="vsCepInfo" style="font-weight:400;font-size:12px;color:var(--muted)"></small></label><input type="text" id="vsCep" inputmode="numeric" maxlength="9" placeholder="00000-000" autocomplete="postal-code"></div>
             <div class="field span-2"><label>Endereço</label><input type="text" id="vsEndereco" placeholder="Rua, número, complemento..."></div>
             <div class="field"><label>Bairro</label><input type="text" id="vsBairro" placeholder="Bairro"></div>
             <div class="field"><label>Telefone</label><input type="text" id="vsTelefone" placeholder="(51) 90000-0000"></div>
@@ -4016,7 +4017,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       ultimoBuscado = d;
       try {
         const { data, error } = await escoparVs(sbClient.from('visitas_domiciliares')
-          .select('nome_responsavel, endereco, bairro, telefone, data_criacao'))
+          .select('*'))
           .eq('cpf', d).order('data_criacao', { ascending: false, nullsFirst: false }).limit(1);
         if (error) throw error;
         const v = data && data[0];
@@ -4024,6 +4025,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         let n = 0;
         const por = (id, valor, fn) => { const e = document.getElementById(id); if (e && valor && !e.value.trim()) { e.value = fn ? fn(valor) : valor; n++; } };
         por('vsNome', v.nome_responsavel);
+        por('vsCep', v.cep, vsFmtCep);
         por('vsEndereco', v.endereco);
         por('vsBairro', v.bairro);
         por('vsTelefone', v.telefone, vsFmtTel);
@@ -4070,6 +4072,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const observacao = document.getElementById('vsObs').value.trim();
     const endereco = document.getElementById('vsEndereco').value.trim() || null;
     const bairro = document.getElementById('vsBairro').value.trim() || null;
+    const cepDig = document.getElementById('vsCep').value.replace(/\D/g, '');
+    if (cepDig && cepDig.length !== 8){ showToast('⚠️ CEP incompleto: use 8 números (ex.: 94800-000)'); document.getElementById('vsCep').focus(); return; }
+    const cep = cepDig ? vsFmtCep(cepDig) : null;   // só vai para o banco quando preenchido
     const telefone = document.getElementById('vsTelefone').value.replace(/\D/g, '') || null;
     const demanda = document.getElementById('vsDemanda').value.trim() || null;
     const urgente = document.getElementById('vsUrgente').checked;
@@ -4117,6 +4122,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           observacao: observacao || null,
           endereco: endereco,
           bairro: bairro,
+          ...((cep || vsCepOriginal) ? { cep: cep } : {}),
           telefone: telefone,
           demanda: demanda,
           urgente: urgente,
@@ -4136,7 +4142,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         res: { nome, data, motivo },
         reg: {
           nome_responsavel: nome, cpf: cpf.replace(/\D/g, ''), data_agendada: data, hora_prevista: hora || null, cras_id: cras, motivo: motivo,
-          beneficio: beneficio || null, observacao: observacao || null, endereco: endereco, bairro: bairro, telefone: telefone, demanda: demanda,
+          beneficio: beneficio || null, observacao: observacao || null, endereco: endereco, bairro: bairro, ...(cep ? { cep: cep } : {}), telefone: telefone, demanda: demanda,
           urgente: urgente, entrevistadores: entrevistadores, status: status, data_criacao: new Date().toISOString()
         }
       });
@@ -4145,7 +4151,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       else showToast('📴 Sem conexão estável: visita guardada neste computador. Será enviada sozinha quando a internet voltar.', 6000);
     } catch (err) {
       console.error('Erro ao salvar:', err);
-      showToast('❌ Não foi possível salvar a visita. ' + erroAmigavel(err));
+      showToast('❌ Não foi possível salvar a visita. ' + (/cep/i.test(String(err && err.message)) && /column|coluna|schema/i.test(String(err && err.message)) ? 'A coluna "cep" ainda não existe no banco (rode o SQL de instalação do CEP).' : erroAmigavel(err)));
     } finally {
       btnSalvar.disabled = false;
       btnSalvar.textContent = editandoVisitaId ? 'Salvar alterações' : 'Agendar visita';
@@ -4168,6 +4174,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('vsBeneficio').value = '';
     document.getElementById('vsObs').value = '';
     document.getElementById('vsEndereco').value = '';
+    document.getElementById('vsCep').value = ''; document.getElementById('vsCep').dataset.ultimo = ''; document.getElementById('vsCepInfo').textContent = ''; vsCepOriginal = '';
+    ['vsEndereco', 'vsBairro'].forEach(i => delete document.getElementById(i).dataset.auto);
     setTimeout(() => vsAjustarDetalhes(false), 0);
     document.getElementById('vsBairro').value = '';
     document.getElementById('vsTelefone').value = '';
@@ -4253,6 +4261,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('vsStatus').innerHTML = vsOpcoesStatus(v.status || 'agendada');
     document.getElementById('vsObs').value = v.observacao || '';
     document.getElementById('vsEndereco').value = v.endereco || '';
+    vsCepOriginal = v.cep || '';
+    document.getElementById('vsCep').value = vsFmtCep(v.cep); document.getElementById('vsCep').dataset.ultimo = String(v.cep || '').replace(/\D/g, ''); document.getElementById('vsCepInfo').textContent = '';
     setTimeout(() => vsAjustarDetalhes(true), 0);   // ao editar, abre os detalhes se houver algo preenchido
     document.getElementById('vsBairro').value = v.bairro || '';
     document.getElementById('vsTelefone').value = vsFmtTel(v.telefone);
@@ -4286,10 +4296,47 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     }
   }
 
+  // ---- CEP: ao digitar o CEP completo, preenche Endereço e Bairro (continuam editáveis) ----
+  const vsFmtCep = (c) => { const d = String(c || '').replace(/\D/g, '').slice(0, 8); return d.length > 5 ? d.slice(0, 5) + '-' + d.slice(5) : d; };
+  (function(){
+    const cepEl = document.getElementById('vsCep'), info = document.getElementById('vsCepInfo');
+    if (!cepEl) return;
+    const marcar = (msg, erro) => { info.textContent = msg || ''; info.style.color = erro ? 'var(--coral)' : 'var(--muted)'; };
+    // só sobrescreve se o campo estiver vazio ou ainda com o que veio do CEP anterior (não apaga o que a pessoa digitou)
+    const preencher = (id, valor) => {
+      const e = document.getElementById(id); if (!e || !valor) return false;
+      if (!e.value.trim() || e.dataset.auto === e.value){ e.value = valor; e.dataset.auto = valor; return true; }
+      return false;
+    };
+    async function buscar(d){
+      marcar('Buscando CEP...');
+      const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 8000);
+      try {
+        const r = await fetch('https://viacep.com.br/ws/' + d + '/json/', { signal: ctl.signal });
+        const j = await r.json();
+        if (!r.ok || j.erro){ marcar('CEP não encontrado. Preencha o endereço manualmente.', true); return; }
+        const a = preencher('vsEndereco', j.logradouro);
+        preencher('vsBairro', j.bairro);
+        marcar([j.localidade, j.uf].filter(Boolean).join('/'));
+        vsAjustarDetalhes();
+        if (a){ const e = document.getElementById('vsEndereco'); e.focus(); const n = e.value.length; e.setSelectionRange(n, n); }   // falta só o número/complemento
+      } catch (e){
+        marcar('Não foi possível buscar o CEP agora. Preencha o endereço manualmente.', true);
+      } finally { clearTimeout(t); }
+    }
+    cepEl.addEventListener('input', () => {
+      cepEl.value = vsFmtCep(cepEl.value);
+      const d = cepEl.value.replace(/\D/g, '');
+      if (d.length < 8){ cepEl.dataset.ultimo = ''; marcar(''); return; }
+      if (d !== cepEl.dataset.ultimo){ cepEl.dataset.ultimo = d; buscar(d); }
+    });
+  })();
+  let vsCepOriginal = '';   // CEP que a visita já tinha ao abrir para editar
+
   // ---- Agenda: detalhes recolhidos | Filtros: "Mais filtros" ----
   function vsAjustarDetalhes(abrir){
     const d = document.getElementById('vsDetalhes'); if (!d) return;
-    const cheio = ['vsBeneficio', 'vsEndereco', 'vsBairro', 'vsTelefone', 'vsDemanda', 'vsObs']
+    const cheio = ['vsBeneficio', 'vsCep', 'vsEndereco', 'vsBairro', 'vsTelefone', 'vsDemanda', 'vsObs']
       .some(i => (document.getElementById(i).value || '').trim());
     d.classList.toggle('preenchido', cheio);                      // bolinha verde: há dados dentro
     if (abrir === true) d.open = cheio; else if (abrir === false) d.open = false;
@@ -4846,7 +4893,7 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
     const ov = document.getElementById('fcPagina');
     ov.innerHTML = `<div style="max-width:860px;margin:0 auto">
       <h3 style="margin:0 0 4px">Formulário de campo (Anexo II)</h3><p class="status-hint" style="margin:0 0 8px">Preencha e imprima. O que ficar em branco sai em branco para escrever à mão.</p>
-      ${S('Data e 1. Sobre a família')}${I('data', 'Data da entrevista', v.data_agendada ? String(v.data_agendada).slice(0, 10) : '', 'date')}${I('nome', '1.1 Nome do responsável (RUF)', v.nome_responsavel)}${I('cpf', '1.2 CPF do RUF', cpfF)}${I('cod', '1.3 Código familiar', '')}${I('end', '1.4 Endereço', [v.endereco, v.bairro].filter(Boolean).join(' - '))}${I('comp', '1.5 Complemento', '')}${I('cep', '1.6 CEP', '')}${I('mun', '1.7 Município/UF', 'Alvorada/RS')}${I('tel', '1.8 Telefone', v.telefone)}
+      ${S('Data e 1. Sobre a família')}${I('data', 'Data da entrevista', v.data_agendada ? String(v.data_agendada).slice(0, 10) : '', 'date')}${I('nome', '1.1 Nome do responsável (RUF)', v.nome_responsavel)}${I('cpf', '1.2 CPF do RUF', cpfF)}${I('cod', '1.3 Código familiar', '')}${I('end', '1.4 Endereço', [v.endereco, v.bairro].filter(Boolean).join(' - '))}${I('comp', '1.5 Complemento', '')}${I('cep', '1.6 CEP', vsFmtCep(v.cep))}${I('mun', '1.7 Município/UF', 'Alvorada/RS')}${I('tel', '1.8 Telefone', v.telefone)}
       ${S('2. Motivo de cadastro em domicílio')}${FC_M.map((t, i) => K('m' + i, `2.${i + 1} ${t}`)).join('')}${I('mOutro', 'Outro(s). Qual(is)?', '')}
       ${S('3. Informações sobre a realização da entrevista')}${FC_R.map(([k, n, t]) => K(k, `${n} ${t}`)).join('')}${I('c32t', 'Motivo (3.2)', '')}${I('c323t', 'Outro(s) motivo(s) (3.2.3)', '')}
       ${S('4 e 5. Informações coletadas e conclusões')}${T('t4', '4. Informações coletadas em entrevista domiciliar', 5)}${T('t5', '5. Conclusões', 3)}
@@ -5500,7 +5547,7 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
             'Data agendada': fmtBR(v.data_agendada), 'Hora prevista': v.hora_prevista ? String(v.hora_prevista).slice(0, 5) : '',
             'Nome': v.nome_responsavel || '', 'CPF': fmtCpf(v.cpf), 'CRAS': mapaCrasFluxo[v.cras_id] || '',
             'Motivo': v.motivo || '', 'Benefício': v.beneficio || '', 'Observação': v.observacao || '',
-            'Endereço': v.endereco || '', 'Bairro': v.bairro || '', 'Telefone': soDig(v.telefone), 'Demanda': v.demanda || '',
+            'Endereço': v.endereco || '', 'CEP': v.cep || '', 'Bairro': v.bairro || '', 'Telefone': soDig(v.telefone), 'Demanda': v.demanda || '',
             'Urgente': v.urgente ? 'Sim' : 'Não', 'Status': VS_ST_LABEL[v.status] || v.status || '',
             'Entrevistadores': nomesFunc(v.entrevistadores), 'Criada em': v.data_criacao || ''
           }));
@@ -5651,6 +5698,7 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
         nome_responsavel: nome, cpf, data_agendada: data, hora_prevista: hora || null, cras_id: crasId, motivo,
         beneficio: txt(g(r, 'beneficio')) || null, observacao: txt(g(r, 'observacao')) || null,
         endereco: txt(g(r, 'endereco')) || null, bairro: txt(g(r, 'bairro')) || null,
+        ...(txt(g(r, 'cep')) ? { cep: vsFmtCep(txt(g(r, 'cep'))) } : {}),
         telefone: soDig(g(r, 'telefone')) || null, demanda: txt(g(r, 'demanda')) || null,
         urgente: ['sim', 's', 'true', '1', 'x'].includes(urg), entrevistadores: ents, status,
         data_criacao: criD && !isNaN(criD) ? criD.toISOString() : new Date().toISOString()
