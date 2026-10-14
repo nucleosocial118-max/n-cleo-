@@ -2487,6 +2487,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   // ---- Atendimentos ----
   const el = (id) => document.getElementById(id);
   const MOTIVOS = ['3 tentativas','Agenda ED p/ Atualizacao','Agenda ED p/ Inclusao','Atend N efetuado','Atualização','Atualização c/ED','Com relatório','Consulta','ED N localizada','Em aberto','Em Caderno','Endereço não localizado','Exclusão família','Inclusão','Inclusão c/ED','Pessoa não localizada','Reagenda ED','Transferência'];
+  // Motivo que já vem selecionado ao abrir/limpar os formulários (Controle de atendimentos e Agenda ED); o usuário troca depois
+  const MOTIVO_PADRAO = 'Em aberto';
   // Submotivos por motivo: "ED N localizada" e "Atend N efetuado" (não efetivada no CRAS)
   const SUBMOTIVOS_ED = ['Endereço não localizado','Falta de documento','Impossibilidade de chegar no local','Mudou-se','Pessoa não localizada','Recusa','Outros'];
   const SUBMOTIVOS_CRAS = ['Falta de documento','Usuário negou prestar informações','Pendências no CPF','Outros'];
@@ -2554,6 +2556,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   el('vsStatus').innerHTML = vsOpcoesStatus('agendada');
   el('vsMotivo').innerHTML = '<option value="">Selecione</option>' +
     VS_MOTIVOS.map((m, i) => `<option value="${escapeHtml(m)}">${i + 1} - ${escapeHtml(m)}</option>`).join('');
+  el('vsMotivo').value = MOTIVO_PADRAO;
   // Atalho: digitar o número do motivo seleciona a opção; números com dois dígitos (ex.: "1" e "5" = 15) são aceitos em sequência rápida
   let vsMotivoBuf = '', vsMotivoTimer = null;
   el('vsMotivo').addEventListener('keydown', (e) => {
@@ -2756,7 +2759,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     el('atDupBox').style.display = 'none';
     el('saveAtendimentoBtn').textContent = 'Salvar atendimento'; el('atLimparBtn').textContent = 'Limpar';
     el('atNome').value = ''; el('atCpf').value = ''; el('atData').value = hoje();
-    el('atMotivo').value = ''; el('atSub').value = ''; subMostrarOutros(); el('atSubBox').style.display = 'none';
+    el('atMotivo').value = MOTIVO_PADRAO; el('atSub').value = ''; subMostrarOutros(); el('atSubBox').style.display = 'none';
     [...el('atEntrev').options].forEach(o => o.selected = !!currentFuncionario && o.value === currentFuncionario.id);
     if (currentFuncionario && currentFuncionario.cras_id) el('atCras').value = currentFuncionario.cras_id;
   }
@@ -4356,7 +4359,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('vsData').value = '';
     document.getElementById('vsHora').value = '';
     document.getElementById('vsCras').value = '';
-    document.getElementById('vsMotivo').value = '';
+    document.getElementById('vsMotivo').value = MOTIVO_PADRAO;
     document.getElementById('vsBeneficio').value = '';
     document.getElementById('vsObs').value = '';
     document.getElementById('vsEndereco').value = '';
