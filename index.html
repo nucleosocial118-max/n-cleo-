@@ -2758,7 +2758,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     editandoId = null; editandoEntrevs = [];
     el('atDupBox').style.display = 'none';
     el('saveAtendimentoBtn').textContent = 'Salvar atendimento'; el('atLimparBtn').textContent = 'Limpar';
-    el('atNome').value = ''; el('atCpf').value = ''; el('atData').value = hoje();
+    el('atNome').value = ''; el('atCpf').value = ''; atCpfAtualizar(); el('atData').value = hoje();
     el('atMotivo').value = MOTIVO_PADRAO; el('atSub').value = ''; subMostrarOutros(); el('atSubBox').style.display = 'none';
     [...el('atEntrev').options].forEach(o => o.selected = !!currentFuncionario && o.value === currentFuncionario.id);
     if (currentFuncionario && currentFuncionario.cras_id) el('atCras').value = currentFuncionario.cras_id;
@@ -2769,7 +2769,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   el('saveAtendimentoBtn').addEventListener('click', async () => {
     const btn = el('saveAtendimentoBtn');
     const nome = el('atNome').value.trim();
-    const cpf = el('atCpf').value.replace(/\D/g, '');
+    const cpf = cpfCompletar(el('atCpf').value);   // só dígitos; recoloca zeros à esquerda perdidos
     const entrevs = [...el('atEntrev').selectedOptions].map(o => o.value);
     const faltando = [];
     if (!el('atData').value) faltando.push('data');
@@ -2779,6 +2779,12 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if (!el('atMotivo').value) faltando.push('motivo');
     if (!entrevs.length) faltando.push('entrevistador (clique no nome para selecionar)');
     if (faltando.length){ showToast('Falta preencher: ' + faltando.join(', ')); return; }
+    if (cpf.length !== 11){ showToast('⚠️ CPF incompleto: precisa ter 11 números'); el('atCpf').focus(); return; }
+    if (!cpfValido(cpf)){
+      if (!editandoId){ showToast('⚠️ CPF inválido: os dígitos não conferem. Confira o número digitado.'); el('atCpf').focus(); return; }
+      // registro antigo já salvo com CPF inválido: deixa salvar outras alterações, mas avisa
+      if (!confirm('Este CPF parece inválido (os dígitos verificadores não conferem).\n\nSalvar mesmo assim?')) return;
+    }
     const dups = await Promise.race([verificarCpfDuplicado(), new Promise(r => setTimeout(() => r([]), 4000))]);
     if (dups.length && !confirm(`Já existe(m) ${dups.length} atendimento(s) com este CPF.\n\nSalvar mesmo assim, em duplicidade?`)) return;
     if (el('atSub').value === 'Outros' && !el('atSubOutros').value.trim()){ showToast('⚠️ Escreva o que aconteceu em "Outros"'); el('atSubOutros').focus(); return; }
@@ -3876,6 +3882,43 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     carregarUsuarios(); popularSelectCras();
   });
 
+  // ---- CPF do Controle de atendimentos: máscara, mensagem ao vivo e validação dos dígitos ----
+  function cpfFormatar(v){
+    const d = cpfSoDigitos(v).slice(0, 11);
+    let o = d.slice(0, 3);
+    if (d.length > 3) o += '.' + d.slice(3, 6);
+    if (d.length > 6) o += '.' + d.slice(6, 9);
+    if (d.length > 9) o += '-' + d.slice(9, 11);
+    return o;
+  }
+  function atCpfAtualizar(){
+    const inp = el('atCpf'), msg = el('atCpfMsg');
+    if (!inp) return;
+    const d = cpfSoDigitos(inp.value).slice(0, 11);
+    inp.value = cpfFormatar(d);
+    if (!msg) return;
+    if (!d.length){ msg.className = 'cpf-msg'; msg.textContent = ''; return; }
+    if (d.length < 11){ const f = 11 - d.length; msg.className = 'cpf-msg'; msg.textContent = `Faltam ${f} dígito${f === 1 ? '' : 's'}`; return; }
+    if (cpfValido(d)){ msg.className = 'cpf-msg ok'; msg.textContent = '✓ CPF válido'; }
+    else { msg.className = 'cpf-msg erro'; msg.textContent = 'Os dígitos não conferem — confira o número'; }
+  }
+  (function melhorarCampoCpfAtendimento(){
+    const inp = el('atCpf'); if (!inp) return;
+    const msg = document.createElement('small');
+    msg.id = 'atCpfMsg'; msg.className = 'cpf-msg';
+    inp.insertAdjacentElement('afterend', msg);
+    inp.setAttribute('inputmode', 'numeric');
+    inp.setAttribute('maxlength', '14');
+    inp.setAttribute('autocomplete', 'off');
+    inp.addEventListener('input', atCpfAtualizar);
+    inp.addEventListener('blur', () => {   // recoloca o zero à esquerda perdido (antes da checagem de duplicidade)
+      const c = cpfCompletar(inp.value);
+      if (c.length === 11 && cpfSoDigitos(inp.value).length < 11) inp.value = cpfFormatar(c);
+      atCpfAtualizar();
+    });
+    atCpfAtualizar();
+  })();
+
   // ---- Aviso de CPF duplicado ----
   const fmtCpf = (d) => d.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
 
@@ -3937,7 +3980,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const garantir = (sel, v) => { if (v && ![...sel.options].some(o => o.value === v)) sel.add(new Option(v, v)); sel.value = v || ''; };
     el('atData').value = data.data_atendimento;
     el('atNome').value = data.nome_atendido || '';
-    el('atCpf').value = data.cpf_atendido || '';
+    el('atCpf').value = data.cpf_atendido || ''; atCpfAtualizar();
     el('atCras').value = data.cras_origem_id || '';
     garantir(el('atMotivo'), data.motivo);
     el('atMotivo').dispatchEvent(new Event('change'));
