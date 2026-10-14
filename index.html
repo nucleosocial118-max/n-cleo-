@@ -2474,7 +2474,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   // ---- Atendimentos ----
   const el = (id) => document.getElementById(id);
-  const MOTIVOS = ['Agenda ED p/ Atualizacao','Agenda ED p/ Inclusao','Atend N efetuado','Atualização','Atualização c/ED','Consulta','ED N localizada','Endereço não localizado','Exclusão família','Inclusão','Inclusão c/ED','Pessoa não localizada','Reagenda ED','Transferência'];
+  const MOTIVOS = ['3 tentativas','Agenda ED p/ Atualizacao','Agenda ED p/ Inclusao','Atend N efetuado','Atualização','Atualização c/ED','Com relatório','Consulta','ED N localizada','Em aberto','Em Caderno','Endereço não localizado','Exclusão família','Inclusão','Inclusão c/ED','Pessoa não localizada','Reagenda ED','Transferência'];
   // Submotivos por motivo: "ED N localizada" e "Atend N efetuado" (não efetivada no CRAS)
   const SUBMOTIVOS_ED = ['Endereço não localizado','Falta de documento','Impossibilidade de chegar no local','Mudou-se','Pessoa não localizada','Recusa','Outros'];
   const SUBMOTIVOS_CRAS = ['Falta de documento','Usuário negou prestar informações','Pendências no CPF','Outros'];
@@ -2516,16 +2516,15 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   const VS_MOTIVOS = [
     'Atualização Cadastral',
     'Novo Cadastro / Inclusão Cadastral',
-    'Inscrição em Programas',
     'Emissão de Folha Resumo',
     'Orientação / Consulta / Informações',
-    'Encaminhamento para Benefício Eventual / Cesta Básica',
-    'Atendimento Especializado / Outros Serviços do CRAS',
     'Transferência',
     'Alteração de Endereço',
     'Inclusão / Entrada de BPC',
     'Outros atendimentos e demandas específicas'
   ];
+  // Acrescenta também todos os motivos do Controle de atendimentos (sem repetir os que já existem, ex.: Transferência)
+  MOTIVOS.forEach(m => { if (!VS_MOTIVOS.includes(m)) VS_MOTIVOS.push(m); });
   // Situações da visita (Agenda ED). "agendada" = Em aberto.
   const VS_ST_LABEL = { agendada: 'Em aberto', caderno: 'Com caderno', relatorio: 'Com relatório', tres_tentativas: '3 tentativas', reagendada: 'Reagendada', realizada: 'Realizada', naolocalizada: 'Não localizada', concluido: 'Concluído', averiguacao_caderno: 'Averiguação c/Caderno', pessoa_nao_localizada: 'Pessoa não localizada', endereco_nao_localizado: 'Endereço não localizado' };
   const VS_ST_OK = ['realizada', 'caderno', 'relatorio', 'concluido', 'averiguacao_caderno'];
@@ -2543,7 +2542,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   el('vsStatus').innerHTML = vsOpcoesStatus('agendada');
   el('vsMotivo').innerHTML = '<option value="">Selecione</option>' +
     VS_MOTIVOS.map((m, i) => `<option value="${escapeHtml(m)}">${i + 1} - ${escapeHtml(m)}</option>`).join('');
-  // Atalho: digitar o número do motivo (1 a 11) seleciona a opção; "1" e "0" em seguida = 10, "1" e "1" = 11
+  // Atalho: digitar o número do motivo seleciona a opção; números com dois dígitos (ex.: "1" e "5" = 15) são aceitos em sequência rápida
   let vsMotivoBuf = '', vsMotivoTimer = null;
   el('vsMotivo').addEventListener('keydown', (e) => {
     if (!/^[0-9]$/.test(e.key) || e.ctrlKey || e.metaKey || e.altKey) return;
