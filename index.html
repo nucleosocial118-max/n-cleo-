@@ -438,7 +438,19 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .rp-col{ flex:1 0 14px; max-width:34px; height:100%; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; font-size:9.5px; color:var(--muted); }
   .rp-col i{ display:block; width:100%; background:var(--blue); border-radius:4px 4px 0 0; min-height:2px; }
   @media (max-width:760px){ .rp-grid{ grid-template-columns:1fr 1fr; } }
-  @media print{ aside, .rp-filtros{ display:none !important; } }
+  @media print{ aside, .rp-filtros, .rp-pop-ov{ display:none !important; } }
+  .rp-kpi.clic{ cursor:pointer; transition:box-shadow .15s, transform .15s; }
+  .rp-kpi.clic:hover{ box-shadow:0 6px 18px rgba(15,23,42,.12); transform:translateY(-1px); }
+  .rp-kpi.clic:focus-visible, .rp-bar.clic:focus-visible{ outline:2px solid var(--blue); outline-offset:2px; }
+  .rp-bar.clic{ cursor:pointer; border-radius:6px; }
+  .rp-bar.clic:hover .n{ color:var(--blue); text-decoration:underline; }
+  .vs-modal.rp-pop{ width:min(920px,100%); }
+  .rp-pop-tit{ font-size:13.5px; font-weight:700; margin-bottom:10px; }
+  .rp-minis{ display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:10px; }
+  .rp-mini{ border:1px solid var(--line); border-top:3px solid var(--blue); border-radius:12px; padding:10px 12px; }
+  .rp-mini span{ font-size:12.5px; color:var(--muted); display:block; }
+  .rp-mini b{ font-size:24px; line-height:30px; display:block; }
+  .rp-mini small{ font-size:11.5px; color:var(--muted); }
   .pg-atend{ cursor:pointer; }
   .pg-atend:hover h5{ color:var(--blue); }
   .pg-atend h5, .pg-atend p{ margin:0; }
@@ -2938,13 +2950,15 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     arr.forEach(x => { let k = fn(x); if (k == null || k === '') return; (Array.isArray(k) ? k : [k]).forEach(kk => { m[kk] = (m[kk] || 0) + 1; }); });
     return Object.entries(m).sort((a, b) => b[1] - a[1]);
   };
-  const rpBarras = (pares, total, cor) => {
+  // Dados do último relatório gerado (usados pelos popups de detalhe)
+  let rpAt = [], rpGrupos = [], rpVs = [], rpGruposVs = [], rpSit = (v) => v.status, rpNomeEnt = () => null;
+  const rpBarras = (pares, total, cor, attrFn) => {
     if (!pares.length) return '<p class="hint" style="margin:0">Sem dados no período.</p>';
     const max = Math.max(1, ...pares.map(p => p[1]));
-    return pares.map(([k, n]) => `<div class="rp-bar"><span class="n" title="${escapeHtml(k)}">${escapeHtml(k)}</span><div class="t"><i style="width:${n / max * 100}%;background:${cor}"></i></div><b>${n}${total ? ` <em>${Math.round(n / total * 100)}%</em>` : ''}</b></div>`).join('');
+    return pares.map(([k, n]) => `<div class="rp-bar${attrFn ? ' clic' : ''}"${attrFn ? ' role="button" tabindex="0" ' + attrFn(k) : ''}><span class="n" title="${escapeHtml(k)}">${escapeHtml(k)}</span><div class="t"><i style="width:${n / max * 100}%;background:${cor}"></i></div><b>${n}${total ? ` <em>${Math.round(n / total * 100)}%</em>` : ''}</b></div>`).join('');
   };
   const rpCard = (t, corpo) => `<div class="panel"><h4>${t}</h4>${corpo}</div>`;
-  const rpKpi = (t, v, sub, cor) => `<div class="rp-kpi"${cor ? ` style="border-top-color:${cor}"` : ''}><span>${t}</span><b>${v}</b>${sub ? `<small>${sub}</small>` : ''}</div>`;
+  const rpKpi = (t, v, sub, cor, grp) => `<div class="rp-kpi${grp ? ' clic' : ''}"${grp ? ` role="button" tabindex="0" data-rpgrp="${grp}" title="Clique para ver o detalhamento"` : ''}${cor ? ` style="border-top-color:${cor}"` : ''}><span>${t}</span><b>${v}</b>${sub ? `<small>${sub}</small>` : ''}</div>`;
 
   function rpMontar(at, vsPeriodo, semLista){
     const nComData = vsPeriodo.length;
@@ -2976,24 +2990,47 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const cardNe = rpCard('Não efetivada no CRAS — motivos', rpBarras(
       SUBMOTIVOS_CRAS.map(n => [n, cSubDe(atNe, n)]).concat(neSem ? [['Sem motivo informado', neSem]] : []), atNe.length, 'var(--coral)')
       + (neOutrosTxt.length ? '<div style="font-size:12.5px;color:var(--muted);margin:14px 0 8px">O que foi escrito em "Outros"</div>' + rpBarras(neOutrosTxt, 0, 'var(--orange)') : ''));
+    // Grupos dos cartões: cada um conta um ou mais motivos. Juntos cobrem TODOS os atendimentos
+    // (o que sobrar vai para "Outros / sem motivo"), então a soma dos cartões fecha com o total.
+    const grupos = [
+      { id: 'total', t: 'Total de atendimentos', test: () => true },
+      { id: 'con', t: 'Consulta', test: a => a.motivo === 'Consulta', cor: 'var(--blue)' },
+      { id: 'agat', t: 'Agenda ED p/ Atualizacao', test: a => a.motivo === 'Agenda ED p/ Atualizacao', cor: 'var(--orange)' },
+      { id: 'aginc', t: 'Agenda ED p/ Inclusao', test: a => a.motivo === 'Agenda ED p/ Inclusao', cor: 'var(--orange)' },
+      { id: 'nef', t: 'Atend N efetuado', test: a => a.motivo === 'Atend N efetuado', cor: 'var(--coral)' },
+      { id: 'atu', t: 'Atualização', test: a => a.motivo === 'Atualização', cor: 'var(--cyan)' },
+      { id: 'atued', t: 'Atualização c/ED', test: a => a.motivo === 'Atualização c/ED', cor: 'var(--cyan)' },
+      { id: 'ednl', t: 'ED N localizada', test: a => a.motivo === 'ED N localizada', cor: 'var(--coral)' },
+      { id: 'exc', t: 'Exclusão família', test: a => a.motivo === 'Exclusão família', cor: 'var(--muted)' },
+      { id: 'inc', t: 'Inclusão', test: a => a.motivo === 'Inclusão', cor: 'var(--cyan)' },
+      { id: 'incd', t: 'Inclusão c/ED', test: a => a.motivo === 'Inclusão c/ED', cor: 'var(--cyan)' },
+      { id: 'reag', t: 'Reagenda ED', test: a => a.motivo === 'Reagenda ED', cor: 'var(--orange)' },
+      { id: 'tra', t: 'Transferência', test: a => a.motivo === 'Transferência', cor: 'var(--muted)' }
+    ];
+    const gBase = grupos.slice(1);
+    // só aparece se existirem atendimentos com outros motivos (ex.: Em Caderno), para a soma dos cartões fechar com o total
+    if (at.some(a => !gBase.some(g => g.test(a)))) grupos.push({ id: 'out', t: 'Outros / sem motivo', test: a => !gBase.some(g => g.test(a)), cor: 'var(--muted)' });
+    rpAt = at; rpGrupos = grupos;
+    const kpisAt = grupos.map(g => {
+      const n = at.filter(g.test).length;
+      const sub = g.id === 'total'
+        ? (dias.length ? 'média de ' + (at.length / dias.length).toFixed(1).replace('.', ',') + ' por dia com atendimento' : '')
+        : pct(n, at.length) + ' do total';
+      return rpKpi(g.t, n, sub, g.cor, g.id);
+    }).join('');
     const htmlAt = `
       <div class="rp-titulo">Atendimentos</div>
+      <p class="hint" style="margin:-4px 0 10px">Clique em um cartão (ou em uma barra de "Por motivo") para ver o detalhamento.</p>
       <div class="rp-kpis">
-        ${rpKpi('Total de atendimentos', at.length, dias.length ? 'média de ' + (at.length / dias.length).toFixed(1).replace('.', ',') + ' por dia com atendimento' : '')}
-        ${rpKpi('Inclusões', at.filter(a => ini(a.motivo, 'Inclus')).length, '', 'var(--cyan)')}
-        ${rpKpi('Atualizações', at.filter(a => ini(a.motivo, 'Atualiza')).length, '', 'var(--cyan)')}
-        ${rpKpi('Agendamentos ED', at.filter(a => ini(a.motivo, 'Agenda ED')).length, '', 'var(--orange)')}
-        ${rpKpi('Reagendamentos ED', at.filter(a => a.motivo === 'Reagenda ED').length, '', 'var(--orange)')}
-        ${rpKpi('Não efetivada no CRAS', nEnc, pct(nEnc, at.length) + ' do total', 'var(--coral)')}
-        ${rpKpi('Consultas', at.filter(a => a.motivo === 'Consulta').length, '', 'var(--blue)')}
-        ${rpKpi('Transferências', at.filter(a => a.motivo === 'Transferência').length, '', 'var(--muted)')}
+        ${kpisAt}
       </div>
       <div class="rp-cards">
         ${rpCard('Atendimentos por dia', dias.length ? `<div class="rp-cols">${dias.map(([d, n]) => `<div class="rp-col" title="${fmtData(d)}: ${n}"><i style="height:${n / Math.max(...dias.map(x => x[1])) * 100}%"></i>${d.slice(8, 10)}</div>`).join('')}</div>` : '<p class="hint" style="margin:0">Sem dados no período.</p>')}
-        ${rpCard('Por motivo', rpBarras(rpCont(at, a => a.motivo || 'Sem motivo'), at.length, 'var(--blue)'))}
+        ${rpCard('Por motivo', rpBarras(rpCont(at, a => a.motivo || 'Sem motivo'), at.length, 'var(--blue)', k => `data-rpmot="${escapeHtml(k)}"`))}
         ${rpCard('Por CRAS', rpBarras(rpCont(at, a => a.cras && a.cras.nome || 'Sem CRAS'), at.length, 'var(--cyan)'))}
         ${rpCard('Por entrevistador (top 10)', rpBarras(rpCont(at, a => (a.ents || []).map(e => e.func && e.func.nome).filter(Boolean)).slice(0, 10), 0, 'var(--blue)'))}
         ${cardNe}
+        ${cardSub}
       </div>`;
 
     const st = (k) => vs.filter(v => v.status === k).length;
@@ -3004,34 +3041,184 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const vencidas = vs.filter(v => VS_ST_ABERTO.includes(v.status) && String(v.data_agendada).slice(0, 10) < hojeStr).length;
     const nomeEnt = (id) => (typeof mapaFuncFluxo !== 'undefined' && mapaFuncFluxo[id]) || null;
     const situacao = (v) => VS_ST_ABERTO.includes(v.status) ? ((v.status === 'reagendada' || temReag(v)) ? 'Reagendada' : 'Em aberto') : (VS_ST_LABEL[v.status] || v.status);
+    const ehReag = (v) => VS_ST_ABERTO.includes(v.status) && (v.status === 'reagendada' || temReag(v));
+    const gv = (id, t, test, cor) => ({ id, t, test, cor });
+    const gruposVs = [
+      gv('vs_tot', 'Total', () => true),
+      gv('vs_com', 'Com data', v => !!v.data_agendada, 'var(--blue)'),
+      gv('vs_sem', 'Sem data', v => !v.data_agendada, 'var(--orange)'),
+      gv('vs_abe', 'Em aberto', v => VS_ST_ABERTO.includes(v.status) && !ehReag(v), 'var(--orange)'),
+      gv('vs_cad', 'Com caderno', v => v.status === 'caderno', 'var(--green)'),
+      gv('vs_rel', 'Com relatório', v => v.status === 'relatorio', 'var(--green)'),
+      gv('vs_con', 'Concluídas', v => v.status === 'concluido', 'var(--green)'),
+      gv('vs_ave', 'Averiguação c/ caderno', v => v.status === 'averiguacao_caderno', 'var(--cyan)'),
+      gv('vs_tre', '3 tentativas', v => v.status === 'tres_tentativas', 'var(--coral)'),
+      gv('vs_rea', 'Reagendadas', ehReag, 'var(--orange)'),
+      gv('vs_nl', 'Não localizadas', v => v.status === 'naolocalizada', 'var(--coral)'),
+      gv('vs_pnl', 'Pessoa não localizada', v => v.status === 'pessoa_nao_localizada', 'var(--coral)'),
+      gv('vs_enl', 'Endereço não localizado', v => v.status === 'endereco_nao_localizado', 'var(--coral)'),
+      gv('vs_urg', 'Urgentes', v => !!v.urgente, '#DC2626')
+    ];
+    rpVs = vs; rpGruposVs = gruposVs; rpSit = situacao; rpNomeEnt = nomeEnt;
     const htmlVs = `
       <div class="rp-titulo">Entrevista Domiciliar (ED) — Visitas domiciliares</div>
+      <p class="hint" style="margin:-4px 0 10px">Clique em um cartão (ou em uma barra de "Por situação" / "Por motivo") para ver o detalhamento.</p>
       <div class="rp-kpis">
-        ${rpKpi('Total', vs.length, nComData + ' com data no período + ' + nSemData + ' sem data')}
-        ${rpKpi('Com data', nComData, 'agendadas dentro do período', 'var(--blue)')}
-        ${rpKpi('Sem data', semLista ? nSemData : '—', 'aguardando agendamento (todas)', 'var(--orange)')}
-        ${rpKpi('Em aberto', emAberto, vencidas ? vencidas + ' com data vencida' : '', 'var(--orange)')}
-        ${rpKpi('Com caderno', st('caderno'), '', 'var(--green)')}
-        ${rpKpi('Com relatório', st('relatorio'), '', 'var(--green)')}
-        ${rpKpi('Concluídas', st('concluido'), pct(st('concluido'), vs.length) + ' do total', 'var(--green)')}
-        ${rpKpi('Averiguação c/ caderno', st('averiguacao_caderno'), pct(st('averiguacao_caderno'), vs.length) + ' do total', 'var(--cyan)')}
-        ${rpKpi('3 tentativas', st('tres_tentativas'), '', 'var(--coral)')}
-        ${rpKpi('Reagendadas', reagAbertas, 'reagendadas e ainda em aberto', 'var(--orange)')}
-        ${rpKpi('Não localizadas', st('naolocalizada'), pct(st('naolocalizada'), vs.length) + ' do total', 'var(--coral)')}
-        ${rpKpi('Pessoa não localizada', st('pessoa_nao_localizada'), pct(st('pessoa_nao_localizada'), vs.length) + ' do total', 'var(--coral)')}
-        ${rpKpi('Endereço não localizado', st('endereco_nao_localizado'), pct(st('endereco_nao_localizado'), vs.length) + ' do total', 'var(--coral)')}
-        ${rpKpi('Urgentes', vs.filter(v => v.urgente).length, '', '#DC2626')}
+        ${rpKpi('Total', vs.length, nComData + ' com data no período + ' + nSemData + ' sem data', undefined, 'vs_tot')}
+        ${rpKpi('Com data', nComData, 'agendadas dentro do período', 'var(--blue)', 'vs_com')}
+        ${rpKpi('Sem data', semLista ? nSemData : '—', 'aguardando agendamento (todas)', 'var(--orange)', semLista ? 'vs_sem' : undefined)}
+        ${rpKpi('Em aberto', emAberto, vencidas ? vencidas + ' com data vencida' : '', 'var(--orange)', 'vs_abe')}
+        ${rpKpi('Com caderno', st('caderno'), '', 'var(--green)', 'vs_cad')}
+        ${rpKpi('Com relatório', st('relatorio'), '', 'var(--green)', 'vs_rel')}
+        ${rpKpi('Concluídas', st('concluido'), pct(st('concluido'), vs.length) + ' do total', 'var(--green)', 'vs_con')}
+        ${rpKpi('Averiguação c/ caderno', st('averiguacao_caderno'), pct(st('averiguacao_caderno'), vs.length) + ' do total', 'var(--cyan)', 'vs_ave')}
+        ${rpKpi('3 tentativas', st('tres_tentativas'), '', 'var(--coral)', 'vs_tre')}
+        ${rpKpi('Reagendadas', reagAbertas, 'reagendadas e ainda em aberto', 'var(--orange)', 'vs_rea')}
+        ${rpKpi('Não localizadas', st('naolocalizada'), pct(st('naolocalizada'), vs.length) + ' do total', 'var(--coral)', 'vs_nl')}
+        ${rpKpi('Pessoa não localizada', st('pessoa_nao_localizada'), pct(st('pessoa_nao_localizada'), vs.length) + ' do total', 'var(--coral)', 'vs_pnl')}
+        ${rpKpi('Endereço não localizado', st('endereco_nao_localizado'), pct(st('endereco_nao_localizado'), vs.length) + ' do total', 'var(--coral)', 'vs_enl')}
+        ${rpKpi('Urgentes', vs.filter(v => v.urgente).length, '', '#DC2626', 'vs_urg')}
         ${rpKpi('Taxa de conclusão', pct(vs.length - abertas, vs.length), '(total − em aberto) ÷ total')}
       </div>
       <div class="rp-cards">
-        ${rpCard('Por situação', rpBarras(rpCont(vs, situacao), vs.length, 'var(--green)'))}
-        ${rpCard('Por motivo', rpBarras(rpCont(vs, v => v.motivo || 'Sem motivo'), vs.length, 'var(--blue)'))}
+        ${rpCard('Por situação', rpBarras(rpCont(vs, situacao), vs.length, 'var(--green)', k => `data-rpvsit="${escapeHtml(k)}"`))}
+        ${rpCard('Por motivo', rpBarras(rpCont(vs, v => v.motivo || 'Sem motivo'), vs.length, 'var(--blue)', k => `data-rpvmot="${escapeHtml(k)}"`))}
         ${rpCard('Por CRAS', rpBarras(rpCont(vs, v => v.cras && v.cras.nome || 'Sem CRAS'), vs.length, 'var(--cyan)'))}
         ${rpCard('Por entrevistador (top 10)', rpBarras(rpCont(vs, v => (v.entrevistadores || []).map(nomeEnt).filter(Boolean)).slice(0, 10), 0, 'var(--blue)'))}
-        ${cardSub}
       </div>`;
     return htmlAt + htmlVs;
   }
+
+  // ---- Popup de detalhe dos cartões do relatório de Atendimentos ----
+  function rpPopupEl(){
+    let ov = document.getElementById('rpPopOverlay');
+    if (ov) return ov;
+    ov = document.createElement('div');
+    ov.id = 'rpPopOverlay';
+    ov.className = 'vs-modal-overlay rp-pop-ov';
+    ov.style.display = 'none';
+    ov.innerHTML = `
+      <div class="vs-modal rp-pop" role="dialog" aria-modal="true" aria-labelledby="rpPopTitulo">
+        <div class="vs-modal-head">
+          <div><h3 id="rpPopTitulo"></h3><p id="rpPopSub"></p></div>
+          <button type="button" class="vs-modal-x" id="rpPopX" aria-label="Fechar">&times;</button>
+        </div>
+        <div class="vs-modal-body" id="rpPopCorpo"></div>
+        <div class="vs-modal-foot"><button type="button" class="btn-ghost" id="rpPopFechar">Fechar</button></div>
+      </div>`;
+    document.body.appendChild(ov);
+    const fechar = () => { ov.style.display = 'none'; };
+    ov.addEventListener('click', (e) => { if (e.target === ov) fechar(); });
+    document.getElementById('rpPopX').addEventListener('click', fechar);
+    document.getElementById('rpPopFechar').addEventListener('click', fechar);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && ov.style.display !== 'none') fechar(); });
+    return ov;
+  }
+
+  function rpAbrirPopup(g){
+    const ov = rpPopupEl();
+    const lista = rpAt.filter(g.test), n = lista.length, tot = rpAt.length;
+    const pc = (a, b) => b ? (Math.round(a / b * 1000) / 10).toString().replace('.', ',') + '%' : '—';
+    document.getElementById('rpPopTitulo').textContent = g.t;
+    document.getElementById('rpPopSub').textContent = `${n} atendimento${n === 1 ? '' : 's'} · ${pc(n, tot)} dos ${tot} do período`;
+    const corpo = document.getElementById('rpPopCorpo');
+    if (!n){
+      corpo.innerHTML = '<p class="hint" style="margin:0">Nenhum atendimento neste grupo no período.</p>';
+      ov.style.display = 'flex';
+      return;
+    }
+    const cor = g.cor || 'var(--blue)';
+    // Um cartão para cada motivo que compõe o grupo (ex.: Atualização e Atualização c/ED separados)
+    const porMotivo = rpCont(lista, a => a.motivo || 'Sem motivo');
+    const minis = porMotivo.map(([m, q]) => `<div class="rp-mini" style="border-top-color:${cor}"><span>${escapeHtml(m)}</span><b>${q}</b><small>${pc(q, n)} do grupo · ${pc(q, tot)} do total</small></div>`).join('');
+    // Atendimentos por dia
+    const dias = rpCont(lista, a => a.data_atendimento).sort((x, y) => x[0].localeCompare(y[0]));
+    const maxDia = Math.max(1, ...dias.map(x => x[1]));
+    const colunas = `<div class="rp-cols">${dias.map(([d, q]) => `<div class="rp-col" title="${fmtData(d)}: ${q}"><i style="height:${q / maxDia * 100}%"></i>${d.slice(8, 10)}</div>`).join('')}</div>`;
+    // Submotivos (só para os motivos que têm submotivo)
+    const normSub = (a) => { const v = String(a.submotivo || '').trim(); return !v ? 'Sem submotivo informado' : (/^Outros(:|$)/.test(v) ? 'Outros' : v); };
+    const cardsSub = ['ED N localizada', 'Atend N efetuado'].filter(m => lista.some(a => a.motivo === m)).map(m => {
+      const base = lista.filter(a => a.motivo === m);
+      const livre = rpCont(base.filter(a => /^Outros:/.test(a.submotivo || '')), a => a.submotivo.replace(/^Outros:\s*/, '').trim() || null);
+      return rpCard(`Submotivos — ${escapeHtml(m)}`, rpBarras(rpCont(base, normSub), base.length, 'var(--coral)')
+        + (livre.length ? '<div style="font-size:12.5px;color:var(--muted);margin:14px 0 8px">O que foi escrito em "Outros"</div>' + rpBarras(livre, 0, 'var(--orange)') : ''));
+    }).join('');
+    corpo.innerHTML = `
+      ${porMotivo.length > 1 ? `<div><div class="rp-pop-tit">Por motivo</div><div class="rp-minis">${minis}</div></div>` : ''}
+      <div class="rp-cards">
+        ${rpCard('Por dia', colunas)}
+        ${rpCard('Por CRAS', rpBarras(rpCont(lista, a => a.cras && a.cras.nome || 'Sem CRAS'), n, 'var(--cyan)'))}
+        ${rpCard('Por entrevistador (top 10)', rpBarras(rpCont(lista, a => (a.ents || []).map(e => e.func && e.func.nome).filter(Boolean)).slice(0, 10), 0, 'var(--blue)'))}
+        ${cardsSub}
+      </div>`;
+    ov.style.display = 'flex';
+    corpo.scrollTop = 0;
+  }
+
+  function rpAbrirPopupVs(g){
+    const ov = rpPopupEl();
+    const lista = rpVs.filter(g.test), n = lista.length, tot = rpVs.length;
+    const pc = (a, b) => b ? (Math.round(a / b * 1000) / 10).toString().replace('.', ',') + '%' : '—';
+    document.getElementById('rpPopTitulo').textContent = g.t;
+    document.getElementById('rpPopSub').textContent = `Visitas domiciliares · ${n} visita${n === 1 ? '' : 's'} · ${pc(n, tot)} das ${tot} (período + sem data)`;
+    const corpo = document.getElementById('rpPopCorpo');
+    if (!n){
+      corpo.innerHTML = '<p class="hint" style="margin:0">Nenhuma visita neste grupo no período.</p>';
+      ov.style.display = 'flex';
+      return;
+    }
+    const cor = g.cor || 'var(--blue)';
+    const porSit = rpCont(lista, rpSit);
+    const minis = porSit.map(([m, q]) => `<div class="rp-mini" style="border-top-color:${cor}"><span>${escapeHtml(m)}</span><b>${q}</b><small>${pc(q, n)} do grupo · ${pc(q, tot)} do total</small></div>`).join('');
+    const dias = rpCont(lista, v => v.data_agendada ? String(v.data_agendada).slice(0, 10) : null).sort((x, y) => x[0].localeCompare(y[0]));
+    const semData = lista.filter(v => !v.data_agendada).length;
+    const maxDia = Math.max(1, ...dias.map(x => x[1]));
+    const colunas = dias.length
+      ? `<div class="rp-cols">${dias.map(([d, q]) => `<div class="rp-col" title="${fmtData(d)}: ${q}"><i style="height:${q / maxDia * 100}%"></i>${d.slice(8, 10)}</div>`).join('')}</div>` + (semData ? `<p class="hint" style="margin:8px 0 0">+ ${semData} sem data</p>` : '')
+      : '<p class="hint" style="margin:0">Todas as visitas deste grupo estão sem data.</p>';
+    corpo.innerHTML = `
+      ${porSit.length > 1 ? `<div><div class="rp-pop-tit">Por situação</div><div class="rp-minis">${minis}</div></div>` : ''}
+      <div class="rp-cards">
+        ${rpCard('Por data agendada', colunas)}
+        ${rpCard('Por motivo', rpBarras(rpCont(lista, v => v.motivo || 'Sem motivo'), n, 'var(--blue)'))}
+        ${rpCard('Por CRAS', rpBarras(rpCont(lista, v => v.cras && v.cras.nome || 'Sem CRAS'), n, 'var(--cyan)'))}
+        ${rpCard('Por entrevistador (top 10)', rpBarras(rpCont(lista, v => (v.entrevistadores || []).map(rpNomeEnt).filter(Boolean)).slice(0, 10), 0, 'var(--blue)'))}
+      </div>`;
+    ov.style.display = 'flex';
+    corpo.scrollTop = 0;
+  }
+
+  (function ligarPopupRelatorio(){
+    const box = el('rpConteudo'); if (!box) return;
+    const abrir = (e) => {
+      const alvo = e.target.closest('[data-rpgrp], [data-rpmot], [data-rpvsit], [data-rpvmot]');
+      if (!alvo || !box.contains(alvo)) return false;
+      if (alvo.dataset.rpgrp){
+        const id = alvo.dataset.rpgrp;
+        if (id.startsWith('vs_')){
+          const g = rpGruposVs.find(x => x.id === id);
+          if (g) rpAbrirPopupVs(g);
+        } else {
+          const g = rpGrupos.find(x => x.id === id);
+          if (g) rpAbrirPopup(g);
+        }
+      } else if (alvo.dataset.rpvsit){
+        const m = alvo.dataset.rpvsit;
+        rpAbrirPopupVs({ t: m, test: v => rpSit(v) === m });
+      } else if (alvo.dataset.rpvmot){
+        const m = alvo.dataset.rpvmot;
+        rpAbrirPopupVs({ t: m, test: v => (v.motivo || 'Sem motivo') === m });
+      } else {
+        const m = alvo.dataset.rpmot;
+        rpAbrirPopup({ t: m, test: a => (a.motivo || 'Sem motivo') === m });
+      }
+      return true;
+    };
+    box.addEventListener('click', abrir);
+    box.addEventListener('keydown', (e) => {
+      if ((e.key === 'Enter' || e.key === ' ') && abrir(e)) e.preventDefault();
+    });
+  })();
 
   async function rpGerar(){
     const box = el('rpConteudo');
