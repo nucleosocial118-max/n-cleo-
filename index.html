@@ -451,6 +451,13 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .rp-mini span{ font-size:12.5px; color:var(--muted); display:block; }
   .rp-mini b{ font-size:24px; line-height:30px; display:block; }
   .rp-mini small{ font-size:11.5px; color:var(--muted); }
+  .gen-opts{ display:flex; gap:8px; flex-wrap:wrap; }
+  .gen-opt{ position:relative; cursor:pointer; }
+  .gen-opt input{ position:absolute; inset:0; width:100%; height:100%; opacity:0; margin:0; cursor:pointer; }
+  .gen-opt span{ display:inline-flex; gap:6px; align-items:center; padding:9px 14px; border:1px solid var(--line); border-radius:10px; font-size:13.5px; }
+  .gen-opt input:checked + span{ border-color:var(--blue); background:rgba(37,99,235,.10); color:var(--blue); font-weight:600; }
+  .gen-opt input:focus-visible + span{ outline:2px solid var(--blue); outline-offset:2px; }
+  .gen-opt input:disabled + span{ opacity:.5; cursor:not-allowed; }
   .pg-atend{ cursor:pointer; }
   .pg-atend:hover h5{ color:var(--blue); }
   .pg-atend h5, .pg-atend p{ margin:0; }
@@ -1662,6 +1669,58 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .dd-chip.dup{ background:#fff4e5; color:#8a5a00; }
   .dd-chip.err{ background:#fdecec; color:#a32a2a; }
   .dd-erros{ margin:8px 0 0; padding-left:18px; font-size:12px; color:#a32a2a; }
+
+  /* ===== HISTÓRICO DE CADERNOS ===== */
+  .cad-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px; align-items:start; }
+  .cad-col,.cad-bloco{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; }
+  .cad-direita{ display:flex; flex-direction:column; gap:14px; background:transparent; border:0; padding:0; }
+  .cad-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; padding-bottom:8px; border-bottom:3px solid var(--blue); }
+  .cad-head h4{ margin:0; font-size:15px; }
+  .cad-entrevista .cad-head{ border-bottom-color:var(--orange); }
+  .cad-balcao .cad-head{ border-bottom-color:var(--green); }
+  .cad-espera .cad-head{ border-bottom-color:#E8A33D; }
+  .cad-count{ font-size:12px; font-weight:700; background:var(--page-bg); color:var(--muted); border-radius:999px; padding:2px 10px; }
+  .cad-lista{ display:flex; flex-direction:column; gap:10px; max-height:520px; overflow:auto; }
+  .cad-vazio{ color:var(--muted); font-size:13px; padding:8px 2px; }
+  .cad-card{ border:1px solid var(--line); border-radius:12px; padding:10px 12px; background:var(--card); }
+  .cad-nome{ font-weight:600; font-size:14px; }
+  .cad-sub{ color:var(--muted); font-size:12.5px; margin-top:2px; }
+  .cad-inclusao{ margin-top:16px; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; }
+  .cad-inc-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; padding-bottom:8px; border-bottom:3px solid #8E5BD6; }
+  .cad-inc-head h4{ margin:0; font-size:15px; }
+  .cad-inc-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:start; }
+  .cad-inc-grid .cad-bloco{ background:transparent; }
+  .cad-analise .cad-head{ border-bottom-color:#8E5BD6; }
+  .cad-concluido .cad-head{ border-bottom-color:var(--green); }
+  .cad-btn-ok{ color:var(--green); border-color:var(--green); }
+  .cad-btn-ok:hover{ background:var(--green); color:#fff; border-color:var(--green); }
+  .cad-tag.ok{ background:#E7F7ED; color:#1E7F45; border-color:#B5E3C6; }
+  .vs-table .cad-sel.cad-inclusao_analise{ background:#F0EAFB; color:#5B3FA3; border-color:#D3C5F0; }
+  @media (max-width:820px){ .cad-inc-grid{ grid-template-columns:1fr; } }
+  .cad-topo-dir{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+  .cad-filtro-resumo{ font-size:12px; color:var(--muted); margin:-4px 0 10px; }
+  .cad-tags{ display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
+  .cad-tag{ font-size:11px; font-weight:600; padding:2px 8px; border-radius:999px; background:var(--page-bg); color:var(--muted); border:1px solid var(--line); }
+  .cad-desde{ color:var(--muted); font-size:11.5px; margin-top:6px; }
+  .cad-mov{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; align-items:center; }
+  .cad-mov small{ color:var(--muted); font-size:11.5px; }
+  .cad-btn{ font:inherit; font-size:12px; font-weight:600; padding:4px 10px; border-radius:8px; border:1px solid var(--line); background:transparent; color:var(--ink); cursor:pointer; }
+  .cad-btn-limpar{ color:var(--coral); border-style:dashed; }
+  .cad-btn-limpar:hover{ border-color:var(--coral); color:var(--coral); }
+  .cad-btn:hover{ border-color:var(--blue); color:var(--blue); }
+  .cad-btn:disabled{ opacity:.5; cursor:wait; }
+  .cad-hist{ margin-top:6px; font-size:12px; }
+  .cad-hist summary{ cursor:pointer; color:var(--muted); }
+  .cad-hist ul{ margin:6px 0 0; padding-left:16px; color:var(--muted); }
+  .cad-sem{ margin-top:14px; border:1px dashed var(--line); border-radius:12px; padding:12px 14px; }
+  .cad-sem h4{ margin:0 0 8px; font-size:13.5px; }
+  .cad-sem .cad-lista{ max-height:260px; display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); }
+  .vs-table .cad-sel{ font:inherit; font-size:12.5px; font-weight:600; padding:5px 8px; border-radius:8px; border:1px solid #D5DAE6; cursor:pointer; max-width:150px; background:#F1F1F1; color:#6B6B6B; }
+  .vs-table .cad-sel.cad-coordenacao{ background:#E8F0FE; color:#2050B0; border-color:#BFD2F8; }
+  .vs-table .cad-sel.cad-entrevista{ background:#FEF1E4; color:#A6621E; border-color:#F6D3AE; }
+  .vs-table .cad-sel.cad-espera{ background:#FFF4E0; color:#8A5A00; border-color:#F2D49B; }
+  .vs-table .cad-sel.cad-balcao{ background:#E7F7ED; color:#1E7F45; border-color:#B5E3C6; }
+  @media (max-width:820px){ .cad-grid{ grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
@@ -1721,7 +1780,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
     <div class="side-label side-text">SISTEMA</div>
     <div class="nav-item" id="navDados" data-panel="panel-dados" title="Dados" style="display:none"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg></i><span class="side-text">Dados</span></div>
+    <div class="nav-item" id="navMensagens" title="Mensagens do plantão" style="display:none"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg></i><span class="side-text">Mensagens</span></div>
     <div class="nav-item" data-panel="panel-config" title="Configurações"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.04 1.56V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.04H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1.04-1.56V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15 4.6a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.56 1.04H21a2 2 0 1 1 0 4h-.09A1.7 1.7 0 0 0 19.4 15z"/></svg></i><span class="side-text">Configurações</span></div>
+    <div class="nav-item" id="navCadernos" data-panel="panel-cadernos" title="Histórico de cadernos"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 21.5A2.5 2.5 0 0 0 6.5 24H20v-5"/><path d="M9 7h7M9 11h5"/></svg></i><span class="side-text">Histórico de cadernos</span></div>
   </aside>
 
   <div class="main">
@@ -1751,6 +1812,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <div class="field"><label>Data *</label><input type="date" id="atData"></div>
         <div class="field"><label>Nome *</label><input type="text" id="atNome"></div>
         <div class="field"><label>CPF *</label><input type="text" id="atCpf" placeholder="000.000.000-00"></div>
+        <div hidden aria-hidden="true"><input type="date" id="atNasc" tabindex="-1"><small id="atNascHint"></small></div>
+        <div class="field"><label>Gênero <small style="font-weight:400;color:var(--muted)">(marque uma opção)</small></label>
+          <div class="gen-opts" id="atGenero" role="group" aria-label="Gênero do atendido">
+            <label class="gen-opt" title="Masculino"><input type="checkbox" value="M"><span><b>M</b></span></label>
+            <label class="gen-opt" title="Feminino"><input type="checkbox" value="F"><span><b>F</b></span></label>
+          </div>
+          <small class="hint" id="atGeneroHint" style="display:none;color:#B45309"></small>
+        </div>
         <div class="field"><label>CRAS *</label><select id="atCras"></select></div>
         <div class="field"><label>Motivo * <small style="font-weight:400;color:var(--muted)">(digite o número para localizar)</small></label><select id="atMotivo"></select></div>
         <div class="field" id="atSubBox" style="display:none"><label>Submotivo</label><select id="atSub"></select><input type="text" id="atSubOutros" maxlength="120" placeholder="Escreva o que aconteceu" style="display:none;margin-top:8px"></div>
@@ -1799,7 +1868,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     </div>
 
     <div class="form-panel panel-usuarios" style="display:none">
-      <div class="section-head"><div><h3>Usuários</h3><p class="hint">Cadastre novos usuários e defina o nível de acesso.</p><p class="hint" id="usuOnlineResumo" style="margin-top:4px;font-weight:600"></p></div></div>
+      <div class="section-head"><div><h3>Usuários</h3><p class="hint">Cadastre novos usuários e defina o nível de acesso.</p><p class="hint" id="usuOnlineResumo" style="margin-top:4px;font-weight:600"></p>
+        <label style="display:flex;gap:6px;align-items:center;font-size:12.5px;color:var(--muted);margin-top:6px;cursor:pointer"><input type="checkbox" id="usuMostrarOff"> Mostrar usuários desativados</label></div></div>
       <div class="field-grid" style="margin-top:16px">
         <div class="field"><label>Nome *</label><input type="text" id="usuNome"></div>
         <div class="field"><label>E-mail *</label><input type="email" id="usuEmail" autocomplete="off"></div>
@@ -1808,7 +1878,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <div class="field"><label>Nível *</label><select id="usuNivel"></select></div>
         <div class="field"><label>Unidade</label><select id="usuCras"></select></div>
       </div>
-      <div class="form-actions"><button class="btn-primary" id="usuCriarBtn">Criar usuário</button></div>
+      <div class="form-actions"><button class="btn-ghost" id="usuLoginsBtn" type="button" title="Gera e-mail e senha provisória para quem está só na lista">Gerar logins provisórios</button><button class="btn-primary" id="usuCriarBtn">Criar usuário</button></div>
       <div style="overflow-x:auto;margin-top:16px">
         <table style="width:100%;border-collapse:collapse;font-size:13.5px">
           <thead><tr style="text-align:left;color:var(--muted)"><th>Status</th><th>Nome</th><th>Cargo</th><th>Nível</th><th>Unidade</th><th>Ações</th></tr></thead>
@@ -1968,12 +2038,71 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         </div>
         <div class="vs-table-wrap">
           <table class="vs-table">
-            <thead><tr><th>Data / Hora</th><th>Nome</th><th>Motivo / CRAS</th><th>Entrevistadores</th><th>Status</th><th>Ações</th></tr></thead>
+            <thead><tr><th>Data / Hora</th><th>Nome</th><th>Motivo / CRAS</th><th>Entrevistadores</th><th>Status</th><th>Caderno</th><th>Ações</th></tr></thead>
             <tbody id="vsLista"></tbody>
           </table>
         </div>
         <div class="vs-mais" id="vsMaisWrap" style="display:none"><button type="button" class="btn-ghost" id="vsMaisBtn">Ver mais</button></div>
       </div>
+      </div>
+    </div>
+
+    <div class="panel-cadernos" style="display:none">
+      <div class="enc-list">
+        <div class="section-head">
+          <div>
+            <h3>Histórico de cadernos</h3>
+            <p class="hint">Pessoas do Controle de atendimentos e das Últimas entrevistas domiciliares no período escolhido. Todo cadastro novo entra em Coordenação; mova o caderno entre os setores.</p>
+          </div>
+          <div class="cad-topo-dir">
+            <span class="status-hint" id="cadResumo"></span>
+            <button type="button" class="btn-ghost" id="cadFiltroBtn" aria-expanded="false" aria-controls="cadFiltros">🔎 Filtros ▾</button>
+          </div>
+        </div>
+        <div class="cad-filtro-resumo" id="cadFiltroResumo"></div>
+        <div class="vs-filtros" id="cadFiltros" style="display:none">
+          <div class="vs-filtros-grid">
+            <div class="field"><label>Data de</label><input type="date" id="cadDe"></div>
+            <div class="field"><label>Data até</label><input type="date" id="cadAte"></div>
+            <div class="field vs-f-busca"><label>Buscar</label><input type="text" id="cadBusca" placeholder="Nome ou CPF..." autocomplete="off"></div>
+            <div class="field vs-f-toggle"><label>&nbsp;</label><button type="button" class="btn-ghost" id="cadHoje">Hoje</button></div>
+          </div>
+        </div>
+        <div id="cadErro" class="hint erro-box" style="display:none;margin:12px 0"></div>
+        <div id="cadSemSetor" class="cad-sem" style="display:none"></div>
+        <div class="cad-grid">
+          <section class="cad-col cad-coordenacao">
+            <header class="cad-head"><h4>Coordenação</h4><span class="cad-count" id="cadNcoordenacao">0</span></header>
+            <div class="cad-lista" id="cadListaCoordenacao"></div>
+          </section>
+          <section class="cad-col cad-direita">
+            <div class="cad-bloco cad-entrevista">
+              <header class="cad-head"><h4>Entrevista</h4><span class="cad-count" id="cadNentrevista">0</span></header>
+              <div class="cad-lista" id="cadListaEntrevista"></div>
+            </div>
+            <div class="cad-bloco cad-balcao">
+              <header class="cad-head"><h4>Balcão</h4><span class="cad-count" id="cadNbalcao">0</span></header>
+              <div class="cad-lista" id="cadListaBalcao"></div>
+            </div>
+            <div class="cad-bloco cad-espera">
+              <header class="cad-head"><h4>Caixa de espera</h4><span class="cad-count" id="cadNespera">0</span></header>
+              <div class="cad-lista" id="cadListaEspera"></div>
+            </div>
+          </section>
+        </div>
+        <section class="cad-inclusao">
+          <header class="cad-inc-head"><h4>Inclusão / Análise</h4><span class="cad-count" id="cadNinclusao">0</span></header>
+          <div class="cad-inc-grid">
+            <div class="cad-bloco cad-analise">
+              <header class="cad-head"><h4>Em análise</h4><span class="cad-count" id="cadNanalise">0</span></header>
+              <div class="cad-lista" id="cadListaAnalise"></div>
+            </div>
+            <div class="cad-bloco cad-concluido">
+              <header class="cad-head"><h4>Concluído</h4><span class="cad-count" id="cadNconcluido">0</span></header>
+              <div class="cad-lista" id="cadListaConcluido"></div>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
 
@@ -2041,7 +2170,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
               </div>
             </div>
           </div>
-          <div class="rp-btns"><button type="button" class="btn-primary" id="rpFiltrar">Filtrar</button><button type="button" class="btn-ghost" id="rpMes">Mês atual</button></div>
+          <div class="rp-btns"><button type="button" class="btn-primary" id="rpFiltrar">Filtrar</button><button type="button" class="btn-ghost" id="rpHoje">Hoje</button><button type="button" class="btn-ghost" id="rpMes">Mês atual</button><button type="button" class="btn-ghost" id="rpTres">Últimos 3 meses</button></div>
         </div>
       </div>
       <div id="rpConteudo"><div class="skel-kpis"><span class="skel skel-kpi"></span><span class="skel skel-kpi"></span><span class="skel skel-kpi"></span><span class="skel skel-kpi"></span><span class="skel skel-kpi"></span><span class="skel skel-kpi"></span><span class="skel skel-kpi"></span><span class="skel skel-kpi"></span></div></div>
@@ -2350,7 +2479,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if (currentFuncionario && currentFuncionario.cras_id) document.getElementById('atCras').value = currentFuncionario.cras_id;
     if (currentFuncionario) [...document.getElementById('atEntrev').options].forEach(o => o.selected = o.value === currentFuncionario.id);
     // "Entrevista em Domicílio" costuma ser o CRAS padrão da tela de ED
-    const crasED = (c.data || []).find(x => normalizeText(x.nome).includes('entrevista em domic'));
+    const crasED = (c.data || []).find(x => { const n = normalizeText(x.nome); return n.includes('entrevista em domic') || /(^|\s)smas ed$/.test(n.trim()); });
     let crasLembrado = ''; try { crasLembrado = localStorage.getItem('vsUltimoCras') || ''; } catch (e) {}
     const crasPadrao = (c.data || []).find(x => String(x.id) === crasLembrado) || crasED; // último usado, senão "Entrevista em Domicílio"
     if (crasPadrao) document.getElementById('vsCras').value = crasPadrao.id;
@@ -2409,10 +2538,12 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         if (!(await escolherUnidade(f))){ usuarioCarregado = null; return; }   // etapa 2 do login
         currentFuncionario = f;
         aplicarFuncionarioNaTela(f);
+        if (window.msgPlantaoPerfil) window.msgPlantaoPerfil();   // mensagens do plantão
         loginScreen.style.display = 'none';
         appShell.style.display = 'flex';          // tela abre já; os dados chegam em paralelo
         popularSelectCras();                       // dispara listas, visitas e relatório
         if (window.Outbox) Outbox.iniciar();       // reenvia o que ficou guardado
+        generoVerificar(); nascVerificar();
         carregarFamilias();                        // segundo plano: não segura mais a tela
         iniciarPresenca();                         // aparece como online para a coordenação
         [3000, 9000].forEach(ms => setTimeout(desenharSino, ms));   // selo do sininho (as visitas chegam depois)
@@ -2426,13 +2557,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           if (pf){
             usuarioCarregado = sv.user.id; modoOffline = true; currentFuncionario = pf;
             aplicarFuncionarioNaTela(pf); loginScreen.style.display = 'none'; appShell.style.display = 'flex';
-            popularSelectCras(); if (window.Outbox) Outbox.iniciar(); carregarFamilias();
+            popularSelectCras(); if (window.Outbox) Outbox.iniciar(); carregarFamilias(); generoVerificar(); nascVerificar();
             showToast('📴 Modo offline: o que você salvar será enviado quando a internet voltar', 5000);
             return;
           }
         } catch (e) {}
       }
       if (typeof pararPresenca === 'function') pararPresenca();
+      if (window.msgPlantaoParar) window.msgPlantaoParar();
       document.getElementById('loginEtapa1').style.display = ''; document.getElementById('loginEtapa2').style.display = 'none';
       usuarioCarregado = null;
       currentFuncionario = null;
@@ -2450,7 +2582,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     sidebar.classList.toggle('collapsed');
   });
 
-  const allPanels = ['panel-geral', 'panel-cadastro', 'panel-atendimentos', 'panel-fluxos', 'panel-visitas', 'panel-config', 'panel-ficha', 'panel-usuarios', 'panel-relatorios', 'panel-dados', 'panel-formulario'];
+  const allPanels = ['panel-geral', 'panel-cadastro', 'panel-atendimentos', 'panel-fluxos', 'panel-visitas', 'panel-config', 'panel-ficha', 'panel-usuarios', 'panel-relatorios', 'panel-dados', 'panel-formulario', 'panel-cadernos'];
   function showPanel(target){
     allPanels.forEach(p => {
       document.querySelectorAll('.' + p).forEach(el => {
@@ -2487,7 +2619,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   // ---- Atendimentos ----
   const el = (id) => document.getElementById(id);
   const MOTIVOS = ['3 tentativas','Agenda ED p/ Atualizacao','Agenda ED p/ Inclusao','Atend N efetuado','Atualização','Atualização c/ED','Com relatório','Consulta','ED N localizada','Em aberto','Em Caderno','Endereço não localizado','Exclusão família','Inclusão','Inclusão c/ED','Pessoa não localizada','Reagenda ED','Transferência'];
-  // Motivo que já vem selecionado ao abrir/limpar os formulários (Controle de atendimentos e Agenda ED); o usuário troca depois
+  // Motivo que já vem selecionado ao abrir/limpar o formulário da Agenda ED (o usuário troca depois). O Controle de atendimentos começa em "Selecione"
   const MOTIVO_PADRAO = 'Em aberto';
   // Submotivos por motivo: "ED N localizada" e "Atend N efetuado" (não efetivada no CRAS)
   const SUBMOTIVOS_ED = ['Endereço não localizado','Falta de documento','Impossibilidade de chegar no local','Mudou-se','Pessoa não localizada','Recusa','Outros'];
@@ -2758,8 +2890,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     editandoId = null; editandoEntrevs = [];
     el('atDupBox').style.display = 'none';
     el('saveAtendimentoBtn').textContent = 'Salvar atendimento'; el('atLimparBtn').textContent = 'Limpar';
-    el('atNome').value = ''; el('atCpf').value = ''; atCpfAtualizar(); el('atData').value = hoje();
-    el('atMotivo').value = MOTIVO_PADRAO; el('atSub').value = ''; subMostrarOutros(); el('atSubBox').style.display = 'none';
+    el('atNome').value = ''; el('atCpf').value = ''; atCpfAtualizar(); generoDefinir(null); el('atNasc').value = ''; nascAtualizar(); el('atData').value = hoje();
+    el('atMotivo').value = ''; el('atSub').value = ''; subMostrarOutros(); el('atSubBox').style.display = 'none';
     [...el('atEntrev').options].forEach(o => o.selected = !!currentFuncionario && o.value === currentFuncionario.id);
     if (currentFuncionario && currentFuncionario.cras_id) el('atCras').value = currentFuncionario.cras_id;
   }
@@ -2785,15 +2917,20 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       // registro antigo já salvo com CPF inválido: deixa salvar outras alterações, mas avisa
       if (!confirm('Este CPF parece inválido (os dígitos verificadores não conferem).\n\nSalvar mesmo assim?')) return;
     }
+    const nascMsg = nascErro(el('atNasc').value);
+    if (nascMsg){ showToast('⚠️ ' + nascMsg); el('atNasc').focus(); return; }
     const dups = await Promise.race([verificarCpfDuplicado(), new Promise(r => setTimeout(() => r([]), 4000))]);
     if (dups.length && !confirm(`Já existe(m) ${dups.length} atendimento(s) com este CPF.\n\nSalvar mesmo assim, em duplicidade?`)) return;
     if (el('atSub').value === 'Outros' && !el('atSubOutros').value.trim()){ showToast('⚠️ Escreva o que aconteceu em "Outros"'); el('atSubOutros').focus(); return; }
+    await generoVerificar(); await nascVerificar();
     btn.disabled = true; btn.textContent = 'Salvando...';
     try {
       if (editandoId){
         const { data: up, error: eu } = await sbClient.from('atendimentos').update({
           data_atendimento: el('atData').value, nome_atendido: nome, cpf_atendido: cpf,
-          cras_origem_id: el('atCras').value, motivo: el('atMotivo').value, submotivo: subValor()
+          cras_origem_id: el('atCras').value, motivo: el('atMotivo').value, submotivo: subValor(),
+          ...(generoOk ? { genero: generoValor() } : {}),
+          ...(nascOk ? { data_nascimento: el('atNasc').value || null } : {})
         }).eq('id', editandoId).select('id');
         if (eu) throw eu;
         if (!up || !up.length) throw new Error('o banco bloqueou a alteração (falta política de UPDATE no RLS)');
@@ -2818,7 +2955,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         reg: {
           data_atendimento: el('atData').value, horario: new Date().toTimeString().slice(0, 8), nome_atendido: nome, cpf_atendido: cpf,
           cras_origem_id: el('atCras').value, motivo: el('atMotivo').value,
-          submotivo: subValor(), profissional_id: currentFuncionario.id
+          submotivo: subValor(), profissional_id: currentFuncionario.id,
+          ...(generoOk && generoValor() ? { genero: generoValor() } : {}),
+          ...(nascOk && el('atNasc').value ? { data_nascimento: el('atNasc').value } : {})
         },
         ents: entrevs
       });
@@ -2943,6 +3082,28 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('pgRsDetalhe').innerHTML = html;
   }
 
+  // ====== REGISTRO DE EXCLUSÕES (a contagem continua mesmo depois que o registro sai do banco) ======
+  // Grava um "recibo" leve (sem nome/CPF) na tabela exclusoes_registro. Se a tabela ainda não existir,
+  // só avisa no console e não atrapalha a exclusão.
+  async function registrarExclusao(tipo, rows, origem){
+    try {
+      const lista = (rows || []).filter(Boolean);
+      if (!lista.length) return;
+      const linhas = lista.map(r => ({
+        tipo, registro_id: String(r.id),
+        data_ref: (tipo === 'atendimento' ? r.data_atendimento : r.data_agendada) || null,
+        motivo: r.motivo || null, submotivo: r.submotivo || null, status: r.status || null,
+        cras_id: (tipo === 'atendimento' ? r.cras_origem_id : r.cras_id) || null,
+        origem: origem || 'manual',
+        excluido_por: currentFuncionario ? currentFuncionario.id : null
+      }));
+      for (let i = 0; i < linhas.length; i += 500){
+        const { error } = await sbClient.from('exclusoes_registro').insert(linhas.slice(i, i + 500));
+        if (error){ console.warn('Exclusão não registrada (a tabela exclusoes_registro existe?):', error.message); return; }
+      }
+    } catch (e){ console.warn('registrarExclusao:', e); }
+  }
+
   // ====== RELATÓRIOS (atendimentos e visitas domiciliares) ======
   async function rpBuscar(mk){
     const out = [];
@@ -2969,7 +3130,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   const rpCard = (t, corpo) => `<div class="panel"><h4>${t}</h4>${corpo}</div>`;
   const rpKpi = (t, v, sub, cor, grp) => `<div class="rp-kpi${grp ? ' clic' : ''}"${grp ? ` role="button" tabindex="0" data-rpgrp="${grp}" title="Clique para ver o detalhamento"` : ''}${cor ? ` style="border-top-color:${cor}"` : ''}><span>${t}</span><b>${v}</b>${sub ? `<small>${sub}</small>` : ''}</div>`;
 
-  function rpMontar(at, vsPeriodo, semLista){
+  function rpMontar(at, vsPeriodo, semLista, exc){
     const nComData = vsPeriodo.length;
     const nSemData = (semLista || []).length;
     const vs = vsPeriodo.concat(semLista || []); // visitas do período + todas as sem data
@@ -3019,7 +3180,15 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const gBase = grupos.slice(1);
     // só aparece se existirem atendimentos com outros motivos (ex.: Em Caderno), para a soma dos cartões fechar com o total
     if (at.some(a => !gBase.some(g => g.test(a)))) grupos.push({ id: 'out', t: 'Outros / sem motivo', test: a => !gBase.some(g => g.test(a)), cor: 'var(--muted)' });
-    rpAt = at; rpGrupos = grupos;
+    // Gênero dos atendidos (só aparece quando a coluna já existe no banco)
+    const gruposGen = generoOk ? [
+      { id: 'gen_m', t: 'Masculino (M)', test: a => a.genero === 'M', cor: 'var(--blue)' },
+      { id: 'gen_f', t: 'Feminino (F)', test: a => a.genero === 'F', cor: 'var(--coral)' },
+      ...(at.some(a => a.genero === 'O') ? [{ id: 'gen_o', t: 'Outros (O) — registros antigos', test: a => a.genero === 'O', cor: 'var(--cyan)' }] : []),
+      { id: 'gen_n', t: 'Gênero não informado', test: a => !a.genero, cor: 'var(--muted)' }
+    ] : [];
+    rpAt = at; rpGrupos = grupos.concat(gruposGen);
+    const kpisGen = gruposGen.map(g => { const n = at.filter(g.test).length; return rpKpi(g.t, n, pct(n, at.length) + ' do total', g.cor, g.id); }).join('');
     const kpisAt = grupos.map(g => {
       const n = at.filter(g.test).length;
       const sub = g.id === 'total'
@@ -3027,12 +3196,20 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         : pct(n, at.length) + ' do total';
       return rpKpi(g.t, n, sub, g.cor, g.id);
     }).join('');
+    // ---- Excluídos: contados à parte, mesmo já tendo saído do banco ----
+    const excAt = Array.isArray(exc) ? exc.filter(x => x.tipo === 'atendimento') : null;
+    const excVs = Array.isArray(exc) ? exc.filter(x => x.tipo === 'visita') : null;
+    const excSub = (l) => { if (!l.length) return 'nenhum no período'; const m = l.filter(x => x.origem === 'manual').length; return m + ' manual(is) · ' + (l.length - m) + ' por limpeza do banco'; };
+    const excKpi = (l) => l === null ? rpKpi('Excluídos', '—', 'crie a tabela exclusoes_registro', '#DC2626') : rpKpi('Excluídos', l.length, excSub(l), '#DC2626');
+    const excCard = (l, campo) => l && l.length ? rpCard('Excluídos por ' + (campo === 'status' ? 'situação' : 'motivo'), rpBarras(rpCont(l, x => campo === 'status' ? (x.status ? (VS_ST_LABEL[x.status] || x.status) : 'Sem situação') : (x.motivo || 'Sem motivo')), l.length, '#DC2626')) : '';
     const htmlAt = `
       <div class="rp-titulo">Atendimentos</div>
       <p class="hint" style="margin:-4px 0 10px">Clique em um cartão (ou em uma barra de "Por motivo") para ver o detalhamento.</p>
       <div class="rp-kpis">
         ${kpisAt}
+        ${excKpi(excAt)}
       </div>
+      ${kpisGen ? `<div class="rp-pop-tit" style="margin:16px 0 8px">Gênero dos atendidos <span style="font-weight:400;color:var(--muted)">(clique para detalhar)</span></div><div class="rp-kpis">${kpisGen}</div>` : ''}
       <div class="rp-cards">
         ${rpCard('Atendimentos por dia', dias.length ? `<div class="rp-cols">${dias.map(([d, n]) => `<div class="rp-col" title="${fmtData(d)}: ${n}"><i style="height:${n / Math.max(...dias.map(x => x[1])) * 100}%"></i>${d.slice(8, 10)}</div>`).join('')}</div>` : '<p class="hint" style="margin:0">Sem dados no período.</p>')}
         ${rpCard('Por motivo', rpBarras(rpCont(at, a => a.motivo || 'Sem motivo'), at.length, 'var(--blue)', k => `data-rpmot="${escapeHtml(k)}"`))}
@@ -3040,6 +3217,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         ${rpCard('Por entrevistador (top 10)', rpBarras(rpCont(at, a => (a.ents || []).map(e => e.func && e.func.nome).filter(Boolean)).slice(0, 10), 0, 'var(--blue)'))}
         ${cardNe}
         ${cardSub}
+        ${excCard(excAt, 'motivo')}
       </div>`;
 
     const st = (k) => vs.filter(v => v.status === k).length;
@@ -3088,12 +3266,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         ${rpKpi('Endereço não localizado', st('endereco_nao_localizado'), pct(st('endereco_nao_localizado'), vs.length) + ' do total', 'var(--coral)', 'vs_enl')}
         ${rpKpi('Urgentes', vs.filter(v => v.urgente).length, '', '#DC2626', 'vs_urg')}
         ${rpKpi('Taxa de conclusão', pct(vs.length - abertas, vs.length), '(total − em aberto) ÷ total')}
+        ${excKpi(excVs)}
       </div>
       <div class="rp-cards">
         ${rpCard('Por situação', rpBarras(rpCont(vs, situacao), vs.length, 'var(--green)', k => `data-rpvsit="${escapeHtml(k)}"`))}
         ${rpCard('Por motivo', rpBarras(rpCont(vs, v => v.motivo || 'Sem motivo'), vs.length, 'var(--blue)', k => `data-rpvmot="${escapeHtml(k)}"`))}
         ${rpCard('Por CRAS', rpBarras(rpCont(vs, v => v.cras && v.cras.nome || 'Sem CRAS'), vs.length, 'var(--cyan)'))}
         ${rpCard('Por entrevistador (top 10)', rpBarras(rpCont(vs, v => (v.entrevistadores || []).map(nomeEnt).filter(Boolean)).slice(0, 10), 0, 'var(--blue)'))}
+        ${excCard(excVs, 'motivo')}${excCard(excVs, 'status')}
       </div>`;
     return htmlAt + htmlVs;
   }
@@ -3239,10 +3419,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     // null = sem filtro (todos); caso contrário, só os CRAS marcados
     const cras = (veTodosCras() && marcados.length && marcados.length < totalCras) ? marcados : null;
     box.innerHTML = skelKpis(8);
+    await generoVerificar();
     try {
-      const [at, vs, semLista] = await Promise.all([
+      const [at, vs, semLista, exc] = await Promise.all([
         rpBuscar(() => { let q = sbClient.from('atendimentos')
-          .select('id, data_atendimento, motivo, submotivo, cras:cras_origem_id(nome), ents:atendimento_entrevistadores(func:funcionario_id(nome))')
+          .select('id, data_atendimento, motivo, submotivo' + (generoOk ? ', genero' : '') + ', cras:cras_origem_id(nome), ents:atendimento_entrevistadores(func:funcionario_id(nome))')
           .gte('data_atendimento', de).lte('data_atendimento', ate).or(FILTRO_DATA_POSSIVEL).lte('data_atendimento', hoje()).order('data_atendimento').order('id');
           return escoparAt(cras ? q.in('cras_origem_id', cras) : q); }),
         rpBuscar(() => { let q = sbClient.from('visitas_domiciliares')
@@ -3253,12 +3434,19 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         rpBuscar(() => { let q = sbClient.from('visitas_domiciliares')
           .select('id, data_agendada, motivo, status, urgente, entrevistadores, historico_reagendamentos, cras:cras_id(nome)')
           .is('data_agendada', null).order('id');
-          return escoparVs(cras ? q.in('cras_id', cras) : q); }).catch(() => null)
+          return escoparVs(cras ? q.in('cras_id', cras) : q); }).catch(() => null),
+        // Exclusões já registradas (continuam existindo mesmo depois de saírem do banco)
+        rpBuscar(() => { let q = sbClient.from('exclusoes_registro')
+          .select('id, tipo, data_ref, motivo, submotivo, status, origem, cras_id')
+          .or(`and(data_ref.gte.${de},data_ref.lte.${ate}),data_ref.is.null`).order('id');
+          if (!veTodosCras()) q = q.eq('cras_id', currentFuncionario ? currentFuncionario.cras_id : null);
+          else if (cras) q = q.in('cras_id', cras);
+          return q; }).catch(() => null)
       ]);
       // cabeçalho que também sai na impressão (o painel de filtros fica oculto no PDF)
       const nomesCras = el('rpCrasLista') ? [...el('rpCrasLista').querySelectorAll('input:checked + span')].map(x => x.textContent) : [];
       const unidades = !veTodosCras() ? ((currentFuncionario && currentFuncionario.cras_nome) || 'Minha unidade') : (cras ? nomesCras.join(', ') : 'Todos os CRAS');
-      box.innerHTML = `<p class="hint" style="margin:0 0 4px"><b>Unidade(s):</b> ${escapeHtml(unidades)} &nbsp;·&nbsp; <b>Período:</b> ${fmtData(de)} a ${fmtData(ate)}</p>` + rpMontar(at, vs, semLista);
+      box.innerHTML = `<p class="hint" style="margin:0 0 4px"><b>Unidade(s):</b> ${escapeHtml(unidades)} &nbsp;·&nbsp; <b>Período:</b> ${fmtData(de)} a ${fmtData(ate)}</p>` + rpMontar(at, vs, semLista, exc);
     } catch (e){
       console.error(e);
       console.error(e);
@@ -3318,6 +3506,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     });
     el('rpFiltrar').addEventListener('click', rpGerar);
     el('rpMes').addEventListener('click', () => { rpMesAtual(); rpGerar(); });
+    el('rpHoje').addEventListener('click', () => { el('rpDe').value = el('rpAte').value = hoje(); rpGerar(); });
+    el('rpTres').addEventListener('click', () => { el('rpDe').value = dataMenosMeses(hoje(), 3); el('rpAte').value = hoje(); rpGerar(); });
     el('rpPrint').addEventListener('click', () => window.print());
   })();
 
@@ -3597,7 +3787,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.querySelectorAll('#usuLista [data-uid]:not([data-inativo])').forEach(td => {
       const ligado = on.has(td.dataset.uid); if (ligado) qtd++;
       const tc = document.querySelector(`#usuLista [data-ucras="${td.dataset.uid}"]`);
-      if (tc){ const hoje = ligado ? (((estado[td.dataset.uid] || [])[0]) || {}).cras : ''; tc.innerHTML = hoje && hoje !== tc.dataset.orig ? '<b>' + escapeHtml(hoje) + '</b> <small style="color:var(--muted)">(cadastro: ' + escapeHtml(tc.dataset.orig) + ')</small>' : escapeHtml(hoje || tc.dataset.orig); }
+      if (tc && tc.dataset.sel){ const hoje = ligado ? (((estado[td.dataset.uid] || [])[0]) || {}).cras : ''; const sp = tc.querySelector('[data-uhoje]'); if (sp) sp.innerHTML = hoje && hoje !== tc.dataset.orig ? '<small style="color:var(--muted)">hoje em: <b>' + escapeHtml(hoje) + '</b></small>' : ''; }
+      else if (tc){ const hoje = ligado ? (((estado[td.dataset.uid] || [])[0]) || {}).cras : ''; tc.innerHTML = hoje && hoje !== tc.dataset.orig ? '<b>' + escapeHtml(hoje) + '</b> <small style="color:var(--muted)">(cadastro: ' + escapeHtml(tc.dataset.orig) + ')</small>' : escapeHtml(hoje || tc.dataset.orig); }
       td.innerHTML = ligado ? BOLA('#22c55e', true) + '<b style="color:#15803d">Online</b>'
                             : BOLA('#c5ccd3', false) + '<span style="color:var(--muted)">Offline</span>';
     });
@@ -3788,27 +3979,48 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   const podeGerir = () => !!currentFuncionario && ['adm', 'coordenador'].includes(currentFuncionario.role);
 
   async function carregarUsuarios(){
-    let r = await sbClient.from('funcionarios').select('id, nome, cargo, role, ativo, cras:cras_id(nome)').order('nome');
-    if (r.error) r = await sbClient.from('funcionarios').select('id, nome, cargo, role, cras:cras_id(nome)').order('nome');   // antes de existir a coluna "ativo"
+    await garantirUnidades();
+    let r = await sbClient.from('funcionarios').select('id, nome, cargo, role, ativo, cras_id, cras:cras_id(nome)').order('nome');
+    if (r.error) r = await sbClient.from('funcionarios').select('id, nome, cargo, role, cras_id, cras:cras_id(nome)').order('nome');   // antes de existir a coluna "ativo"
     if (r.error){ console.error(r.error); return; }
     const eu = currentFuncionario.id, souAdm = currentFuncionario.role === 'adm';
     const lnk = (cor) => `background:none;border:none;padding:0 8px 0 0;cursor:pointer;font:inherit;text-decoration:underline;color:${cor}`;
-    el('usuLista').innerHTML = (r.data || []).map(u => {
+    const mostrarOff = !!(el('usuMostrarOff') && el('usuMostrarOff').checked);   // desativados ficam escondidos (o histórico deles continua nos relatórios)
+    el('usuLista').innerHTML = (r.data || []).filter(u => mostrarOff || u.ativo !== false).map(u => {
       const inativo = u.ativo === false;
       const pode = u.id !== eu && (souAdm || u.role !== 'adm');   // coordenador não mexe em administrador; ninguém mexe em si mesmo
       const dados = `data-id="${u.id}" data-nome="${escapeHtml(u.nome)}"`;
       const acoes = !pode ? '' :
         (inativo ? `<button type="button" style="${lnk('var(--green, #1E7F45)')}" data-usu-acao="reativar" ${dados}>Reativar</button>` : '')
+        + `<button type="button" style="${lnk('var(--accent, #1D4ED8)')}" data-usu-login="1" ${dados}>Editar login</button>`
         + `<button type="button" style="${lnk('#DC2626')}" data-usu-acao="excluir" ${dados}>Excluir</button>`;
       return `<tr${inativo ? ' style="opacity:.6"' : ''}><td data-uid="${u.id}"${inativo ? ' data-inativo="1"' : ''}>${inativo ? '<span style="color:var(--muted)">Desativado</span>' : ''}</td>
         <td>${escapeHtml(u.nome)}</td><td>${escapeHtml(u.cargo || '')}</td>
-        <td>${escapeHtml(ROTULOS[u.role] || u.role)}</td><td data-ucras="${u.id}" data-orig="${escapeHtml(u.cras && u.cras.nome)}">${escapeHtml(u.cras && u.cras.nome)}</td><td style="white-space:nowrap">${acoes}</td></tr>`;
+        <td>${escapeHtml(ROTULOS[u.role] || u.role)}</td>${pode
+          ? `<td data-ucras="${u.id}" data-sel="1" data-orig="${escapeHtml((u.cras && u.cras.nome) || '')}"><select data-usu-unid="${u.id}" data-prev="${u.cras_id == null ? '' : u.cras_id}" style="padding:4px 6px;font:inherit;max-width:200px">${loginsUnidades().map(x => `<option value="${escapeHtml(x.id)}" ${String(u.cras_id == null ? '' : u.cras_id) === x.id ? 'selected' : ''}>${escapeHtml(x.nome)}</option>`).join('')}</select><div data-uhoje></div></td>`
+          : `<td data-ucras="${u.id}" data-orig="${escapeHtml((u.cras && u.cras.nome) || '')}">${escapeHtml((u.cras && u.cras.nome) || '')}</td>`}<td style="white-space:nowrap">${acoes}</td></tr>`;
     }).join('');
     atualizarPresenca();
   }
 
+  el('usuMostrarOff').addEventListener('change', carregarUsuarios);
+  // Trocar a unidade direto na lista (salva ao escolher)
+  el('usuLista').addEventListener('change', async (e) => {
+    const sel = e.target.closest('[data-usu-unid]'); if (!sel) return;
+    const id = sel.dataset.usuUnid, novo = sel.value, anterior = sel.dataset.prev || '';
+    sel.disabled = true;
+    const { data: atual } = await sbClient.from('funcionarios').select('cargo, role').eq('id', id).maybeSingle();
+    const res = await salvarPerfil(id, { cargo: (atual || {}).cargo, role: (atual || {}).role || 'atendente', cras_id: novo });
+    sel.disabled = false;
+    if (!res.ok){ sel.value = anterior; showToast('❌ Não consegui gravar a unidade: ' + res.erro, 8000); return; }
+    sel.dataset.prev = novo;
+    const td = sel.closest('td'); if (td) td.dataset.orig = sel.options[sel.selectedIndex].textContent;
+    showToast('Unidade atualizada', 2500);
+  });
+
   function aplicarPerfil(){
     const gere = podeGerir();
+    if (window.msgPlantaoPerfil) window.msgPlantaoPerfil();
     el('navUsuarios').style.display = gere ? '' : 'none';
     if (el('navDados')) el('navDados').style.display = gere ? '' : 'none';
     if (gere){
@@ -3880,6 +4092,377 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if (!r.ok){ showToast('❌ ' + r.erro, 6000); b.disabled = false; return; }
     showToast({ excluido: 'Usuário excluído', desativado: 'Acesso desativado', reativado: 'Acesso reativado' }[r.data && r.data.modo] || 'Pronto');
     carregarUsuarios(); popularSelectCras();
+  });
+
+  // ---- Gênero do atendido (M / F / O) ----
+  // A coluna "genero" precisa existir no banco (arquivo supabase/sql/2026-10-genero-atendimentos.sql).
+  // Enquanto não existir, o campo fica desativado e nada quebra.
+  let generoOk = null;   // null = ainda não verificado; true/false = a coluna existe / não existe
+  async function generoVerificar(){
+    if (generoOk !== null) return generoOk;
+    try {
+      const r = await sbClient.from('atendimentos').select('genero').limit(1);
+      if (!r.error) generoOk = true;
+      else if (/genero/i.test(r.error.message || '') || r.error.code === '42703' || r.error.code === 'PGRST204') generoOk = false;
+      else return false;   // erro de rede/permissão: não decide agora, tenta de novo depois
+    } catch (_) { return false; }
+    generoAplicarUI();
+    return generoOk;
+  }
+  function generoAplicarUI(){
+    const box = el('atGenero'), hint = el('atGeneroHint'); if (!box) return;
+    box.querySelectorAll('input').forEach(i => { i.disabled = generoOk === false; });
+    hint.style.display = generoOk === false ? '' : 'none';
+    hint.textContent = generoOk === false ? 'Ainda não ativado: falta criar a coluna "genero" no banco (veja o arquivo SQL entregue junto).' : '';
+  }
+  const generoValor = () => { const c = el('atGenero').querySelector('input:checked'); return c ? c.value : null; };
+  function generoDefinir(v){ el('atGenero').querySelectorAll('input').forEach(i => { i.checked = (i.value === v); }); }
+  el('atGenero').addEventListener('change', (e) => {   // marca só uma opção por vez; clicar de novo desmarca
+    if (e.target.checked) el('atGenero').querySelectorAll('input').forEach(i => { if (i !== e.target) i.checked = false; });
+  });
+  // ---- Data de nascimento do atendido (coluna "data_nascimento"; sem a coluna no banco o campo fica desativado) ----
+  var nascOk = null;   // var de propósito: limparAtendimento() roda no carregamento, antes desta linha
+  async function nascVerificar(){
+    if (nascOk !== null && nascOk !== undefined) return nascOk;
+    try {
+      const r = await sbClient.from('atendimentos').select('data_nascimento').limit(1);
+      if (!r.error) nascOk = true;
+      else if (/data_nascimento/i.test(r.error.message || '') || r.error.code === '42703' || r.error.code === 'PGRST204') nascOk = false;
+      else return false;   // erro de rede/permissão: decide depois
+    } catch (_) { return false; }
+    nascAplicarUI();
+    return nascOk;
+  }
+  function nascAplicarUI(){
+    const inp = el('atNasc'), hint = el('atNascHint'); if (!inp) return;
+    inp.disabled = nascOk === false;
+    if (nascOk === false){ hint.style.color = '#B45309'; hint.textContent = 'Ainda não ativado: falta criar a coluna "data_nascimento" no banco (veja o arquivo SQL entregue junto).'; }
+    else nascAtualizar();
+  }
+  function idadeDe(iso, ref){   // anos completos em "ref"
+    const [y, m, d] = iso.split('-').map(Number), [ry, rm, rd] = ref.split('-').map(Number);
+    let i = ry - y; if (rm < m || (rm === m && rd < d)) i--;
+    return i;
+  }
+  function nascErro(v){   // devolve o problema em texto, ou '' se estiver tudo certo (campo vazio é permitido)
+    if (!v) return '';
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return 'Data de nascimento inválida';
+    if (v > hoje()) return 'A data de nascimento não pode ser no futuro';
+    if (v < '1900-01-01') return 'Data de nascimento muito antiga — confira o ano';
+    return '';
+  }
+  function nascAtualizar(){
+    const inp = el('atNasc'), hint = el('atNascHint'); if (!inp || nascOk === false) return;
+    const v = inp.value, erro = nascErro(v);
+    hint.style.color = erro ? '#DC2626' : 'var(--muted)';
+    if (erro) hint.textContent = erro;
+    else if (v){ const i = idadeDe(v, hoje()); hint.textContent = i + (i === 1 ? ' ano' : ' anos'); }
+    else hint.textContent = '';
+  }
+  el('atNasc').addEventListener('input', nascAtualizar);
+  function dataMenosMeses(iso, n){
+    const [y, m, d] = iso.split('-').map(Number);
+    const alvo = new Date(y, m - 1 - n, 1);
+    const ult = new Date(alvo.getFullYear(), alvo.getMonth() + 1, 0).getDate();
+    return alvo.getFullYear() + '-' + String(alvo.getMonth() + 1).padStart(2, '0') + '-' + String(Math.min(d, ult)).padStart(2, '0');
+  }
+
+  // ---- Logins provisórios: e-mail + senha temporária para quem está só na lista de Usuários ----
+  // Quem NÃO recebe (comparação sem acento/maiúscula): Ana Pinho, Michael, Michael de Borba e Teste
+  const LOGIN_PROV_EXCLUIR = ['ana pinho', 'michael', 'michael de borba', 'teste'];
+  const normNome = (v) => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+  function emailDoNome(nome, dominio, usados){
+    const partes = normNome(nome).replace(/[^a-z0-9 ]/g, '').split(' ').filter(x => x && !['de', 'da', 'do', 'dos', 'das', 'e'].includes(x));
+    const base = partes.length > 1 ? partes[0] + '.' + partes[partes.length - 1] : (partes[0] || 'usuario');
+    let em = base + '@' + dominio, n = 2;
+    while (usados.has(em)) em = base + (n++) + '@' + dominio;
+    usados.add(em);
+    return em;
+  }
+  function senhaProvisoria(){
+    const T = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // sem caracteres que se confundem (0/O, 1/l/I)
+    const a = new Uint32Array(12); crypto.getRandomValues(a);
+    const s = Array.from(a, n => T[n % T.length]).join('');
+    return (/[A-Za-z]/.test(s) && /\d/.test(s)) ? s : senhaProvisoria();
+  }
+  let loginsRows = [], loginsExcluidos = [];
+
+  function loginsModalEl(){
+    let ov = document.getElementById('usuLoginsOverlay'); if (ov) return ov;
+    ov = document.createElement('div');
+    ov.id = 'usuLoginsOverlay'; ov.className = 'vs-modal-overlay'; ov.style.display = 'none';
+    ov.innerHTML = `
+      <div class="vs-modal" style="width:min(1200px,100%)" role="dialog" aria-modal="true" aria-labelledby="loginsTit">
+        <div class="vs-modal-head">
+          <div><h3 id="loginsTit">Logins provisórios</h3><p id="loginsSub"></p></div>
+          <button type="button" class="vs-modal-x" id="loginsX" aria-label="Fechar">&times;</button>
+        </div>
+        <div class="vs-modal-body">
+          <div class="field" style="max-width:440px"><label>Domínio do e-mail provisório</label><input type="text" id="loginsDominio" value="example.com" autocomplete="off"></div>
+          <div class="field" style="max-width:440px"><label>Senha padrão (igual para todos)</label><input type="text" id="loginsSenhaPadrao" value="123456789" autocomplete="off"><small class="hint">Deixe em branco para gerar uma senha diferente para cada pessoa.</small></div>
+          <p class="hint" style="margin:0">O e-mail é montado com o nome (ex.: <b>maria.souza@</b>domínio) e pode ser editado na tabela. Use o domínio da sua unidade se quiser que a pessoa receba e-mail de recuperação de senha; <b>example.com</b> é um domínio de teste que não entrega mensagens.</p>
+          <p class="hint" id="loginsAviso" style="margin:0"></p>
+          <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13.5px">
+            <thead><tr style="text-align:left;color:var(--muted)"><th></th><th>Nome</th><th>Unidade</th><th>Cargo</th><th>Nível</th><th>E-mail provisório</th><th>Senha provisória</th><th>Resultado</th></tr></thead>
+            <tbody id="loginsTbody"></tbody>
+          </table></div>
+        </div>
+        <div class="vs-modal-foot">
+          <button type="button" class="btn-ghost" id="loginsFechar">Fechar</button>
+          <button type="button" class="btn-ghost" id="loginsCopiar" style="display:none">Copiar logins criados</button>
+          <button type="button" class="btn-ghost" id="loginsCsv" style="display:none">Baixar planilha</button>
+          <button type="button" class="btn-primary" id="loginsCriar">Criar logins selecionados</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    const fechar = () => { ov.style.display = 'none'; };
+    ov.addEventListener('click', (e) => { if (e.target === ov) fechar(); });
+    document.getElementById('loginsX').addEventListener('click', fechar);
+    document.getElementById('loginsFechar').addEventListener('click', fechar);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && ov.style.display !== 'none') fechar(); });
+    document.getElementById('loginsDominio').addEventListener('change', () => { loginsGerarEmails(); loginsRender(); });
+    const tb = document.getElementById('loginsTbody');
+    tb.addEventListener('change', (e) => {
+      const i = e.target.dataset.lgi; if (i === undefined) return;
+      if (e.target.dataset.lg === 'chk') loginsRows[i].marcado = e.target.checked;
+      if (e.target.dataset.lg === 'email') loginsRows[i].email = e.target.value.trim().toLowerCase();
+      if (e.target.dataset.lg === 'cras') loginsRows[i].cras_id = e.target.value;
+      if (e.target.dataset.lg === 'cargo') loginsRows[i].cargo = e.target.value.trim();
+      if (e.target.dataset.lg === 'role') loginsRows[i].role = e.target.value;
+      loginsResumo();
+    });
+    document.getElementById('loginsSenhaPadrao').addEventListener('input', () => {
+      loginsRows.forEach(r => { if (r.status !== 'criado') r.senha = loginsSenhaNova(); });
+      loginsRender();
+    });
+    document.getElementById('loginsCriar').addEventListener('click', loginsCriar);
+    document.getElementById('loginsCopiar').addEventListener('click', loginsCopiar);
+    document.getElementById('loginsCsv').addEventListener('click', loginsBaixar);
+    return ov;
+  }
+
+  const loginsSenhaNova = () => { const el_ = document.getElementById('loginsSenhaPadrao'); const v = el_ ? el_.value : ''; return v ? v : senhaProvisoria(); };
+  function loginsNiveis(){ return currentFuncionario.role === 'adm' ? ['atendente', 'coordenador', 'adm'] : ['atendente', 'coordenador']; }
+  var unidadesCache = [];
+  // Lê as unidades direto da tabela "cras" (não depende da cópia feita no início da sessão)
+  async function garantirUnidades(){
+    const r = await sbClient.from('cras').select('id, nome').order('nome');
+    if (!r.error && (r.data || []).length) unidadesCache = [{ id: '', nome: 'Sem unidade' }].concat(r.data.map(x => ({ id: String(x.id), nome: x.nome })));
+    return unidadesCache;
+  }
+  function loginsUnidades(){
+    if (unidadesCache.length) return unidadesCache;
+    const o = Array.from(el('usuCras').options).map(o => ({ id: o.value, nome: o.textContent }));
+    return o.length ? o : [{ id: '', nome: 'Sem unidade' }];
+  }
+  const loginsNomeUnidade = (id) => { const u = loginsUnidades().find(x => x.id === String(id || '')); return u ? u.nome : ''; };
+  function loginsDominio(){ return (document.getElementById('loginsDominio').value || '').trim().toLowerCase().replace(/^@/, '') || 'example.com'; }
+  function loginsGerarEmails(){
+    const usados = new Set(loginsRows.filter(r => r.status === 'criado').map(r => r.email));
+    const dom = loginsDominio();
+    loginsRows.forEach(r => { if (r.status !== 'criado') r.email = emailDoNome(r.nome, dom, usados); });
+  }
+  function loginsResumo(){
+    const sel = loginsRows.filter(r => r.marcado && r.status !== 'criado').length;
+    document.getElementById('loginsSub').textContent = `${loginsRows.length} pessoa${loginsRows.length === 1 ? '' : 's'} na lista · ${sel} selecionada${sel === 1 ? '' : 's'}`;
+    const exc = loginsExcluidos.length ? 'Fora desta lista (sem login provisório): ' + loginsExcluidos.map(escapeHtml).join(', ') + '. ' : '';
+    document.getElementById('loginsAviso').innerHTML = exc + '<b>As senhas aparecem só aqui:</b> copie ou baixe a planilha antes de fechar.';
+    const criados = loginsRows.some(r => r.status === 'criado');
+    document.getElementById('loginsCopiar').style.display = criados ? '' : 'none';
+    document.getElementById('loginsCsv').style.display = criados ? '' : 'none';
+  }
+  function loginsRender(){
+    const tb = document.getElementById('loginsTbody');
+    if (!loginsRows.length){ tb.innerHTML = '<tr><td colspan="8" style="padding:14px 0;color:var(--muted)">Ninguém na lista precisa de login provisório.</td></tr>'; loginsResumo(); return; }
+    const res = (r) => r.status === 'criado' ? '<span style="color:var(--green,#1E7F45);font-weight:600">✓ Criado</span>'
+      : r.status === 'ja_existe' ? '<span style="color:#B45309">Já tinha login</span>'
+      : r.status === 'erro' ? '<span style="color:#DC2626">✕ ' + escapeHtml(r.msg) + '</span>' : '';
+    tb.innerHTML = loginsRows.map((r, i) => `<tr style="border-top:1px solid var(--line,#e5e7eb)">
+      <td style="padding:6px 8px 6px 0"><input type="checkbox" data-lg="chk" data-lgi="${i}" ${r.marcado ? 'checked' : ''} ${r.status === 'criado' ? 'disabled' : ''}></td>
+      <td>${escapeHtml(r.nome)}</td>
+      <td style="padding:4px 8px 4px 0"><select data-lg="cras" data-lgi="${i}" ${r.status === 'criado' ? 'disabled' : ''}>${loginsUnidades().map(u => `<option value="${escapeHtml(u.id)}" ${String(r.cras_id || '') === u.id ? 'selected' : ''}>${escapeHtml(u.nome)}</option>`).join('')}</select></td>
+      <td style="padding:4px 8px 4px 0"><input type="text" data-lg="cargo" data-lgi="${i}" value="${escapeHtml(r.cargo)}" ${r.status === 'criado' ? 'disabled' : ''} style="width:100%;min-width:130px"></td>
+      <td style="padding:4px 8px 4px 0"><select data-lg="role" data-lgi="${i}" ${r.status === 'criado' ? 'disabled' : ''}>${loginsNiveis().map(n => `<option value="${n}" ${r.role === n ? 'selected' : ''}>${ROTULOS[n]}</option>`).join('')}</select></td>
+      <td style="padding:4px 8px 4px 0"><input type="text" data-lg="email" data-lgi="${i}" value="${escapeHtml(r.email)}" ${r.status === 'criado' ? 'disabled' : ''} style="width:100%;min-width:210px"></td>
+      <td><code>${escapeHtml(r.senha)}</code></td><td>${res(r)}</td></tr>`).join('');
+    loginsResumo();
+  }
+
+  async function loginsAbrir(){
+    const ov = loginsModalEl(); ov.style.display = 'flex';
+    document.getElementById('loginsTbody').innerHTML = '<tr><td colspan="8" style="padding:14px 0;color:var(--muted)">Carregando...</td></tr>';
+    await garantirUnidades();
+    let r = await sbClient.from('funcionarios').select('id, nome, cargo, role, cras_id, ativo').order('nome');
+    if (r.error) r = await sbClient.from('funcionarios').select('id, nome, cargo, role, cras_id').order('nome');
+    if (r.error){ document.getElementById('loginsTbody').innerHTML = '<tr><td colspan="8" style="padding:14px 0;color:#DC2626">Não foi possível carregar a lista.</td></tr>'; return; }
+    const souAdm = currentFuncionario.role === 'adm';
+    loginsRows = []; loginsExcluidos = [];
+    (r.data || []).forEach(u => {
+      if (u.ativo === false || u.id === currentFuncionario.id) return;          // desativados e você mesmo
+      if (LOGIN_PROV_EXCLUIR.includes(normNome(u.nome))){ loginsExcluidos.push(u.nome); return; }
+      if (u.role === 'adm' && !souAdm) return;                                  // coordenador não mexe em administrador
+      loginsRows.push({ id: u.id, nome: u.nome, cargo: u.cargo || '', role: u.role || 'atendente', cras_id: u.cras_id || '', email: '', senha: loginsSenhaNova(), marcado: true, status: '', msg: '' });
+    });
+    loginsGerarEmails(); loginsRender();
+  }
+
+  async function loginsCriar(){
+    const alvo = loginsRows.filter(r => r.marcado && r.status !== 'criado');
+    if (!alvo.length){ showToast('Selecione pelo menos uma pessoa'); return; }
+    const mal = alvo.find(r => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.email));
+    if (mal){ showToast('E-mail inválido para ' + mal.nome); return; }
+    const vistos = new Set();
+    for (const r of loginsRows.filter(r => r.status === 'criado').concat(alvo)){
+      if (vistos.has(r.email)){ showToast('E-mail repetido: ' + r.email); return; }
+      vistos.add(r.email);
+    }
+    const btn = document.getElementById('loginsCriar'); btn.disabled = true; btn.textContent = 'Criando...';
+    const { data, error } = await sbClient.functions.invoke('criar-logins-provisorios', { body: { itens: alvo.map(r => ({ id: r.id, email: r.email, senha: r.senha })) } });
+    btn.disabled = false; btn.textContent = 'Criar logins selecionados';
+    if (error){
+      let msg = error.message; try { const j = await error.context.json(); if (j.error) msg = j.error; } catch (_) {}
+      showToast(error.context && error.context.status === 404 ? '❌ A função "criar-logins-provisorios" ainda não foi publicada no Supabase' : '❌ ' + msg, 7000);
+      return;
+    }
+    (data && data.resultados || []).forEach(x => {
+      const row = loginsRows.find(r => r.id === x.id); if (!row) return;
+      row.status = x.status; row.msg = x.erro || '';
+      if (x.status !== 'erro') row.marcado = false;
+    });
+    // grava unidade, cargo e nível escolhidos na tabela de funcionários
+    const salvar = alvo.filter(r => r.status !== 'erro');
+    const falhas = (await Promise.all(salvar.map(async r => {
+      const res = await salvarPerfil(r.id, { cargo: r.cargo, role: r.role, cras_id: r.cras_id });
+      return res.ok ? null : r.nome;
+    }))).filter(Boolean);
+    if (falhas.length) showToast('⚠️ Login criado, mas não consegui gravar unidade/cargo/nível de: ' + falhas.join(', '), 8000);
+    loginsRender();
+    const ok = loginsRows.filter(r => r.status === 'criado').length, falhou = loginsRows.filter(r => r.status === 'erro' || r.status === 'ja_existe').length;
+    showToast(`${ok} login${ok === 1 ? '' : 's'} criado${ok === 1 ? '' : 's'}` + (falhou ? ` · ${falhou} com aviso` : ''), 5000);
+    carregarUsuarios();
+  }
+  function loginsCriados(){ return loginsRows.filter(r => r.status === 'criado'); }
+  async function loginsCopiar(){
+    const txt = ['Nome\tUnidade\tCargo\tNível\tE-mail\tSenha provisória'].concat(loginsCriados().map(r => `${r.nome}\t${loginsNomeUnidade(r.cras_id)}\t${r.cargo}\t${ROTULOS[r.role] || r.role}\t${r.email}\t${r.senha}`)).join('\n');
+    try { await navigator.clipboard.writeText(txt); showToast('Logins copiados'); } catch (_) { showToast('Não foi possível copiar — use "Baixar planilha"'); }
+  }
+  function loginsBaixar(){
+    const q = (v) => '"' + String(v).replace(/"/g, '""') + '"';
+    const csv = '\ufeff' + ['Nome;Unidade;Cargo;Nível;E-mail;Senha provisória'].concat(loginsCriados().map(r => [q(r.nome), q(loginsNomeUnidade(r.cras_id)), q(r.cargo), q(ROTULOS[r.role] || r.role), q(r.email), q(r.senha)].join(';'))).join('\r\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    a.download = 'logins-provisorios.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  }
+  el('usuLoginsBtn').addEventListener('click', loginsAbrir);
+
+  // ---- Editar login (e-mail / senha) de uma pessoa, pela função "atualizar-login" ----
+  async function loginFn(corpo){
+    const { data, error } = await sbClient.functions.invoke('atualizar-login', { body: corpo });
+    if (!error) return { ok: true, data };
+    let msg = error.message;
+    try { const j = await error.context.json(); if (j.error) msg = j.error; } catch (_) {}
+    if (/Failed to send|fetch|CORS/i.test(msg)) msg = 'A função "atualizar-login" não está publicada no Supabase (ou está fora do ar).';
+    return { ok: false, erro: msg };
+  }
+  // Grava unidade/cargo/nível. Tenta direto no banco; se o banco ignorar (regras de acesso) ou recusar,
+  // usa a função do servidor "atualizar-login". Só considera salvo se a linha realmente mudou.
+  async function salvarPerfil(id, dados){
+    const d = { cargo: dados.cargo || null, role: dados.role, cras_id: dados.cras_id || null };
+    const a = await sbClient.from('funcionarios').update(d).eq('id', id).select('id, cras_id, role, cargo');
+    if (!a.error && a.data && a.data.length) return { ok: true };
+    const b = await loginFn({ id, acao: 'perfil', ...d });
+    if (b.ok) return { ok: true };
+    const precisaAtualizar = /Ação inválida/i.test(b.erro || '');
+    return { ok: false, erro: precisaAtualizar ? 'o banco não deixou gravar e a função "atualizar-login" no Supabase está desatualizada. Publique a versão nova.' : (b.erro || (a.error && a.error.message) || 'o banco não permitiu a alteração') };
+  }
+  function loginEditModalEl(){
+    let ov = document.getElementById('usuLoginEditOverlay'); if (ov) return ov;
+    ov = document.createElement('div');
+    ov.id = 'usuLoginEditOverlay'; ov.className = 'vs-modal-overlay'; ov.style.display = 'none';
+    ov.innerHTML = `
+      <div class="vs-modal" style="width:min(520px,100%)" role="dialog" aria-modal="true" aria-labelledby="leTit">
+        <div class="vs-modal-head">
+          <div><h3 id="leTit">Editar usuário</h3><p id="leSub"></p></div>
+          <button type="button" class="vs-modal-x" id="leX" aria-label="Fechar">&times;</button>
+        </div>
+        <div class="vs-modal-body">
+          <div class="field"><label>E-mail de acesso</label><input type="text" id="leEmail" autocomplete="off"></div>
+          <div class="field"><label>Nova senha</label>
+            <input type="text" id="leSenha" autocomplete="off" placeholder="Deixe em branco para manter a senha atual">
+            <button type="button" class="btn-ghost" id="lePadrao" style="margin-top:6px">Usar senha padrão (123456789)</button>
+          </div>
+          <div class="field"><label>Unidade</label><select id="leCras"></select></div>
+          <div class="field"><label>Cargo</label><input type="text" id="leCargo" autocomplete="off"></div>
+          <div class="field"><label>Nível</label><select id="leRole"></select></div>
+          <p class="hint" id="leAviso" style="margin:0"></p>
+        </div>
+        <div class="vs-modal-foot">
+          <button type="button" class="btn-ghost" id="leFechar">Cancelar</button>
+          <button type="button" class="btn-primary" id="leSalvar">Salvar</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    const fechar = () => { ov.style.display = 'none'; };
+    ov.addEventListener('click', (e) => { if (e.target === ov) fechar(); });
+    document.getElementById('leX').addEventListener('click', fechar);
+    document.getElementById('leFechar').addEventListener('click', fechar);
+    document.getElementById('lePadrao').addEventListener('click', () => { document.getElementById('leSenha').value = '123456789'; });
+    document.getElementById('leSalvar').addEventListener('click', async () => {
+      const id = ov.dataset.id, btn = document.getElementById('leSalvar'), o = ov._orig || {};
+      const email = document.getElementById('leEmail').value.trim(), senha = document.getElementById('leSenha').value;
+      const perfil = { cargo: document.getElementById('leCargo').value.trim(), role: document.getElementById('leRole').value, cras_id: document.getElementById('leCras').value };
+      const mudouPerfil = perfil.cargo !== (o.cargo || '') || perfil.role !== (o.role || '') || perfil.cras_id !== (o.cras_id || '');
+      const mudouLogin = !!senha || (!!email && email !== (o.email || ''));
+      if (!mudouPerfil && !mudouLogin){ showToast('Nada para alterar'); return; }
+      btn.disabled = true; btn.textContent = 'Salvando...';
+      let msgs = [];
+      if (mudouLogin){
+        const r = await loginFn({ id, acao: 'salvar', email, senha });
+        if (!r.ok){ btn.disabled = false; btn.textContent = 'Salvar'; showToast('❌ Login: ' + r.erro, 7000); return; }
+        msgs.push(r.data && r.data.modo === 'criado' ? 'login criado' : 'login atualizado');
+      }
+      if (mudouPerfil){
+        const res = await salvarPerfil(id, perfil);
+        if (!res.ok){ btn.disabled = false; btn.textContent = 'Salvar'; showToast('❌ Não consegui gravar unidade/cargo/nível: ' + res.erro, 8000); return; }
+        msgs.push('unidade/cargo/nível atualizados');
+      }
+      btn.disabled = false; btn.textContent = 'Salvar';
+      showToast('Salvo: ' + msgs.join(' e '), 4000);
+      fechar(); carregarUsuarios();
+    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && ov.style.display !== 'none') fechar(); });
+    return ov;
+  }
+  el('usuLista').addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-usu-login]'); if (!b) return;
+    const ov = loginEditModalEl();
+    ov.dataset.id = b.dataset.id; ov._orig = null;
+    document.getElementById('leSub').textContent = b.dataset.nome;
+    document.getElementById('leEmail').value = ''; document.getElementById('leSenha').value = '';
+    document.getElementById('leCargo').value = '';
+    document.getElementById('leCras').innerHTML = loginsUnidades().map(u => `<option value="${escapeHtml(u.id)}">${escapeHtml(u.nome)}</option>`).join('');
+    document.getElementById('leRole').innerHTML = loginsNiveis().map(n => `<option value="${n}">${ROTULOS[n]}</option>`).join('');
+    document.getElementById('leAviso').textContent = 'Carregando...';
+    ov.style.display = 'flex';
+    await garantirUnidades();
+    document.getElementById('leCras').innerHTML = loginsUnidades().map(u => `<option value="${escapeHtml(u.id)}">${escapeHtml(u.nome)}</option>`).join('');
+    const [rp, rl] = await Promise.all([
+      sbClient.from('funcionarios').select('cargo, role, cras_id').eq('id', b.dataset.id).maybeSingle(),
+      loginFn({ id: b.dataset.id, acao: 'consultar' })
+    ]);
+    const p = (rp && rp.data) || {};
+    document.getElementById('leCargo').value = p.cargo || '';
+    document.getElementById('leCras').value = p.cras_id != null ? String(p.cras_id) : '';
+    document.getElementById('leRole').value = p.role || 'atendente';
+    const email = rl.ok ? (rl.data.email || '') : '';
+    document.getElementById('leEmail').value = email;
+    ov._orig = { cargo: p.cargo || '', role: document.getElementById('leRole').value, cras_id: document.getElementById('leCras').value, email };
+    document.getElementById('leAviso').textContent = !rl.ok
+      ? '⚠️ ' + rl.erro + ' Você ainda pode alterar unidade, cargo e nível.'
+      : rl.data.tem_login ? 'Troque só o que precisar. A senha só muda se você preencher o campo de nova senha.'
+      : 'Esta pessoa ainda não tem login. Para criar, preencha e-mail e senha.';
   });
 
   // ---- CPF do Controle de atendimentos: máscara, mensagem ao vivo e validação dos dígitos ----
@@ -3961,11 +4544,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const a = e.target.closest('.at-del'); if (!a) return;
     e.preventDefault();
     if (!confirm('Deseja realmente excluir?')) return;
+    // guarda os dados que entram na contagem de excluídos ANTES de apagar
+    const snap = await sbClient.from('atendimentos').select('id, data_atendimento, motivo, submotivo, cras_origem_id').eq('id', a.dataset.id).maybeSingle();
     const r1 = await sbClient.from('atendimento_entrevistadores').delete().eq('atendimento_id', a.dataset.id);
     if (r1.error){ showToast('❌ Não foi possível excluir. ' + erroAmigavel(r1.error)); return; }
     const { data, error } = await sbClient.from('atendimentos').delete().eq('id', a.dataset.id).select('id');
     if (error){ showToast('❌ Não foi possível excluir. ' + erroAmigavel(error)); return; }
     if (!data || !data.length){ showToast('O banco bloqueou a exclusão (falta política de DELETE no RLS)'); return; }
+    if (snap && snap.data) await registrarExclusao('atendimento', [snap.data], 'manual');
     if (editandoId === a.dataset.id) limparAtendimento();
     listarAtendimentos(paginaAt); listarRecentes(); carregarRelatorioMes();
   }
@@ -3973,8 +4559,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   async function editarAtendimento(e){
     const a = e.target.closest('.at-edit'); if (!a) return;
     e.preventDefault();
+    await generoVerificar(); await nascVerificar();
     const { data, error } = await sbClient.from('atendimentos')
-      .select('id, data_atendimento, nome_atendido, cpf_atendido, cras_origem_id, motivo, submotivo, atendimento_entrevistadores(funcionario_id)')
+      .select('id, data_atendimento, nome_atendido, cpf_atendido, cras_origem_id, motivo, submotivo' + (generoOk ? ', genero' : '') + (nascOk ? ', data_nascimento' : '') + ', atendimento_entrevistadores(funcionario_id)')
       .eq('id', a.dataset.id).single();
     if (error || !data){ showToast('Não foi possível carregar o atendimento'); return; }
     const garantir = (sel, v) => { if (v && ![...sel.options].some(o => o.value === v)) sel.add(new Option(v, v)); sel.value = v || ''; };
@@ -3982,6 +4569,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     el('atNome').value = data.nome_atendido || '';
     el('atCpf').value = data.cpf_atendido || ''; atCpfAtualizar();
     el('atCras').value = data.cras_origem_id || '';
+    generoDefinir(data.genero || null);
+    el('atNasc').value = data.data_nascimento || ''; nascAtualizar();
     garantir(el('atMotivo'), data.motivo);
     el('atMotivo').dispatchEvent(new Event('change'));
     if (/^Outros(:|$)/.test(data.submotivo || '')){
@@ -4519,6 +5108,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       const { data: del, error } = await sbClient.from('visitas_domiciliares').delete().eq('id', v.id).select('id');
       if (error) throw error;
       if (!del || !del.length) throw new Error('o banco bloqueou a exclusão (falta política de DELETE no RLS)');
+      await registrarExclusao('visita', [v], 'manual');
       if (String(editandoVisitaId) === String(v.id)) document.getElementById('vsLimparBtn').click();
       showToast('🗑️ Visita excluída');
       loadVisitas();
@@ -4692,6 +5282,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
                 ? `<div class="vs-chips">${v.entrevistadores_nomes.map(n => `<span class="vs-chip">${escapeHtml(n)}</span>`).join('')}</div>`
                 : '<span class="vs-vazio">—</span>'}</td>
               <td class="vs-col-status"><select class="vs-st-sel st-${escapeHtml(v.status || 'agendada')}" data-status-id="${escapeHtml(v.id)}" aria-label="Status da visita">${vsOpcoesStatus(v.status || 'agendada', v.data_agendada)}</select></td>
+              ${typeof cadCelula === 'function' ? cadCelula(v) : '<td></td>'}
               <td class="vs-col-acoes">
                 <div class="vs-acoes">
                   <button type="button" class="vs-btn-icon reagendar" data-acao="reagendar" data-id="${escapeHtml(v.id)}" title="Reagendar (${Array.isArray(v.historico_reagendamentos) ? v.historico_reagendamentos.length : 0}/3)" aria-label="Reagendar visita">
@@ -4708,7 +5299,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
                 </div>
               </td>
             </tr>
-          `).join('') : `<tr><td colspan="6" class="vs-vazio" style="text-align:center;padding:24px">${filtrando ? 'Nenhuma visita encontrada com esses filtros.' : 'Nenhuma entrevista domiciliar registrada ainda.'}</td></tr>`;
+          `).join('') : `<tr><td colspan="7" class="vs-vazio" style="text-align:center;padding:24px">${filtrando ? 'Nenhuma visita encontrada com esses filtros.' : 'Nenhuma entrevista domiciliar registrada ainda.'}</td></tr>`;
 
     const resumo = document.getElementById('vsResumo');
     if (resumo) {
@@ -5207,6 +5798,7 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
         vsTabelaCache = data;
         vsPopularFiltros(data);
         vsRenderTabela();
+        if (typeof cadCarregarMapa === 'function') cadCarregarMapa().then(() => vsRenderTabela());
         renderPgProximasVisitas();
         renderPgResumoDia();
         vsChecarMudanca(); // guarda a "assinatura" atual para a atualização automática
@@ -5454,6 +6046,323 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
     };
     reader.readAsDataURL(file);
   });
+</script>
+
+<script>
+// ============================================================
+// HISTÓRICO DE CADERNOS
+// Tabelas (ver cadernos_setor.sql): cadernos_setor (setor atual de cada caderno,
+// uma linha por CPF) e cadernos_movimentos (histórico de trocas de setor).
+// A pessoa aparece no painel pela data do atendimento; o setor é ligado pelo CPF
+// e também aparece na tabela de "Últimas entrevistas domiciliares".
+// ============================================================
+(function(){
+  const SETORES = { coordenacao: 'Coordenação', entrevista: 'Entrevista', balcao: 'Balcão', espera: 'Caixa de espera', inclusao_analise: 'Inclusão / Análise' };
+  const rotulo = (x) => x ? (SETORES[x] || (x === 'concluido' ? 'Concluído' : x)) : SETORES.coordenacao;
+  let colunaAusente = false;   // colunas novas (concluido) ainda não criadas no Supabase
+  const $ = (id) => document.getElementById(id);
+  const esc = (v) => escapeHtml(v == null ? '' : String(v));
+  const soDig = (v) => String(v == null ? '' : v).replace(/\D/g, '');
+  const norm = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  const fmtCpf = (v) => { const d = soDig(v); return d.length === 11 ? `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9)}` : (v || 'sem CPF'); };
+  const hojeLocal = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  const fmtDia = (d) => d ? String(d).slice(0, 10).split('-').reverse().join('/') : '';
+  const fmtDH = (iso) => { if (!iso) return ''; const d = new Date(iso); return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); };
+  // Chave do caderno: CPF só com números; sem CPF, usa o nome
+  const chave = (cpf, nome) => { const d = soDig(cpf); return d || ('nome:' + norm(nome)); };
+
+  let mapa = {};            // { chave: { cpf, nome, setor, atualizado_em, atualizado_por_nome } }
+  let tabelaAusente = false;
+  let pessoas = [];         // atendimentos do período (1 por pessoa)
+  let reqId = 0;
+
+  function ehTabelaAusente(e){
+    const m = String((e && (e.message || '')) || '');
+    return !!e && (e.code === '42P01' || e.code === 'PGRST205' || /cadernos_(setor|movimentos)/.test(m) && /does not exist|schema cache|Could not find/i.test(m));
+  }
+
+  async function carregarMapa(){
+    try {
+      const out = [];
+      for (let from = 0; ; from += 1000){
+        let r = await sbClient.from('cadernos_setor')
+          .select('cpf, nome, setor, atualizado_em, atualizado_por_nome, concluido, concluido_em').order('cpf').range(from, from + 999);
+        if (r.error && (r.error.code === '42703' || /concluido/.test(String(r.error.message || '')))){
+          colunaAusente = true;   // SQL novo ainda não rodado: segue sem as colunas de "concluído"
+          r = await sbClient.from('cadernos_setor')
+            .select('cpf, nome, setor, atualizado_em, atualizado_por_nome').order('cpf').range(from, from + 999);
+        } else if (!r.error) colunaAusente = false;
+        const { data, error } = r;
+        if (error) throw error;
+        out.push(...(data || []));
+        if (!data || data.length < 1000) break;
+      }
+      mapa = {}; out.forEach(r => { mapa[r.cpf] = r; });
+      tabelaAusente = false;
+    } catch (e) {
+      if (ehTabelaAusente(e)) tabelaAusente = true;
+      else console.log('Não foi possível carregar os setores dos cadernos:', e && e.message);
+    }
+  }
+  window.cadCarregarMapa = carregarMapa;
+
+  const optsSetor = (atual) => Object.keys(SETORES).map(k => `<option value="${k}"${k === (atual || 'coordenacao') ? ' selected' : ''}>${SETORES[k]}</option>`).join('');
+
+  // Célula "Caderno" da tabela Últimas entrevistas domiciliares
+  window.cadCelula = function(v){
+    if (tabelaAusente) return '<td class="vs-col-caderno"><span class="vs-vazio" title="Tabelas do histórico de cadernos ainda não criadas no Supabase">—</span></td>';
+    const k = chave(v.cpf, v.nome_responsavel);
+    const atual = (mapa[k] || {}).setor || 'coordenacao';   // quem ainda não tem setor fica em Coordenação
+    return `<td class="vs-col-caderno"><select class="cad-sel cad-${atual}" data-cad-chave="${esc(k)}" data-cad-nome="${esc(v.nome_responsavel)}" aria-label="Setor do caderno">${optsSetor(atual)}</select></td>`;
+  };
+
+  async function mover(k, nome, novo){
+    const anterior = (mapa[k] || {}).setor || '';
+    if (novo === anterior) return true;
+    // Concluído em Inclusão / Análise e indo para outro setor: tira o Concluído (a entrevista volta para "Com caderno")
+    let tirouConcluido = false;
+    if (anterior === 'inclusao_analise' && novo !== 'inclusao_analise'){
+      const pp = pessoas.find(x => x.chave === k);
+      const estavaConcluido = pp ? concluidoDe(pp) : !!(mapa[k] || {}).concluido;
+      if (estavaConcluido){
+        const okC = await concluir(k, nome, false);
+        if (!okC) return false;
+        tirouConcluido = true;
+      }
+    }
+    const por = (typeof currentFuncionario !== 'undefined' && currentFuncionario) ? currentFuncionario.nome : null;
+    const agora = new Date().toISOString();
+    try {
+      if (!novo){
+        const { error } = await sbClient.from('cadernos_setor').delete().eq('cpf', k);
+        if (error) throw error;
+        delete mapa[k];
+      } else {
+        const reg = { cpf: k, nome: nome || '', setor: novo, atualizado_em: agora, atualizado_por_nome: por };
+        const { error } = await sbClient.from('cadernos_setor').upsert(reg, { onConflict: 'cpf' });
+        if (error) throw error;
+        mapa[k] = Object.assign({}, mapa[k] || {}, reg);
+      }
+    } catch (e) {
+      if (ehTabelaAusente(e)){ tabelaAusente = true; renderizar(); }
+      const dica = (e && e.code === '23514') ? ' Rode a atualização do arquivo cadernos_setor.sql no Supabase (novo setor Inclusão / Análise).' : '';
+      showToast('❌ Não foi possível mover o caderno. ' + (typeof erroAmigavel === 'function' ? erroAmigavel(e) : ((e && e.message) || '')) + dica, 5000);
+      return false;
+    }
+    // histórico (se falhar, a troca de setor já valeu)
+    sbClient.from('cadernos_movimentos').insert({ cpf: k, nome: nome || '', de_setor: anterior || null, para_setor: novo || null, por_nome: por }).then(() => {}, () => {});
+    showToast(novo ? `📒 Caderno de ${nome || 'pessoa'} → ${SETORES[novo]}${tirouConcluido ? ' (Concluído removido)' : ''}` : `📒 Caderno de ${nome || 'pessoa'} sem setor`);
+    if (tirouConcluido && typeof loadVisitas === 'function') loadVisitas();   // atualiza o status na tabela de entrevistas
+    return true;
+  }
+
+  // Concluído = marcado no caderno OU status "Concluído" da visita mais recente (Últimas entrevistas domiciliares)
+  const concluidoDe = (p) => !!((mapa[p.chave] || {}).concluido || ((p.visitas || [])[0] || {}).status === 'concluido');
+
+  function cardHtml(p){
+    const m = mapa[p.chave] || {};
+    const efetivo = m.setor || 'coordenacao';   // cadastro novo entra em Coordenação
+    const conc = concluidoDe(p);
+    const btnTirar = '<button type="button" class="cad-btn cad-btn-limpar" data-cad-concluir="0" title="Remove o Concluído: a entrevista volta para Com caderno">↩ Tirar concluído</button>';
+    const acao = efetivo === 'inclusao_analise'
+      ? (conc ? btnTirar
+              : '<button type="button" class="cad-btn cad-btn-ok" data-cad-concluir="1" title="Marca como Concluído também nas Últimas entrevistas domiciliares">✔ Concluído</button>')
+      : (conc ? btnTirar : '');   // concluído em outro setor também pode ser desfeito
+    const destinos = Object.keys(SETORES).filter(k => k !== efetivo);
+    const btns = destinos.map(k => `<button type="button" class="cad-btn" data-cad-mover="${k}">${SETORES[k]}</button>`).join('');
+    const limpar = '';
+    const hora = p.horario ? ' ' + String(p.horario).slice(0, 5) : '';
+    return `<div class="cad-card" data-chave="${esc(p.chave)}" data-nome="${esc(p.nome)}">
+      <div class="cad-nome">${esc(p.nome) || '—'}</div>
+      <div class="cad-sub">${esc(fmtCpf(p.cpf))} · ${fmtDia(p.data)}${hora}${p.cras ? ' · ' + esc(p.cras) : ''}</div>
+      <div class="cad-tags">${(p.origens || []).map(o => `<span class="cad-tag">${esc(o)}</span>`).join('')}${conc ? '<span class="cad-tag ok">✔ Concluído</span>' : ''}</div>
+      <div class="cad-mov"><small>Mover para:</small>${acao}${btns}${limpar}</div>
+      ${m.atualizado_em ? `<div class="cad-desde">No setor desde ${fmtDH(m.atualizado_em)}${m.atualizado_por_nome ? ' · ' + esc(m.atualizado_por_nome) : ''}</div>` : ''}
+      ${m.setor ? '<details class="cad-hist"><summary>Movimentações</summary><ul><li>carregando…</li></ul></details>' : ''}
+    </div>`;
+  }
+
+  function renderizar(){
+    resumoFiltro();
+    const termo = norm($('cadBusca').value), termoDig = soDig($('cadBusca').value);
+    const lista = pessoas.filter(p => !termo || norm(p.nome).includes(termo) || (termoDig && soDig(p.cpf).includes(termoDig)));
+    const grupos = { coordenacao: [], entrevista: [], balcao: [], espera: [], inclusao_analise: [], nenhum: [] };
+    lista.forEach(p => { grupos[(mapa[p.chave] || {}).setor || 'coordenacao'].push(p); });
+    const analise = grupos.inclusao_analise.filter(p => !concluidoDe(p));
+    const concluidos = grupos.inclusao_analise.filter(concluidoDe);
+
+    const erro = $('cadErro');
+    if (tabelaAusente){
+      erro.style.display = '';
+      erro.innerHTML = '<span>As tabelas do histórico de cadernos ainda não existem no Supabase. Rode o arquivo <b>cadernos_setor.sql</b> no SQL Editor e atualize a página.</span>';
+    } else erro.style.display = 'none';
+
+    ['coordenacao', 'entrevista', 'balcao', 'espera'].forEach(k => {
+      const nome = k.charAt(0).toUpperCase() + k.slice(1);
+      $('cadLista' + nome).innerHTML = grupos[k].length ? grupos[k].map(cardHtml).join('') : '<div class="cad-vazio">Nenhum caderno neste setor no período.</div>';
+      $('cadN' + k).textContent = grupos[k].length;
+    });
+    $('cadListaAnalise').innerHTML = analise.length ? analise.map(cardHtml).join('') : '<div class="cad-vazio">Nenhum caderno em análise no período.</div>';
+    $('cadListaConcluido').innerHTML = concluidos.length ? concluidos.map(cardHtml).join('') : '<div class="cad-vazio">Nenhum caderno concluído no período.</div>';
+    $('cadNanalise').textContent = analise.length; $('cadNconcluido').textContent = concluidos.length;
+    $('cadNinclusao').textContent = grupos.inclusao_analise.length;
+    const sem = $('cadSemSetor');
+    if (grupos.nenhum.length && !tabelaAusente){
+      sem.style.display = '';
+      sem.innerHTML = `<h4>Aguardando destino (${grupos.nenhum.length})</h4><div class="cad-lista">${grupos.nenhum.map(cardHtml).join('')}</div>`;
+    } else { sem.style.display = 'none'; sem.innerHTML = ''; }
+    $('cadResumo').textContent = `${lista.length} ${lista.length === 1 ? 'pessoa' : 'pessoas'}`;
+  }
+
+  async function carregarPainel(){
+    const meu = ++reqId;
+    let de = $('cadDe').value || hojeLocal(), ate = $('cadAte').value || de;
+    if (ate < de){ const t = de; de = ate; ate = t; }
+    ['coordenacao', 'entrevista', 'balcao'].forEach(k => { const nome = k.charAt(0).toUpperCase() + k.slice(1); $('cadLista' + nome).innerHTML = '<div style="padding:6px 0">' + (typeof skelLinhas === 'function' ? skelLinhas(3) : 'Carregando…') + '</div>'; });
+    ['Analise', 'Concluido'].forEach(n => { $('cadLista' + n).innerHTML = '<div style="padding:6px 0">' + (typeof skelLinhas === 'function' ? skelLinhas(2) : 'Carregando…') + '</div>'; });
+    try {
+      await carregarMapa();
+      let qa = escoparAt(sbClient.from('atendimentos')
+        .select('id, data_atendimento, horario, nome_atendido, cpf_atendido, cras:cras_origem_id(nome)'))
+        .gte('data_atendimento', de).lte('data_atendimento', ate).lte('data_atendimento', hojeLocal());
+      if (typeof FILTRO_DATA_POSSIVEL !== 'undefined') qa = qa.or(FILTRO_DATA_POSSIVEL);
+      const qv = escoparVs(sbClient.from('visitas_domiciliares')
+        .select('id, data_agendada, hora_prevista, status, nome_responsavel, cpf, cras:cras_id(nome)'))
+        .gte('data_agendada', de).lte('data_agendada', ate);
+      const [ra, rv] = await Promise.all([
+        qa.order('data_atendimento', { ascending: false }).order('horario', { ascending: false, nullsFirst: false }).limit(1000),
+        qv.order('data_agendada', { ascending: false }).order('hora_prevista', { ascending: false, nullsFirst: false }).limit(1000)
+      ]);
+      if (ra.error) throw ra.error;
+      if (rv.error) throw rv.error;
+      if (meu !== reqId) return;
+      // Junta Controle de atendimentos + Últimas entrevistas domiciliares: 1 cartão por pessoa (CPF, ou nome se não houver CPF)
+      const porChave = {};
+      const add = (k, nome, cpf, data, horario, cras, origem, vis) => {
+        if (!nome && !soDig(cpf)) return;
+        let p = porChave[k];
+        if (!p){ p = porChave[k] = { chave: k, nome, cpf, data, horario, cras, origens: [], visitas: [] }; }
+        if (vis) p.visitas.push(vis);
+        if (!p.origens.includes(origem)) p.origens.push(origem);
+        if (!p.cpf && cpf) p.cpf = cpf;
+        const mais = (data || '') > (p.data || '') || ((data || '') === (p.data || '') && String(horario || '') > String(p.horario || ''));
+        if (mais){ p.data = data; p.horario = horario; p.cras = cras; if (nome) p.nome = nome; }
+      };
+      (ra.data || []).forEach(a => add(chave(a.cpf_atendido, a.nome_atendido), a.nome_atendido, a.cpf_atendido, a.data_atendimento, a.horario, a.cras && a.cras.nome, 'Atendimento'));
+      (rv.data || []).forEach(v => add(chave(v.cpf, v.nome_responsavel), v.nome_responsavel, v.cpf, v.data_agendada, v.hora_prevista, v.cras && v.cras.nome, 'Entrevista domiciliar', { id: v.id, status: v.status, data: v.data_agendada, hora: v.hora_prevista }));
+      Object.values(porChave).forEach(p => p.visitas.sort((x, y) => (y.data || '').localeCompare(x.data || '') || String(y.hora || '').localeCompare(String(x.hora || ''))));
+      pessoas = Object.values(porChave).sort((x, y) => (y.data || '').localeCompare(x.data || '') || norm(x.nome).localeCompare(norm(y.nome)));
+      renderizar();
+    } catch (e) {
+      if (meu !== reqId) return;
+      pessoas = [];
+      renderizar();
+      const erro = $('cadErro'); erro.style.display = '';
+      erro.innerHTML = '<span>❌ Não foi possível carregar os cadernos. ' + esc(typeof erroAmigavel === 'function' ? erroAmigavel(e) : (e && e.message)) + '</span><button type="button" id="cadTentar">Tentar de novo</button>';
+      $('cadTentar').addEventListener('click', carregarPainel);
+    }
+  }
+
+  // Marcar Concluído / Reabrir: grava no caderno e no status da entrevista domiciliar mais recente da pessoa
+  async function concluir(k, nome, ligar){
+    const p = pessoas.find(x => x.chave === k);
+    if (colunaAusente){ showToast('❌ Rode a atualização do arquivo cadernos_setor.sql no Supabase (colunas de Concluído) e atualize a página.', 5000); return false; }
+    const por = (typeof currentFuncionario !== 'undefined' && currentFuncionario) ? currentFuncionario.nome : null;
+    const agora = new Date().toISOString();
+    const ult = p && p.visitas && p.visitas[0];
+    try {
+      if (ult && (ligar ? ult.status !== 'concluido' : ult.status === 'concluido')){
+        const { data: up, error: ev } = await sbClient.from('visitas_domiciliares')
+          .update({ status: ligar ? 'concluido' : 'caderno' }).eq('id', ult.id).select('id');
+        if (ev) throw ev;
+        if (!up || !up.length) throw new Error('o banco bloqueou a alteração do status da entrevista (falta política de UPDATE no RLS)');
+        ult.status = ligar ? 'concluido' : 'caderno';
+      }
+      const { error } = await sbClient.from('cadernos_setor')
+        .update({ concluido: !!ligar, concluido_em: ligar ? agora : null, atualizado_por_nome: por }).eq('cpf', k);
+      if (error) throw error;
+      mapa[k] = Object.assign({}, mapa[k] || {}, { concluido: !!ligar, concluido_em: ligar ? agora : null });
+    } catch (e) {
+      showToast('❌ Não foi possível atualizar. ' + (typeof erroAmigavel === 'function' ? erroAmigavel(e) : ((e && e.message) || '')), 5000);
+      return false;
+    }
+    sbClient.from('cadernos_movimentos').insert({ cpf: k, nome: nome || '', de_setor: ligar ? 'inclusao_analise' : 'concluido', para_setor: ligar ? 'concluido' : 'inclusao_analise', por_nome: por }).then(() => {}, () => {});
+    showToast(ligar ? `✅ ${nome || 'Pessoa'}: Concluído` : `↩ ${nome || 'Pessoa'}: reaberto`);
+    return true;
+  }
+
+  // ---- eventos ----
+  $('navCadernos').addEventListener('click', () => {
+    if (!$('cadDe').value){ $('cadDe').value = hojeLocal(); $('cadAte').value = hojeLocal(); }
+    carregarPainel();
+  });
+  // Filtros recolhíveis: ficam escondidos e abrem só quando necessário (a escolha fica lembrada neste aparelho)
+  function resumoFiltro(){
+    const de = $('cadDe').value, ate = $('cadAte').value, b = $('cadBusca').value.trim();
+    const per = de && ate ? (de === ate ? fmtDia(de) : fmtDia(de) + ' a ' + fmtDia(ate)) : 'todo o período';
+    $('cadFiltroResumo').textContent = 'Período: ' + per + (b ? ' · Busca: ' + b : '');
+  }
+  function filtrosAbertos(abrir){
+    $('cadFiltros').style.display = abrir ? '' : 'none';
+    $('cadFiltroResumo').style.display = abrir ? 'none' : '';
+    const btn = $('cadFiltroBtn');
+    btn.setAttribute('aria-expanded', abrir ? 'true' : 'false');
+    btn.textContent = abrir ? '🔎 Ocultar filtros ▴' : '🔎 Filtros ▾';
+    try { localStorage.setItem('cadFiltrosAberto', abrir ? '1' : '0'); } catch (_) {}
+  }
+  $('cadFiltroBtn').addEventListener('click', () => filtrosAbertos($('cadFiltros').style.display === 'none'));
+  ['cadDe', 'cadAte'].forEach(id => $(id).addEventListener('change', resumoFiltro));
+  $('cadBusca').addEventListener('input', resumoFiltro);
+  $('cadHoje').addEventListener('click', () => setTimeout(resumoFiltro, 0));
+  { let ab = false; try { ab = localStorage.getItem('cadFiltrosAberto') === '1'; } catch (_) {} filtrosAbertos(ab); }
+  $('cadHoje').addEventListener('click', () => { $('cadDe').value = hojeLocal(); $('cadAte').value = hojeLocal(); carregarPainel(); });
+  $('cadDe').addEventListener('change', () => { if ($('cadAte').value && $('cadAte').value < $('cadDe').value) $('cadAte').value = $('cadDe').value; carregarPainel(); });
+  $('cadAte').addEventListener('change', carregarPainel);
+  let tb = null;
+  $('cadBusca').addEventListener('input', () => { clearTimeout(tb); tb = setTimeout(renderizar, 150); });
+
+  // mover pelos botões dos cartões
+  $('cadSemSetor').parentElement.addEventListener('click', async (e) => {
+    const bc = e.target.closest('button[data-cad-concluir]');
+    if (bc){
+      const cardC = bc.closest('.cad-card');
+      bc.disabled = true;
+      const okC = await concluir(cardC.dataset.chave, cardC.dataset.nome, bc.dataset.cadConcluir === '1');
+      if (okC){ renderizar(); if (typeof loadVisitas === 'function') loadVisitas(); } else bc.disabled = false;
+      return;
+    }
+    const b = e.target.closest('button[data-cad-mover]');
+    if (!b) return;
+    const card = b.closest('.cad-card');
+    b.disabled = true;
+    const ok = await mover(card.dataset.chave, card.dataset.nome, b.dataset.cadMover);
+    if (ok){ renderizar(); if (typeof vsRenderTabela === 'function') vsRenderTabela(); } else b.disabled = false;
+  });
+
+  // movimentações de um caderno (carrega ao abrir)
+  $('cadSemSetor').parentElement.addEventListener('toggle', async (e) => {
+    const det = e.target;
+    if (!det.classList || !det.classList.contains('cad-hist') || !det.open || det.dataset.ok) return;
+    const k = det.closest('.cad-card').dataset.chave, ul = det.querySelector('ul');
+    try {
+      const { data, error } = await sbClient.from('cadernos_movimentos').select('de_setor, para_setor, por_nome, em').eq('cpf', k).order('em', { ascending: false }).limit(10);
+      if (error) throw error;
+      ul.innerHTML = (data || []).length ? data.map(m => `<li>${fmtDH(m.em)} — ${rotulo(m.de_setor)} → ${rotulo(m.para_setor)}${m.por_nome ? ' (' + esc(m.por_nome) + ')' : ''}</li>`).join('') : '<li>Sem movimentações registradas.</li>';
+      det.dataset.ok = '1';
+    } catch (err) { ul.innerHTML = '<li>Não foi possível carregar.</li>'; }
+  }, true);
+
+  // mover pelo seletor na tabela de Últimas entrevistas domiciliares
+  $('vsLista').addEventListener('change', async (e) => {
+    const sel = e.target.closest('select[data-cad-chave]');
+    if (!sel) return;
+    sel.disabled = true;
+    const ok = await mover(sel.dataset.cadChave, sel.dataset.cadNome, sel.value);
+    sel.disabled = false;
+    if (typeof vsRenderTabela === 'function') vsRenderTabela();
+    if (ok && $('cadLista' + 'Coordenacao') && pessoas.length) renderizar();
+  });
+})();
 </script>
 
 <script>
@@ -5753,7 +6662,7 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
     try {
       await garantirXLSX();
       const wb = XLSX.utils.book_new();
-      const novo = { atIds: [], atEnts: {}, vsIds: [], de: p.de, ate: p.ate };
+      const novo = { atIds: [], atEnts: {}, vsIds: [], atSnap: {}, vsSnap: {}, de: p.de, ate: p.ate };
       if (p.at){
         const rows = await buscarAtendimentos(p);
         rows.sort((x, y) => String(x.data_atendimento).localeCompare(String(y.data_atendimento)) || String(x.horario || '').localeCompare(String(y.horario || '')));
@@ -5768,7 +6677,7 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
           const ws = XLSX.utils.json_to_sheet(linhas, { header: AT_COLS }); larguras(ws, AT_COLS);
           XLSX.utils.book_append_sheet(wb, ws, 'Atendimentos');
           novo.atIds = rows.map(a => a.id);
-          rows.forEach(a => { novo.atEnts[a.id] = (a.ents || []).map(e => e.funcionario_id); });
+          rows.forEach(a => { novo.atEnts[a.id] = (a.ents || []).map(e => e.funcionario_id); novo.atSnap[a.id] = { id: a.id, data_atendimento: a.data_atendimento, motivo: a.motivo, submotivo: a.submotivo, cras_origem_id: a.cras_origem_id }; });
         }
       }
       if (p.vs){
@@ -5786,6 +6695,7 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
           const ws = XLSX.utils.json_to_sheet(linhas, { header: VS_COLS }); larguras(ws, VS_COLS);
           XLSX.utils.book_append_sheet(wb, ws, 'Visitas');
           novo.vsIds = rows.map(v => v.id);
+          rows.forEach(v => { novo.vsSnap[v.id] = { id: v.id, data_agendada: v.data_agendada, motivo: v.motivo, status: v.status, cras_id: v.cras_id }; });
         }
       }
       if (!novo.atIds.length && !novo.vsIds.length){ msg('ddBaixarMsg', 'Nenhum registro encontrado nesse período.'); return; }
@@ -5813,6 +6723,7 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
         const r2 = await sbClient.from('atendimentos').delete().in('id', ids).select('id');
         const apagados = new Set(((r2 && r2.data) || []).map(x => String(x.id)));
         rmAt += apagados.size;
+        await registrarExclusao('atendimento', [...apagados].map(id => backup.atSnap[id]), 'limpeza_banco');
         const sobrou = ids.filter(id => !apagados.has(String(id)));
         if (sobrou.length){
           // não conseguiu apagar o atendimento: devolve os entrevistadores para não deixar o registro incompleto
@@ -5829,6 +6740,7 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
           msg('ddBaixarMsg', `Removendo visitas... ${Math.min(i + CHUNK, backup.vsIds.length)}/${backup.vsIds.length}`);
           const r = await sbClient.from('visitas_domiciliares').delete().in('id', ids).select('id');
           rmVs += ((r && r.data) || []).length;
+          await registrarExclusao('visita', ((r && r.data) || []).map(x => backup.vsSnap[x.id]), 'limpeza_banco');
           if (r.error || !r.data || r.data.length < ids.length){ falha = r.error ? erroAmigavel(r.error) : 'o banco bloqueou parte da exclusão (falta política de DELETE no RLS)'; break; }
         }
       }
@@ -6062,6 +6974,245 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
   $('ddImportarBtn').addEventListener('click', importar);
   // Mudar o período ou o escopo invalida a prévia já feita
   ['ddDe', 'ddAte', 'ddAt', 'ddVs'].forEach(id => $(id).addEventListener('change', () => { if (analise){ analise = null; renderPrevia(); msg('ddUpMsg', 'Período alterado: selecione o arquivo de novo para reanalisar.'); setBusy(false); } }));
+})();
+</script>
+
+<script>
+// ============================================================
+// MENSAGENS DO PLANTÃO
+// Adm/coordenação enviam (para todos os atendentes ou para alguns). O atendente vê um popup no canto
+// direito durante o plantão (8 h, definido no banco). Ao fechar, some até o próximo login.
+// Tabela: mensagens_plantao (veja mensagens_plantao.sql)
+// ============================================================
+(function(){
+  const $ = (id) => document.getElementById(id);
+  const AVISO_SQL = 'Para usar as mensagens, rode o script mensagens_plantao.sql no Supabase.';
+  let timer = null, dispensadas = new Set(), atendentes = [], enviando = false;
+
+  const hhmm = (iso) => new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const agoraISO = () => new Date().toISOString();
+  const souGestao = () => !!currentFuncionario && ['adm', 'coordenador'].includes(currentFuncionario.role);
+  const souAtendente = () => !!currentFuncionario && currentFuncionario.role === 'atendente';
+
+  // ---------- estilos ----------
+  const st = document.createElement('style');
+  st.textContent = `
+    #msgPopBox{ position:fixed; top:84px; right:18px; z-index:1050; width:min(340px, calc(100vw - 24px)); display:flex; flex-direction:column; gap:10px; pointer-events:none; }
+    .msg-pop{ pointer-events:auto; background:var(--card); border:1px solid var(--line); border-left:5px solid var(--orange); border-radius:12px; box-shadow:0 14px 34px rgba(14,27,51,.22); padding:12px 14px 12px 14px; animation:msgIn .28s ease; }
+    @keyframes msgIn{ from{ opacity:0; transform:translateX(24px); } to{ opacity:1; transform:none; } }
+    .msg-pop-top{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
+    .msg-pop-top b{ font-size:12.5px; color:var(--ink); }
+    .msg-pop-x{ border:0; background:transparent; font-size:22px; line-height:1; color:var(--muted); cursor:pointer; padding:0 2px; }
+    .msg-pop-x:hover{ color:var(--ink); }
+    .msg-pop-txt{ font-size:14px; line-height:1.45; white-space:pre-wrap; word-break:break-word; color:var(--ink); }
+    .msg-pop-sub{ margin-top:8px; font-size:11.5px; color:var(--muted); }
+    .msg-lista{ display:flex; flex-direction:column; gap:6px; max-height:170px; overflow:auto; border:1px solid var(--line); border-radius:10px; padding:8px 10px; }
+    .msg-lista label{ display:flex; align-items:center; gap:8px; font-size:13.5px; cursor:pointer; }
+    .msg-dot{ display:inline-block; width:10px; height:10px; border-radius:50%; background:#c5ccd3; flex:none; }
+    .msg-dot.on{ background:#22c55e; box-shadow:0 0 0 3px rgba(34,197,94,.25); }
+    .msg-on-bar{ display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:12.5px; color:var(--muted); margin-bottom:6px; }
+    .msg-env{ border:1px solid var(--line); border-radius:10px; padding:10px 12px; display:flex; gap:10px; align-items:flex-start; justify-content:space-between; }
+    .msg-env p{ margin:0; font-size:13.5px; white-space:pre-wrap; word-break:break-word; }
+    .msg-env small{ color:var(--muted); font-size:11.5px; display:block; margin-top:4px; }
+  `;
+  document.head.appendChild(st);
+
+  // ---------- popup do atendente ----------
+  function caixaPopup(){
+    let b = $('msgPopBox');
+    if (!b){ b = document.createElement('div'); b.id = 'msgPopBox'; document.body.appendChild(b); }
+    return b;
+  }
+  function desenharPopups(lista){
+    const box = caixaPopup();
+    const visiveis = lista.filter(m => !dispensadas.has(m.id));
+    const ids = new Set(visiveis.map(m => m.id));
+    [...box.children].forEach(c => { if (!ids.has(c.dataset.id)) c.remove(); });     // retirada/expirada/fechada
+    const jaTem = new Set([...box.children].map(c => c.dataset.id));
+    visiveis.forEach(m => {
+      if (jaTem.has(m.id)) return;
+      const d = document.createElement('div');
+      d.className = 'msg-pop'; d.dataset.id = m.id; d.setAttribute('role', 'alert');
+      d.innerHTML = `<div class="msg-pop-top"><b>📢 Mensagem da coordenação</b><button type="button" class="msg-pop-x" aria-label="Fechar">&times;</button></div>
+        <div class="msg-pop-txt">${escapeHtml(m.texto)}</div>
+        <div class="msg-pop-sub">${escapeHtml(m.criado_por_nome || 'Coordenação')} · ${hhmm(m.criado_em)} · vale até ${hhmm(m.expira_em)}</div>`;
+      d.querySelector('.msg-pop-x').addEventListener('click', () => { dispensadas.add(m.id); d.remove(); });
+      box.appendChild(d);
+    });
+  }
+  async function buscarMinhas(){
+    if (!souAtendente()) return;
+    try {
+      const { data, error } = await sbClient.from('mensagens_plantao')
+        .select('id, texto, criado_por_nome, criado_em, expira_em')
+        .eq('ativa', true).gt('expira_em', agoraISO())
+        .or(`destinatario_id.is.null,destinatario_id.eq.${currentFuncionario.id}`)
+        .order('criado_em', { ascending: true });
+      if (error){ console.warn('[Mensagens do plantão] erro:', error.message); return; }
+      console.info('[Mensagens do plantão] recebidas para este usuário:', (data || []).length);
+      desenharPopups(data || []);
+    } catch (e){ /* sem internet: tenta de novo no próximo ciclo */ }
+  }
+
+  // ---------- painel de envio (adm / coordenação) ----------
+  function painel(){
+    let ov = $('msgPlOverlay');
+    if (ov) return ov;
+    ov = document.createElement('div');
+    ov.id = 'msgPlOverlay'; ov.className = 'vs-modal-overlay'; ov.style.display = 'none';
+    ov.innerHTML = `
+      <div class="vs-modal" role="dialog" aria-modal="true" aria-labelledby="msgPlTit" style="width:min(600px,100%)">
+        <div class="vs-modal-head"><div><h3 id="msgPlTit">Mensagens do plantão</h3><p>Aparece no canto direito da tela dos atendentes por 8 horas. Quem fechar vê de novo ao entrar outra vez.</p></div>
+          <button type="button" class="vs-modal-x" id="msgPlX" aria-label="Fechar">&times;</button></div>
+        <div class="vs-modal-body">
+          <div class="field"><label for="msgPlTxt">Mensagem</label>
+            <textarea id="msgPlTxt" rows="4" maxlength="600" placeholder="Digite o aviso para o plantão..." style="width:100%;font-family:inherit;font-size:14px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;resize:vertical"></textarea>
+            <div style="font-size:11.5px;color:var(--muted);text-align:right" id="msgPlCont">0/600</div></div>
+          <div class="field"><label>Para quem</label>
+            <label style="display:flex;gap:8px;align-items:center;font-size:13.5px;font-weight:400"><input type="radio" name="msgPlDest" value="todos" checked> Todos os atendentes <span id="msgPlTodosOn" style="color:var(--muted);font-size:12px"></span></label>
+            <label style="display:flex;gap:8px;align-items:center;font-size:13.5px;font-weight:400"><input type="radio" name="msgPlDest" value="alguns"> Escolher atendentes</label>
+            <div id="msgPlEscolher" style="display:none"><div class="msg-on-bar"><span id="msgPlOnlineResumo"></span><button type="button" class="btn-ghost" id="msgPlMarcarOn" style="padding:5px 10px;font-size:12px">Marcar só os online</button></div>
+              <div class="msg-lista" id="msgPlLista"></div>
+              <div style="font-size:11.5px;color:var(--muted);margin-top:6px">Quem estiver offline também recebe: a mensagem aparece quando entrar, enquanto estiver valendo.</div></div></div>
+          <div style="display:flex;justify-content:flex-end"><button type="button" class="btn-primary" id="msgPlEnviar">Enviar mensagem</button></div>
+          <div><div style="font-weight:700;font-size:13.5px;margin-bottom:8px">No ar agora</div><div id="msgPlEnv" style="display:flex;flex-direction:column;gap:8px"></div></div>
+        </div>
+        <div class="vs-modal-foot"><button type="button" class="btn-ghost" id="msgPlFechar">Fechar</button></div>
+      </div>`;
+    document.body.appendChild(ov);
+    const fechar = () => { ov.style.display = 'none'; pararOnline(); };
+    $('msgPlX').addEventListener('click', fechar); $('msgPlFechar').addEventListener('click', fechar);
+    ov.addEventListener('mousedown', (e) => { if (e.target === ov) fechar(); });
+    $('msgPlTxt').addEventListener('input', () => { $('msgPlCont').textContent = $('msgPlTxt').value.length + '/600'; });
+    ov.querySelectorAll('input[name="msgPlDest"]').forEach(r => r.addEventListener('change', () => {
+      $('msgPlEscolher').style.display = ov.querySelector('input[name="msgPlDest"]:checked').value === 'alguns' ? '' : 'none';
+    }));
+    $('msgPlEnviar').addEventListener('click', enviar);
+    $('msgPlMarcarOn').addEventListener('click', () => {
+      const on = onlineIds();
+      $('msgPlLista').querySelectorAll('input[type=checkbox]').forEach(i => { i.checked = on.has(i.value); });
+    });
+    $('msgPlEnv').addEventListener('click', (e) => { const b = e.target.closest('[data-retirar]'); if (b) retirar(b.dataset.retirar); });
+    return ov;
+  }
+
+  async function carregarAtendentes(){
+    let r = await sbClient.from('funcionarios').select('id, nome, role, ativo').eq('role', 'atendente').order('nome');
+    if (r.error) r = await sbClient.from('funcionarios').select('id, nome, role').eq('role', 'atendente').order('nome');
+    atendentes = ((r && r.data) || []).filter(f => f.ativo !== false);
+    const on = onlineIds();
+    atendentes.sort((a, b) => (on.has(b.id) - on.has(a.id)) || String(a.nome).localeCompare(String(b.nome), 'pt-BR'));   // online primeiro
+    $('msgPlLista').innerHTML = atendentes.length
+      ? atendentes.map(f => `<label><input type="checkbox" value="${f.id}"> <span class="msg-dot" data-dot="${f.id}"></span><span>${escapeHtml(f.nome)}</span><small data-on="${f.id}" style="margin-left:auto;font-size:11.5px"></small></label>`).join('')
+      : '<span style="font-size:13px;color:var(--muted)">Nenhum atendente cadastrado.</span>';
+    atualizarOnline();
+  }
+
+  // ---------- quem está online (usa o mesmo canal de presença do sistema) ----------
+  let tOnline = null;
+  function onlineIds(){
+    try { return (typeof canalPresenca !== 'undefined' && canalPresenca) ? new Set(Object.keys(canalPresenca.presenceState())) : new Set(); }
+    catch (e){ return new Set(); }
+  }
+  function atualizarOnline(){
+    const on = onlineIds();
+    let n = 0;
+    atendentes.forEach(f => {
+      const ligado = on.has(f.id); if (ligado) n++;
+      const d = document.querySelector(`#msgPlLista [data-dot="${f.id}"]`), t = document.querySelector(`#msgPlLista [data-on="${f.id}"]`);
+      if (d) d.classList.toggle('on', ligado);
+      if (t){ t.textContent = ligado ? 'Online' : 'Offline'; t.style.color = ligado ? '#15803d' : 'var(--muted)'; t.style.fontWeight = ligado ? '700' : '400'; }
+    });
+    const txt = n + ' de ' + atendentes.length + ' atendente(s) online agora';
+    if ($('msgPlOnlineResumo')) $('msgPlOnlineResumo').textContent = txt;
+    if ($('msgPlTodosOn')) $('msgPlTodosOn').textContent = '(' + n + ' online agora)';
+  }
+  function pararOnline(){ if (tOnline){ clearInterval(tOnline); tOnline = null; } }
+
+  async function listarEnviadas(){
+    const box = $('msgPlEnv');
+    box.innerHTML = '<span style="font-size:13px;color:var(--muted)">Carregando...</span>';
+    const { data, error } = await sbClient.from('mensagens_plantao')
+      .select('id, lote, texto, destinatario_id, criado_em, expira_em')
+      .eq('ativa', true).gt('expira_em', agoraISO()).order('criado_em', { ascending: false }).limit(60);
+    if (error){ box.innerHTML = `<span style="font-size:13px;color:var(--coral)">${escapeHtml(AVISO_SQL)}</span>`; return; }
+    const grupos = {};
+    (data || []).forEach(m => { (grupos[m.lote] = grupos[m.lote] || []).push(m); });
+    const nome = (id) => ((atendentes.find(a => a.id === id) || {}).nome) || 'Atendente';
+    const itens = Object.entries(grupos).map(([lote, ms]) => {
+      const m = ms[0];
+      const para = m.destinatario_id == null ? 'Todos os atendentes'
+        : (ms.length <= 3 ? ms.map(x => nome(x.destinatario_id)).join(', ') : ms.slice(0, 2).map(x => nome(x.destinatario_id)).join(', ') + ' e mais ' + (ms.length - 2));
+      return `<div class="msg-env"><div><p>${escapeHtml(m.texto)}</p><small>Para: ${escapeHtml(para)} · enviada às ${hhmm(m.criado_em)} · vale até ${hhmm(m.expira_em)}</small></div>
+        <button type="button" class="btn-ghost" style="padding:6px 12px;white-space:nowrap" data-retirar="${lote}">Retirar</button></div>`;
+    });
+    box.innerHTML = itens.length ? itens.join('') : '<span style="font-size:13px;color:var(--muted)">Nenhuma mensagem no ar.</span>';
+  }
+
+  async function enviar(){
+    if (enviando || !souGestao()) return;
+    const texto = $('msgPlTxt').value.trim();
+    if (!texto){ showToast('⚠️ Escreva a mensagem'); return; }
+    const alguns = $('msgPlOverlay').querySelector('input[name="msgPlDest"]:checked').value === 'alguns';
+    const ids = alguns ? [...$('msgPlLista').querySelectorAll('input:checked')].map(i => i.value) : [null];
+    if (!ids.length){ showToast('⚠️ Marque ao menos um atendente'); return; }
+    enviando = true; $('msgPlEnviar').disabled = true;
+    try {
+      const lote = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : null;
+      const linhas = ids.map(d => { const l = { texto, destinatario_id: d, criado_por: currentFuncionario.id, criado_por_nome: currentFuncionario.nome }; if (lote) l.lote = lote; return l; });
+      const { error } = await sbClient.from('mensagens_plantao').insert(linhas);
+      if (error){ console.error(error); showToast('❌ Não foi possível enviar. ' + (/relation|does not exist|schema cache/i.test(error.message) ? AVISO_SQL : erroAmigavel(error)), 6000); return; }
+      $('msgPlTxt').value = ''; $('msgPlCont').textContent = '0/600';
+      $('msgPlLista').querySelectorAll('input:checked').forEach(i => { i.checked = false; });
+      showToast('📢 Mensagem enviada');
+      listarEnviadas();
+    } finally { enviando = false; $('msgPlEnviar').disabled = false; }
+  }
+
+  async function retirar(lote){
+    if (!confirm('Retirar esta mensagem da tela dos atendentes?')) return;
+    const { error } = await sbClient.from('mensagens_plantao').update({ ativa: false }).eq('lote', lote);
+    if (error){ showToast('❌ Não foi possível retirar. ' + erroAmigavel(error)); return; }
+    showToast('Mensagem retirada'); listarEnviadas();
+  }
+
+  async function abrirPainel(){
+    const ov = painel(); ov.style.display = 'flex';
+    $('msgPlTxt').focus();
+    await carregarAtendentes();
+    pararOnline(); tOnline = setInterval(atualizarOnline, 5000);   // mantém as bolinhas atualizadas com o painel aberto
+    listarEnviadas();
+  }
+
+  // ---------- ciclo de vida (chamado pelo login/logout) ----------
+  window.msgPlantaoPerfil = function(){
+    const b = $('navMensagens');
+    if (b){
+      b.style.display = souGestao() ? '' : 'none';
+      if (!b.dataset.ligado){ b.dataset.ligado = '1'; b.addEventListener('click', abrirPainel); }
+    }
+    if (souAtendente() && !timer){
+      dispensadas = new Set();
+      buscarMinhas();
+      [4000, 12000].forEach(ms => setTimeout(buscarMinhas, ms));   // reforço logo após o login
+      timer = setInterval(buscarMinhas, 60000);
+    }
+  };
+  window.msgPlantaoDiagnostico = async function(){
+    const r = { perfil: currentFuncionario ? { id: currentFuncionario.id, role: currentFuncionario.role } : null, verificandoAutomatico: !!timer };
+    const q = await sbClient.from('mensagens_plantao').select('id, texto, destinatario_id, ativa, expira_em').order('criado_em', { ascending: false }).limit(5);
+    r.erro = q.error ? q.error.message : null; r.mensagensVisiveisParaMim = q.data;
+    console.log('[Mensagens do plantão] diagnóstico', r); return r;
+  };
+  window.msgPlantaoParar = function(){
+    if (timer){ clearInterval(timer); timer = null; }
+    dispensadas = new Set();
+    const box = $('msgPopBox'); if (box) box.innerHTML = '';
+    const ov = $('msgPlOverlay'); if (ov) ov.style.display = 'none';
+    pararOnline();
+    const b = $('navMensagens'); if (b) b.style.display = 'none';
+  };
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && timer) buscarMinhas(); });
 })();
 </script>
 
