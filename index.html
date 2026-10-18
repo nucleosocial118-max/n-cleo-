@@ -1698,7 +1698,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .vs-table .cad-sel.cad-inclusao_analise{ background:#F0EAFB; color:#5B3FA3; border-color:#D3C5F0; }
   @media (max-width:820px){ .cad-inc-grid{ grid-template-columns:1fr; } }
   .cad-topo-dir{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
-  .cad-filtro-resumo{ font-size:12px; color:var(--muted); margin:-4px 0 10px; }
+  .cad-filtro-resumo{ font-size:12px; font-weight:400; color:var(--muted); margin:0; }
+  .cad-filtros-det{ margin:12px 0 4px; }
+  .cad-filtros-det>.vs-filtros{ margin:0; padding:2px 14px 14px; border:0; background:transparent; box-shadow:none; }
   .cad-tags{ display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
   .cad-tag{ font-size:11px; font-weight:600; padding:2px 8px; border-radius:999px; background:var(--page-bg); color:var(--muted); border:1px solid var(--line); }
   .cad-desde{ color:var(--muted); font-size:11.5px; margin-top:6px; }
@@ -1709,6 +1711,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .cad-btn-limpar:hover{ border-color:var(--coral); color:var(--coral); }
   .cad-btn:hover{ border-color:var(--blue); color:var(--blue); }
   .cad-btn:disabled{ opacity:.5; cursor:wait; }
+  /* botões "Mover para": cada setor com a sua cor (a mesma da coluna) */
+  .cad-btn-set{ border-color:var(--c); background:color-mix(in srgb, var(--c) 15%, transparent); color:var(--ink); }
+  .cad-btn-set:hover{ background:var(--c); border-color:var(--c); color:#fff; }
+  .cad-mv-coordenacao{ --c:var(--blue); }
+  .cad-mv-entrevista{ --c:var(--orange); }
+  .cad-mv-balcao{ --c:var(--green); }
+  .cad-mv-espera{ --c:#E8A33D; }
+  .cad-mv-inclusao_analise{ --c:#8E5BD6; }
   .cad-hist{ margin-top:6px; font-size:12px; }
   .cad-hist summary{ cursor:pointer; color:var(--muted); }
   .cad-hist ul{ margin:6px 0 0; padding-left:16px; color:var(--muted); }
@@ -2056,18 +2066,19 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           </div>
           <div class="cad-topo-dir">
             <span class="status-hint" id="cadResumo"></span>
-            <button type="button" class="btn-ghost" id="cadFiltroBtn" aria-expanded="false" aria-controls="cadFiltros">🔎 Filtros ▾</button>
           </div>
         </div>
-        <div class="cad-filtro-resumo" id="cadFiltroResumo"></div>
-        <div class="vs-filtros" id="cadFiltros" style="display:none">
-          <div class="vs-filtros-grid">
-            <div class="field"><label>Data de</label><input type="date" id="cadDe"></div>
-            <div class="field"><label>Data até</label><input type="date" id="cadAte"></div>
-            <div class="field vs-f-busca"><label>Buscar</label><input type="text" id="cadBusca" placeholder="Nome ou CPF..." autocomplete="off"></div>
-            <div class="field vs-f-toggle"><label>&nbsp;</label><button type="button" class="btn-ghost" id="cadHoje">Hoje</button></div>
+        <details class="vs-detalhes cad-filtros-det" id="cadFiltrosBox">
+          <summary>Filtros <span class="cad-filtro-resumo" id="cadFiltroResumo"></span></summary>
+          <div class="vs-filtros" id="cadFiltros">
+            <div class="vs-filtros-grid">
+              <div class="field"><label>Data de</label><input type="date" id="cadDe"></div>
+              <div class="field"><label>Data até</label><input type="date" id="cadAte"></div>
+              <div class="field vs-f-busca"><label>Buscar</label><input type="text" id="cadBusca" placeholder="Nome ou CPF..." autocomplete="off"></div>
+              <div class="field vs-f-toggle"><label>&nbsp;</label><button type="button" class="btn-ghost" id="cadHoje">Hoje</button></div>
+            </div>
           </div>
-        </div>
+        </details>
         <div id="cadErro" class="hint erro-box" style="display:none;margin:12px 0"></div>
         <div id="cadSemSetor" class="cad-sem" style="display:none"></div>
         <div class="cad-grid">
@@ -5721,7 +5732,7 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
       ${S('3. Informações sobre a realização da entrevista')}${FC_R.map(([k, n, t]) => K(k, `${n} ${t}`)).join('')}${I('c32t', 'Motivo (3.2)', '')}${I('c323t', 'Outro(s) motivo(s) (3.2.3)', '')}
       ${S('4 e 5. Informações coletadas e conclusões')}${T('t4', '4. Informações coletadas em entrevista domiciliar', 5)}${T('t5', '5. Conclusões', 3)}
       ${S('6. Encaminhamentos')}${FC_E.map((t, i) => K('e' + i, `6.${i + 1} ${t}`)).join('')}${I('encOutro', 'Outro(s). Qual(is)', '')}
-      ${S('7. Entrevistador(a) social')}${I('enNome', '7.1 Nome', (v.entrevistadores_nomes || [])[0])}${I('enCpf', '7.2 CPF', '')}${I('enUn', '7.3 Unidade referenciada', v.cras && v.cras.nome)}${I('enTel', '7.4 Telefone institucional', '')}${I('enMail', '7.5 E-mail institucional', '')}
+      ${S('7. Entrevistador(a) social')}${I('enNome', '7.1 Nome', (v.entrevistadores_nomes || [])[0])}${I('enCpf', '7.2 CPF', '')}${I('enUn', '7.3 Unidade referenciada', v.cras && v.cras.nome)}${I('enTel', '7.4 Telefone institucional', '51 3044-7111')}${I('enMail', '7.5 E-mail institucional', 'cadastro_unico@avorada.rs.gov.br')}
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px"><button type="button" class="btn-ghost" id="fcLimpar">Limpar</button><button type="button" id="fcImprimir" style="background:#1f6b57;color:#fff;border:0;border-radius:10px;padding:10px 18px;font:inherit;font-weight:600;cursor:pointer">Imprimir</button></div></div>`;
     // abre a página do Formulário (mesmo comportamento dos outros botões do menu)
     document.querySelectorAll('.nav-item').forEach(i => i.classList.toggle('active', i.id === 'navFormulario'));
@@ -6169,7 +6180,7 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
               : '<button type="button" class="cad-btn cad-btn-ok" data-cad-concluir="1" title="Marca como Concluído também nas Últimas entrevistas domiciliares">✔ Concluído</button>')
       : (conc ? btnTirar : '');   // concluído em outro setor também pode ser desfeito
     const destinos = Object.keys(SETORES).filter(k => k !== efetivo);
-    const btns = destinos.map(k => `<button type="button" class="cad-btn" data-cad-mover="${k}">${SETORES[k]}</button>`).join('');
+    const btns = destinos.map(k => `<button type="button" class="cad-btn cad-btn-set cad-mv-${k}" data-cad-mover="${k}">${SETORES[k]}</button>`).join('');
     const limpar = '';
     const hora = p.horario ? ' ' + String(p.horario).slice(0, 5) : '';
     return `<div class="cad-card" data-chave="${esc(p.chave)}" data-nome="${esc(p.nome)}">
@@ -6300,17 +6311,15 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
   function resumoFiltro(){
     const de = $('cadDe').value, ate = $('cadAte').value, b = $('cadBusca').value.trim();
     const per = de && ate ? (de === ate ? fmtDia(de) : fmtDia(de) + ' a ' + fmtDia(ate)) : 'todo o período';
-    $('cadFiltroResumo').textContent = 'Período: ' + per + (b ? ' · Busca: ' + b : '');
+    $('cadFiltroResumo').textContent = '· Período: ' + per + (b ? ' · Busca: ' + b : '');
   }
   function filtrosAbertos(abrir){
-    $('cadFiltros').style.display = abrir ? '' : 'none';
-    $('cadFiltroResumo').style.display = abrir ? 'none' : '';
-    const btn = $('cadFiltroBtn');
-    btn.setAttribute('aria-expanded', abrir ? 'true' : 'false');
-    btn.textContent = abrir ? '🔎 Ocultar filtros ▴' : '🔎 Filtros ▾';
-    try { localStorage.setItem('cadFiltrosAberto', abrir ? '1' : '0'); } catch (_) {}
+    $('cadFiltrosBox').open = !!abrir;
+    resumoFiltro();
   }
-  $('cadFiltroBtn').addEventListener('click', () => filtrosAbertos($('cadFiltros').style.display === 'none'));
+  $('cadFiltrosBox').addEventListener('toggle', () => {
+    try { localStorage.setItem('cadFiltrosAberto', $('cadFiltrosBox').open ? '1' : '0'); } catch (_) {}
+  });
   ['cadDe', 'cadAte'].forEach(id => $(id).addEventListener('change', resumoFiltro));
   $('cadBusca').addEventListener('input', resumoFiltro);
   $('cadHoje').addEventListener('click', () => setTimeout(resumoFiltro, 0));
