@@ -2168,7 +2168,15 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
     <div class="panel-relatorios" style="display:none">
       <div class="panel rp-filtros" style="margin-bottom:16px">
-        <div class="section-head"><h3>Relatórios</h3><button type="button" class="btn-ghost" id="rpPrint">Imprimir / PDF</button></div>
+        <div class="section-head"><h3>Relatórios</h3><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <select id="rpDetTipo" title="O que incluir no relatório detalhado" style="padding:8px 10px;border:1px solid var(--line,#d9deea);border-radius:8px;background:var(--surface,#fff);color:inherit;font:inherit">
+            <option value="ambos">Atendimentos + Entrevistas</option>
+            <option value="at">Só atendimentos</option>
+            <option value="vs">Só entrevistas domiciliares</option>
+          </select>
+          <button type="button" class="btn-primary" id="rpPrintDet">Imprimir detalhado</button>
+          <button type="button" class="btn-ghost" id="rpPrint">Imprimir / PDF</button>
+        </div></div>
         <div class="rp-grid">
           <div class="field"><label>De</label><input type="date" id="rpDe"></div>
           <div class="field"><label>Até</label><input type="date" id="rpAte"></div>
@@ -3466,6 +3474,131 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     }
   }
 
+  // ====== IMPRIMIR DETALHADO (Relatórios) ======
+  // Lista nominal do período no modelo dos relatórios em PDF do sistema antigo:
+  //  • Atendimentos: resumo por motivo + Data / Nome / CPF / Motivo / CRAS / Entrevistadores / BPC
+  //  • Entrevistas domiciliares: resumo por status + Data / Nome / CPF / CRAS / Bairro / Status / Urgente
+  const rpCpf = (v) => { const d = String(v == null ? '' : v).replace(/\D/g, ''); return d.length >= 9 && d.length < 11 ? d.padStart(11, '0') : d; };
+  const rpPct = (n, t) => (t ? (Math.round(n / t * 1000) / 10).toString().replace('.', ',') : '0') + '%';
+  const rpDetCss = `
+    @page{ size:A4; margin:12mm 10mm; }
+    *{ box-sizing:border-box; }
+    body{ font-family:Arial,Helvetica,sans-serif; color:#111; font-size:10px; margin:0; }
+    h1{ font-size:17px; margin:0 0 4px; }
+    h2{ font-size:12px; margin:14px 0 6px; }
+    .meta{ margin:0 0 10px; color:#333; font-size:10px; line-height:1.5; }
+    .kpis{ display:flex; gap:10px; margin:6px 0 4px; flex-wrap:wrap; }
+    .kpi{ border:1px solid #999; border-radius:4px; padding:5px 12px; min-width:90px; }
+    .kpi b{ display:block; font-size:16px; }
+    .kpi span{ font-size:9px; color:#444; text-transform:uppercase; letter-spacing:.3px; }
+    table{ border-collapse:collapse; width:100%; }
+    th,td{ border:1px solid #bbb; padding:3px 5px; text-align:left; vertical-align:top; }
+    th{ background:#e9edf5; font-size:9px; text-transform:uppercase; }
+    thead{ display:table-header-group; }
+    tr{ page-break-inside:avoid; }
+    td.n, th.n{ text-align:right; white-space:nowrap; }
+    td.nw{ white-space:nowrap; }
+    .resumo{ width:auto; min-width:320px; margin-bottom:6px; }
+    .sec + .sec{ page-break-before:always; }
+    .vazio{ color:#666; font-style:italic; margin:8px 0; }
+    .rodape{ margin-top:10px; color:#666; font-size:9px; }
+  `;
+  const rpTabela = (cols, linhas, vazio) => linhas.length
+    ? `<table><thead><tr>${cols.map(c => `<th${c.cls ? ` class="${c.cls}"` : ''}>${c.t}</th>`).join('')}</tr></thead><tbody>${linhas.join('')}</tbody></table>`
+    : `<p class="vazio">${vazio}</p>`;
+
+  function rpSecAtendimentos(at, meta){
+    const rotulo = (a) => (a.motivo || '') + (a.motivo === 'ED N localizada' && a.submotivo ? ' - ' + a.submotivo : '');
+    const ehBpc = (a) => a.bpc === true || /^(sim|s|true)$/i.test(String(a.bpc == null ? '' : a.bpc)) || /bpc/i.test((a.motivo || '') + ' ' + (a.submotivo || ''));
+    const nBpc = at.filter(ehBpc).length;
+    const resumo = rpCont(at, a => rotulo(a) || 'Sem motivo');
+    const linhas = at.map(a => `<tr>
+      <td class="nw">${escapeHtml(fmtData(a.data_atendimento))}</td>
+      <td>${escapeHtml(a.nome_atendido || '')}</td>
+      <td class="nw">${escapeHtml(rpCpf(a.cpf_atendido))}</td>
+      <td>${escapeHtml(rotulo(a))}</td>
+      <td>${escapeHtml((a.cras && a.cras.nome) || '')}</td>
+      <td>${escapeHtml((a.ents || []).map(e => e.func && e.func.nome).filter(Boolean).join(' / '))}</td>
+      <td class="nw">${ehBpc(a) ? 'SIM' : 'NÃO'}</td></tr>`);
+    return `<section class="sec">
+      <h1>Relatório de Atendimentos</h1>${meta}
+      <div class="kpis"><div class="kpi"><span>Total</span><b>${at.length}</b></div><div class="kpi"><span>BPC</span><b>${nBpc}</b></div></div>
+      <h2>Resumo por Motivo</h2>
+      ${resumo.length ? `<table class="resumo"><thead><tr><th>Motivo</th><th class="n">Total</th></tr></thead><tbody>${resumo.map(([k, n]) => `<tr><td>${escapeHtml(k)}</td><td class="n">${n}</td></tr>`).join('')}</tbody></table>` : '<p class="vazio">Sem atendimentos no período.</p>'}
+      <h2>Atendimentos</h2>
+      ${rpTabela([{ t: 'Data' }, { t: 'Nome' }, { t: 'CPF' }, { t: 'Motivo' }, { t: 'CRAS' }, { t: 'Entrevistadores' }, { t: 'BPC' }], linhas, 'Nenhum atendimento no período.')}
+    </section>`;
+  }
+
+  function rpSecVisitas(vs, meta){
+    const ORDEM = ['agendada', 'caderno', 'relatorio', 'tres_tentativas', 'reagendada'];
+    const ANDAMENTO = ['agendada', 'caderno', 'tres_tentativas', 'reagendada'];
+    const cont = {}; vs.forEach(v => { cont[v.status] = (cont[v.status] || 0) + 1; });
+    const outros = Object.keys(cont).filter(k => !ORDEM.includes(k));
+    const chaves = ORDEM.concat(outros);
+    const andamento = vs.filter(v => ANDAMENTO.includes(v.status)).length;
+    const linhas = vs.map(v => `<tr>
+      <td class="nw">${escapeHtml(fmtData(v.data_agendada))}</td>
+      <td>${escapeHtml(v.nome_responsavel || '')}</td>
+      <td class="nw">${escapeHtml(rpCpf(v.cpf))}</td>
+      <td>${escapeHtml((v.cras && v.cras.nome) || '')}</td>
+      <td>${escapeHtml(v.bairro || '')}</td>
+      <td class="nw">${escapeHtml(VS_ST_LABEL[v.status] || v.status || '')}</td>
+      <td class="nw">${v.urgente ? 'SIM' : 'Não'}</td></tr>`);
+    return `<section class="sec">
+      <h1>Relatório – Entrevistas Domiciliares</h1>${meta}
+      <div class="kpis"><div class="kpi"><span>Total geral</span><b>${vs.length}</b></div><div class="kpi"><span>Em andamento</span><b>${andamento}</b></div></div>
+      <h2>Resumo por Status</h2>
+      <table class="resumo"><thead><tr><th>Status</th><th class="n">Total</th><th class="n">%</th></tr></thead><tbody>${chaves.map(k => `<tr><td>${escapeHtml(VS_ST_LABEL[k] || k)}</td><td class="n">${cont[k] || 0}</td><td class="n">${rpPct(cont[k] || 0, vs.length)}</td></tr>`).join('')}</tbody></table>
+      <h2>Entrevistas domiciliares</h2>
+      ${rpTabela([{ t: 'Data' }, { t: 'Nome' }, { t: 'CPF' }, { t: 'CRAS' }, { t: 'Bairro' }, { t: 'Status' }, { t: 'Urgente' }], linhas, 'Nenhuma entrevista domiciliar no período.')}
+    </section>`;
+  }
+
+  function rpImprimirDoc(html){
+    const antigo = document.getElementById('rpPrintFrame'); if (antigo) antigo.remove();
+    const f = document.createElement('iframe');
+    f.id = 'rpPrintFrame'; f.setAttribute('aria-hidden', 'true');
+    f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
+    document.body.appendChild(f);
+    const d = f.contentWindow.document; d.open(); d.write(html); d.close();
+    setTimeout(() => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { console.error(e); showToast('⚠️ Não foi possível abrir a impressão'); } }, 350);
+  }
+
+  async function rpImprimirDetalhado(){
+    const btn = el('rpPrintDet');
+    const de = el('rpDe').value, ate = el('rpAte').value;
+    if (!de || !ate || de > ate){ showToast('⚠️ Confira o período'); return; }
+    rpCrasMontar();
+    const marcados = rpCrasIds(), totalCras = el('rpCrasLista').querySelectorAll('input').length;
+    if (veTodosCras() && totalCras && !marcados.length){ showToast('⚠️ Selecione ao menos um CRAS'); return; }
+    const cras = (veTodosCras() && marcados.length && marcados.length < totalCras) ? marcados : null;
+    const tipo = el('rpDetTipo').value;   // 'ambos' | 'at' | 'vs'
+    const querAt = tipo !== 'vs', querVs = tipo !== 'at';
+    btn.disabled = true; const rotuloBtn = btn.textContent; btn.textContent = 'Preparando...';
+    try {
+      const [at, vs] = await Promise.all([
+        querAt ? rpBuscar(() => { let q = sbClient.from('atendimentos')
+          .select('*, cras:cras_origem_id(nome), ents:atendimento_entrevistadores(func:funcionario_id(nome))')
+          .gte('data_atendimento', de).lte('data_atendimento', ate).or(FILTRO_DATA_POSSIVEL).lte('data_atendimento', hoje())
+          .order('data_atendimento', { ascending: false }).order('id', { ascending: false });
+          return escoparAt(cras ? q.in('cras_origem_id', cras) : q); }) : [],
+        querVs ? rpBuscar(() => { let q = sbClient.from('visitas_domiciliares')
+          .select('id, data_agendada, nome_responsavel, cpf, bairro, status, urgente, cras:cras_id(nome)')
+          .gte('data_agendada', de).lte('data_agendada', ate)
+          .order('data_agendada', { ascending: false }).order('urgente', { ascending: false }).order('nome_responsavel').order('id');
+          return escoparVs(cras ? q.in('cras_id', cras) : q); }) : []
+      ]);
+      const nomesCras = el('rpCrasLista') ? [...el('rpCrasLista').querySelectorAll('input:checked + span')].map(x => x.textContent) : [];
+      const unidades = !veTodosCras() ? ((currentFuncionario && currentFuncionario.cras_nome) || 'Minha unidade') : (cras ? nomesCras.join(', ') : 'Todos os CRAS');
+      const meta = `<p class="meta"><b>Período:</b> ${fmtData(de)} a ${fmtData(ate)} &nbsp;·&nbsp; <b>Unidade(s):</b> ${escapeHtml(unidades)}<br><b>Emitido em:</b> ${new Date().toLocaleString('pt-BR')}</p>`;
+      const corpo = (querAt ? rpSecAtendimentos(at, meta) : '') + (querVs ? rpSecVisitas(vs, meta) : '');
+      rpImprimirDoc(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relatório detalhado ${fmtData(de)} a ${fmtData(ate)}</title><style>${rpDetCss}</style></head><body>${corpo}</body></html>`);
+    } catch (e){
+      console.error(e); showToast('❌ Não foi possível gerar o relatório. ' + erroAmigavel(e));
+    } finally { btn.disabled = false; btn.textContent = rotuloBtn; }
+  }
+
   function rpMesAtual(){
     const h = hoje();
     el('rpDe').value = h.slice(0, 8) + '01';
@@ -3520,6 +3653,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     el('rpHoje').addEventListener('click', () => { el('rpDe').value = el('rpAte').value = hoje(); rpGerar(); });
     el('rpTres').addEventListener('click', () => { el('rpDe').value = dataMenosMeses(hoje(), 3); el('rpAte').value = hoje(); rpGerar(); });
     el('rpPrint').addEventListener('click', () => window.print());
+    el('rpPrintDet').addEventListener('click', rpImprimirDetalhado);
   })();
 
   // Atualização automática do Painel Geral (sem precisar recarregar a página)
@@ -6794,11 +6928,11 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
   const txt = (v) => String(v == null ? '' : v).trim();
   const canon = (lista, v) => { const n = norm(v); return lista.find(x => norm(x) === n) || txt(v); };
   const idPorNome = (mapa, nome) => { const n = norm(nome); const e = Object.entries(mapa).find(([, nm]) => norm(nm) === n); return e ? e[0] : null; };
-  function resolverEntrevs(valor, erros){
+  function resolverEntrevs(valor, erros, opcional){
     const nomes = txt(valor).split(/\s*[\/;\n]\s*/).map(x => x.trim()).filter(Boolean);
     const ids = [];
     nomes.forEach(n => { const id = idPorNome(mapaFuncFluxo, n); if (id){ if (!ids.includes(id)) ids.push(id); } else erros.push(`entrevistador "${n}" não encontrado`); });
-    if (!nomes.length) erros.push('entrevistador vazio');
+    if (!nomes.length && !opcional) erros.push('entrevistador vazio');
     return ids;
   }
   const statusPorTexto = (v) => {
@@ -6818,7 +6952,7 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
     const motivo = canon(MOTIVOS, g(r, 'motivo')); if (!motivo) erros.push('motivo vazio');
     const submotivo = canon(SUBMOTIVOS, g(r, 'submotivo')) || null;
     const hora = parseHora(g(r, 'hora', 'horario')); if (hora === null) erros.push('hora inválida');
-    const ents = resolverEntrevs(g(r, 'entrevistadores', 'entrevistador'), erros);
+    const ents = resolverEntrevs(g(r, 'entrevistadores', 'entrevistador'), erros, true);   // migração: atendimento pode vir sem entrevistador
     const regTxt = txt(g(r, 'registrado por', 'profissional'));
     const prof = (regTxt && idPorNome(mapaFuncFluxo, regTxt)) || currentFuncionario.id;
     if (erros.length) return { data, erros };
@@ -6840,7 +6974,7 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
     const motivo = canon(VS_MOTIVOS, g(r, 'motivo')); if (!motivo) erros.push('motivo vazio');
     const hora = parseHora(g(r, 'hora prevista', 'hora', 'horario')); if (hora === null) erros.push('hora inválida');
     const status = statusPorTexto(g(r, 'status', 'situacao')); if (!status) erros.push(`status "${txt(g(r, 'status', 'situacao'))}" desconhecido`);
-    const ents = resolverEntrevs(g(r, 'entrevistadores', 'entrevistador'), erros);
+    const ents = resolverEntrevs(g(r, 'entrevistadores', 'entrevistador'), erros, true);   // migração: visita pode vir sem entrevistador
     if (ents.length > 2) erros.push('no máximo 2 entrevistadores');
     if (erros.length) return { data, erros };
     const urg = norm(g(r, 'urgente'));
@@ -6854,6 +6988,7 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
         ...(txt(g(r, 'cep')) ? { cep: vsFmtCep(txt(g(r, 'cep'))) } : {}),
         telefone: soDig(g(r, 'telefone')) || null, demanda: txt(g(r, 'demanda')) || null,
         urgente: ['sim', 's', 'true', '1', 'x'].includes(urg), entrevistadores: ents, status,
+        importado: true,   // upload: o gatilho do banco deixa passar data anterior a hoje (só no INSERT)
         data_criacao: criD && !isNaN(criD) ? criD.toISOString() : new Date().toISOString()
       }
     };
@@ -6895,8 +7030,8 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
         ? await buscarTudo((a, b) => sbClient.from('atendimentos').select('data_atendimento, cpf_atendido, motivo, cras_origem_id').gte('data_atendimento', an.p.de).lte('data_atendimento', an.p.ate).order('id').range(a, b))
         : await buscarTudo((a, b) => sbClient.from('visitas_domiciliares').select('data_agendada, cpf, motivo, cras_id').gte('data_agendada', an.p.de).lte('data_agendada', an.p.ate).order('id').range(a, b));
       rows.forEach(x => existentes.add(gr.tipo === 'at'
-        ? [x.data_atendimento, soDig(x.cpf_atendido), norm(x.motivo), String(x.cras_origem_id)].join('|')
-        : [x.data_agendada, soDig(x.cpf), norm(x.motivo), String(x.cras_id)].join('|')));
+        ? [x.data_atendimento, cpfCompletar(x.cpf_atendido), norm(x.motivo), String(x.cras_origem_id)].join('|')
+        : [x.data_agendada, cpfCompletar(x.cpf), norm(x.motivo), String(x.cras_id)].join('|')));
       const vistos = new Set();
       gr.itens.forEach(it => {
         if (it.estado !== 'novo' && it.estado !== 'duplicado') return;
@@ -6943,6 +7078,7 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
   async function inserirAtendimento(it){
     const { data, error } = await sbClient.from('atendimentos').insert(it.reg).select('id').single();
     if (error) throw error;
+    if (!it.ents.length) return;   // sem entrevistador: grava só o atendimento
     const { error: e2 } = await sbClient.from('atendimento_entrevistadores').insert(it.ents.map(f => ({ atendimento_id: data.id, funcionario_id: f })));
     if (e2){ await sbClient.from('atendimentos').delete().eq('id', data.id); throw e2; }
   }
