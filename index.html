@@ -823,6 +823,24 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .vs-detalhes[open]>summary::after{ content:'\2212'; }
   .vs-detalhes.preenchido>summary::before{ content:''; width:8px; height:8px; border-radius:50%; background:#1E7F45; }
   .vs-detalhes>.field-grid{ margin-top:0; padding:2px 14px 14px; }
+
+  /* Endereço, contato e observações: cartão em destaque + checklist do tipo de moradia */
+  .vs-detalhes.vs-destaque{ border:2px solid var(--blue); background:linear-gradient(180deg, rgba(47,111,237,.07), rgba(47,111,237,0) 90px), var(--card); box-shadow:0 2px 10px rgba(47,111,237,.10); overflow:hidden; }
+  .vs-dest-head{ display:flex; align-items:center; gap:12px; padding:13px 16px; border-bottom:1px solid var(--line); }
+  .vs-dest-ico{ font-size:22px; line-height:1; }
+  .vs-dest-head b{ display:block; font-size:15px; font-weight:700; color:var(--ink); }
+  .vs-dest-head small{ display:block; font-size:12px; color:var(--muted); margin-top:1px; }
+  .vs-detalhes.vs-destaque>.field-grid{ padding:14px 16px 16px; }
+  .vs-tipo-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .vs-tipo-op{ display:flex; align-items:center; gap:8px; padding:10px 12px; border:1px solid var(--campo-borda,var(--line)); border-radius:10px; background:var(--card); cursor:pointer; font-size:13.5px; font-weight:600; color:var(--ink); transition:background .12s ease, border-color .12s ease; }
+  .vs-tipo-op:hover{ background:var(--page-bg); }
+  .vs-tipo-op input[type=checkbox]{ width:18px; height:18px; min-width:18px; margin:0; padding:0; accent-color:var(--blue); cursor:pointer; }
+  .vs-tipo-op:has(input:checked){ background:#EEF2FF; border-color:var(--blue); color:#1E3FA8; }
+  .vs-table .vs-tipo-tag{ display:inline-block; margin-left:6px; padding:1px 7px; border-radius:999px; background:#EEF2FF; color:#3B4FCB; font-size:11px; font-weight:600; vertical-align:1px; }
+  body.dark .vs-detalhes.vs-destaque{ border-color:#5FB39E; background:linear-gradient(180deg, rgba(95,179,158,.10), rgba(95,179,158,0) 90px), var(--card); box-shadow:none; }
+  body.dark .vs-tipo-op:has(input:checked){ background:rgba(95,179,158,.18); border-color:#5FB39E; color:#BFE8DC; }
+  body.dark .vs-table .vs-tipo-tag{ background:rgba(95,179,158,.18); color:#BFE8DC; }
+  @media (max-width:560px){ .vs-tipo-grid{ grid-template-columns:1fr; } }
   .vs-table .vs-det{ margin-top:6px; }
   .vs-table .vs-det>summary{ cursor:pointer; list-style:none; font-size:12px; font-weight:600; color:#3B4FCB; }
   .vs-table .vs-det>summary::-webkit-details-marker{ display:none; }
@@ -1927,7 +1945,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <div class="enc-list" id="fluxoResultado">
         <div class="section-head">
           <h3>Resultado</h3>
-          <span class="status-hint" id="fluxoResumo">Use a busca acima</span>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <span class="status-hint" id="fluxoResumo">Use a busca acima</span>
+            <button type="button" class="btn-ghost" id="fluxoImprimirBtn" disabled title="Imprimir os resultados filtrados">Imprimir</button>
+          </div>
         </div>
         <p style="color:var(--muted);font-size:13.5px;padding:6px 0 14px">Digite um nome, um CPF ou um período e clique em "Buscar fluxo".</p>
       </div>
@@ -1977,8 +1998,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <div class="section-head">
             <div>
               <h3>Agenda ED — Entrevista domiciliar</h3>
-              <p class="hint">Busque um nome já atendido ou cadastre um novo. Endereço, telefone e observações ficam recolhidos abaixo.</p>
+              <p class="hint">Busque um nome já atendido ou cadastre um novo. Informe também endereço, telefone e tipo de moradia.</p>
             </div>
+            <button type="button" class="btn-ghost" id="vsLimparTopoBtn" title="Limpar todos os campos do formulário">Limpar campos</button>
           </div>
 
           <div class="field-grid" style="margin-top:16px">
@@ -1991,12 +2013,21 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
             <div class="field"><label>Horário previsto</label><input type="time" id="vsHora"></div>
             <div class="field"><label>CRAS *</label><select id="vsCras"></select></div>
             <div class="field span-2"><label>Motivo *</label><select id="vsMotivo"></select></div>
-            <div class="field span-2"><label>Entrevistador(es) * (marque até 2 pessoas na mesma ED)</label><input type="text" id="vsEntrevBusca" placeholder="Buscar entrevistador pelo nome..." autocomplete="off"><div id="vsEntrev" class="chk-list"></div><div id="vsEntrevVazio" class="vs-entrev-info" style="display:none">Nenhum entrevistador encontrado.</div><div id="vsEntrevSel" class="vs-entrev-info">Nenhum selecionado (máx. 2)</div></div>
+            <div class="field span-2"><label>Entrevistador(es) * (marque quantas pessoas forem necessárias)</label><input type="text" id="vsEntrevBusca" placeholder="Buscar entrevistador pelo nome..." autocomplete="off"><div id="vsEntrev" class="chk-list"></div><div id="vsEntrevVazio" class="vs-entrev-info" style="display:none">Nenhum entrevistador encontrado.</div><div id="vsEntrevSel" class="vs-entrev-info">Nenhum selecionado (máx. 2)</div></div>
             <label class="vs-urgente-box" for="vsUrgente">
               <input type="checkbox" id="vsUrgente">
               <span class="vs-urg-txt"><b>Visita urgente</b><small>Destaca esta visita em vermelho no calendário, na lista lateral e na tabela</small></span>
             </label>
-            <details class="vs-detalhes" id="vsDetalhes"><summary>Endereço, contato e observações</summary><div class="field-grid">
+            <section class="vs-detalhes vs-destaque" id="vsDetalhes">
+            <div class="vs-dest-head"><span class="vs-dest-ico" aria-hidden="true">&#127968;</span><div><b>Endereço, contato e observações</b><small>Dados do local da visita: confira antes de agendar</small></div></div>
+            <div class="field-grid">
+            <div class="field span-2 vs-tipo-campo"><label>Tipo de moradia <small style="font-weight:400;font-size:12px;color:var(--muted)">(marque o que se aplica)</small></label>
+              <div class="vs-tipo-grid" id="vsTipoImovel" role="group" aria-label="Tipo de moradia">
+                <label class="vs-tipo-op"><input type="checkbox" value="casa"><span>&#127968; Casa</span></label>
+                <label class="vs-tipo-op"><input type="checkbox" value="apartamento"><span>&#127970; Apartamento</span></label>
+                <label class="vs-tipo-op"><input type="checkbox" value="condominio"><span>&#127984; Condom&iacute;nio</span></label>
+              </div>
+            </div>
             <div class="field"><label>Benefício</label><input type="text" id="vsBeneficio" placeholder="Informe o benefício..."></div>
             <div class="field"><label>Status</label><select id="vsStatus"></select></div>
             <div class="field"><label>CEP <small id="vsCepInfo" style="font-weight:400;font-size:12px;color:var(--muted)"></small></label><input type="text" id="vsCep" inputmode="numeric" maxlength="9" placeholder="00000-000" autocomplete="postal-code"></div>
@@ -2005,11 +2036,12 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
             <div class="field"><label>Telefone</label><input type="text" id="vsTelefone" placeholder="(51) 90000-0000"></div>
             <div class="field span-2"><label>Demanda</label><input type="text" id="vsDemanda" placeholder="Ex.: atualização unipessoal, inclusão, averiguação..."></div>
             <div class="field" id="vsObsBox" style="grid-column:1/-1"><label>Observação</label><textarea id="vsObs" rows="3" placeholder="Histórico, tentativas, recados sobre a família..."></textarea></div>
-            </div></details>
+            </div></section>
           </div>
 
           <div class="form-actions">
             <button class="btn-ghost" id="vsLimparBtn">Limpar</button>
+            <button type="button" class="btn-ghost" id="vsImprimirBtn" title="Imprimir a ficha com o que está digitado neste formulário">&#128424; Imprimir</button>
             <button class="btn-primary" id="saveVisitaBtn">Agendar visita</button>
           </div>
         </div>
@@ -2022,6 +2054,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <div class="section-head">
           <h3>Últimas entrevistas domiciliares</h3>
           <span class="status-hint" id="vsResumo"></span>
+          <button type="button" class="btn-ghost" id="vsImprimirListaBtn" title="Imprimir a lista de entrevistas que está na tela (respeita os filtros)">&#128424; Imprimir lista</button>
           <button type="button" class="btn-ghost" id="fcAbrirBranco" title="Preencher e imprimir o formulário de campo (Anexo II)">Formulário</button>
         </div>
         <div class="vs-filtros" id="vsFiltros">
@@ -2472,6 +2505,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if (r.error) r = await sbClient.from('funcionarios').select('id, nome').order('nome');   // antes de existir a coluna "ativo"
     return r;
   }
+  let atEntrevBaseHtml = null;
   async function popularSelectCras(){
     let [c, f] = await Promise.all([
       sbClient.from('cras').select('id, nome').order('nome'),
@@ -2489,8 +2523,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('vsCras').innerHTML = opt(c.data, '<option value="">Selecione</option>');
     const optF = (l, first, bloquear) => (first || '') + (l || []).map(x => { const off = x.ativo === false;
       return `<option value="${x.id}"${off && bloquear ? ' disabled' : ''}>${escapeHtml(x.nome)}${off ? ' (desativado)' : ''}</option>`; }).join('');
-    document.getElementById('atEntrev').innerHTML = optF(f.data, '', true);
-    document.getElementById('fEntrev').innerHTML = optF(f.data, '<option value="">Todos</option>', false);
+    // Controle de atendimentos: entrevistadores = só usuários do nível atendente (a Agenda ED continua com todos)
+    const soAtendentes = (f.data || []).filter(x => x.role === 'atendente');
+    document.getElementById('atEntrev').innerHTML = optF(soAtendentes, '', true);
+    atEntrevBaseHtml = document.getElementById('atEntrev').innerHTML;   // lista-base (para restaurar ao limpar/cancelar)
+    document.getElementById('fEntrev').innerHTML = optF(soAtendentes, '<option value="">Todos</option>', false);
     document.getElementById('vsEntrev').innerHTML = (f.data || []).map(x =>
       `<label><input type="checkbox" value="${x.id}"${x.ativo === false ? ' disabled' : ''}><span>${escapeHtml(x.nome)}${x.ativo === false ? ' (desativado)' : ''}</span></label>`).join('');
     mapaCrasFluxo = Object.fromEntries((c.data || []).map(x => [x.id, x.nome]));
@@ -2907,28 +2944,56 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   function limparAtendimento(){
     editandoId = null; editandoEntrevs = [];
+    el('atEntrev').closest('.field').style.display = '';   // volta a mostrar o Entrevistador (some só ao atendente editar)
     el('atDupBox').style.display = 'none';
     el('saveAtendimentoBtn').textContent = 'Salvar atendimento'; el('atLimparBtn').textContent = 'Limpar';
     el('atNome').value = ''; el('atCpf').value = ''; atCpfAtualizar(); generoDefinir(null); el('atNasc').value = ''; nascAtualizar(); el('atData').value = hoje();
     el('atMotivo').value = ''; el('atSub').value = ''; subMostrarOutros(); el('atSubBox').style.display = 'none';
+    // atendente: ao editar, outros entrevistadores do registro são adicionados à lista; ao cancelar/limpar,
+    // a lista volta a ter somente o usuário logado
+    if (currentFuncionario && currentFuncionario.role === 'atendente'){
+      el('atEntrev').innerHTML = `<option value="${currentFuncionario.id}" selected>${escapeHtml(currentFuncionario.nome)}</option>`;
+      ajustarCaixaEntrev();
+    } else if (atEntrevBaseHtml !== null){
+      el('atEntrev').innerHTML = atEntrevBaseHtml;   // volta a lista só com atendentes (tira entrevistadores extras da edição)
+    }
     [...el('atEntrev').options].forEach(o => o.selected = !!currentFuncionario && o.value === currentFuncionario.id);
     if (currentFuncionario && currentFuncionario.cras_id) el('atCras').value = currentFuncionario.cras_id;
   }
   limparAtendimento();
   el('atLimparBtn').addEventListener('click', limparAtendimento);
 
+  // Foto do formulário: se o banco recusar o registro depois de a tela já ter limpado, devolvemos o que foi digitado
+  function atSnapshot(){
+    const g = [...el('atGenero').querySelectorAll('input')].find(i => i.checked);
+    return { data: el('atData').value, nome: el('atNome').value, cpf: el('atCpf').value, cras: el('atCras').value,
+      motivo: el('atMotivo').value, sub: el('atSub').value, subOutros: el('atSubOutros').value, nasc: el('atNasc').value,
+      genero: g ? g.value : null, entrevs: [...el('atEntrev').selectedOptions].map(o => o.value) };
+  }
+  function atRestaurar(sn){
+    if (el('atNome').value.trim() || el('atCpf').value.trim()) return;   // já começou outro registro: não sobrescreve
+    el('atData').value = sn.data; el('atNome').value = sn.nome; el('atCpf').value = sn.cpf; atCpfAtualizar();
+    el('atCras').value = sn.cras;
+    el('atMotivo').value = sn.motivo; el('atMotivo').dispatchEvent(new Event('change'));
+    el('atSub').value = sn.sub; subMostrarOutros(); el('atSubOutros').value = sn.subOutros;
+    el('atNasc').value = sn.nasc; nascAtualizar(); generoDefinir(sn.genero);
+    [...el('atEntrev').options].forEach(o => { o.selected = sn.entrevs.includes(o.value); });
+  }
+
   el('saveAtendimentoBtn').addEventListener('click', async () => {
     const btn = el('saveAtendimentoBtn');
     const nome = el('atNome').value.trim();
     const cpf = cpfCompletar(el('atCpf').value);   // só dígitos; recoloca zeros à esquerda perdidos
-    const entrevs = [...el('atEntrev').selectedOptions].map(o => o.value);
+    // atendente editando: o campo Entrevistador fica oculto e os entrevistadores do registro são mantidos como estão
+    const atendenteEditando = !!editandoId && !!currentFuncionario && currentFuncionario.role === 'atendente';
+    const entrevs = atendenteEditando ? editandoEntrevs.slice() : [...el('atEntrev').selectedOptions].map(o => o.value);
     const faltando = [];
     if (!el('atData').value) faltando.push('data');
     if (!nome) faltando.push('nome');
     if (!cpf) faltando.push('CPF');
     if (!el('atCras').value) faltando.push('CRAS');
     if (!el('atMotivo').value) faltando.push('motivo');
-    if (!entrevs.length) faltando.push('entrevistador (clique no nome para selecionar)');
+    if (!entrevs.length && !atendenteEditando) faltando.push('entrevistador (clique no nome para selecionar)');
     if (faltando.length){ showToast('Falta preencher: ' + faltando.join(', ')); return; }
     if (cpf.length !== 11){ showToast('⚠️ CPF incompleto: precisa ter 11 números'); el('atCpf').focus(); return; }
     if (!cpfValido(cpf)){
@@ -2943,6 +3008,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if (el('atSub').value === 'Outros' && !el('atSubOutros').value.trim()){ showToast('⚠️ Escreva o que aconteceu em "Outros"'); el('atSubOutros').focus(); return; }
     await generoVerificar(); await nascVerificar();
     btn.disabled = true; btn.textContent = 'Salvando...';
+    const atSnap = atSnapshot(); let atLimpou = false;
     try {
       if (editandoId){
         const { data: up, error: eu } = await sbClient.from('atendimentos').update({
@@ -2978,13 +3044,15 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           ...(generoOk && generoValor() ? { genero: generoValor() } : {}),
           ...(nascOk && el('atNasc').value ? { data_nascimento: el('atNasc').value } : {})
         },
-        ents: entrevs
+        ents: entrevs,
+        // limpa os campos assim que o registro fica guardado no computador (sem esperar o servidor responder)
+        aoGuardar: () => { atLimpou = true; limparAtendimento(); btn.disabled = false; btn.textContent = 'Salvar atendimento'; }
       });
-      limparAtendimento();
       if (res.estado === 'enviado'){ showToast('Atendimento salvo'); listarAtendimentos(1); listarRecentes(); carregarRelatorioMes(); }
       else showToast('📴 Sem conexão estável: atendimento guardado neste computador. Será enviado sozinho quando a internet voltar.', 6000);
     } catch (err){
-      console.error(err); showToast('❌ Não foi possível salvar. ' + erroAmigavel(err));
+      console.error(err); if (atLimpou) atRestaurar(atSnap);
+      showToast('❌ Não foi possível salvar. ' + erroAmigavel(err));
     } finally { btn.disabled = false; btn.textContent = editandoId ? 'Salvar alterações' : 'Salvar atendimento'; }
   });
 
@@ -4723,11 +4791,13 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     } else { garantir(el('atSub'), data.submotivo); subMostrarOutros(); }
     editandoEntrevs = (data.atendimento_entrevistadores || []).map(x => x.funcionario_id);
     // atendente só vê a si mesmo na lista; ao editar um atendimento com outras pessoas, elas são mantidas para não se perderem ao salvar
-    if (currentFuncionario && currentFuncionario.role === 'atendente'){
+    {
       editandoEntrevs.forEach(id => { if (![...el('atEntrev').options].some(o => o.value === id)) el('atEntrev').add(new Option((mapaFuncFluxo && mapaFuncFluxo[id]) || 'Outro(a) entrevistador(a)', id)); });
     }
     [...el('atEntrev').options].forEach(o => o.selected = editandoEntrevs.includes(o.value));
     ajustarCaixaEntrev();
+    // atendente não pode trocar o entrevistador de um atendimento já salvo: esconde o campo
+    el('atEntrev').closest('.field').style.display = (currentFuncionario && currentFuncionario.role === 'atendente') ? 'none' : '';
     editandoId = data.id;
     verificarCpfDuplicado();
     el('saveAtendimentoBtn').textContent = 'Salvar alterações';
@@ -4781,22 +4851,71 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <span style="color:var(--muted)"> · ${escapeHtml(quem)}, ${escapeHtml(quando)}</span></p>`;
   }
 
-  async function alternarHistorico(btn, atendimentoId){
+  // Passagens da pessoa (mesmo CPF; sem CPF, mesmo nome): atendimentos em cada CRAS + entrevistas domiciliares.
+  // Fluxos de atendimento não é limitado por CRAS, então aqui também não se limita.
+  async function buscarPassagens(cpf, nome){
+    const dig = String(cpf || '').replace(/\D/g, '');
+    const cpfFmt = dig.length === 11 ? `${dig.slice(0,3)}.${dig.slice(3,6)}.${dig.slice(6,9)}-${dig.slice(9)}` : dig;
+    const nomeLimpo = String(nome || '').trim().replace(/[,()%*]/g, '');
+    if (!dig && !nomeLimpo) return { lista: [], erro: false };
+    let qa = sbClient.from('atendimentos')
+      .select('id, data_atendimento, horario, nome_atendido, motivo, submotivo, cras:cras_origem_id(nome)')
+      .or(FILTRO_DATA_POSSIVEL).lte('data_atendimento', hoje());
+    let qv = sbClient.from('visitas_domiciliares')
+      .select('id, data_agendada, hora_prevista, nome_responsavel, motivo, status, urgente, cras:cras_id(nome)');
+    if (dig){
+      qa = qa.or(`cpf_atendido.eq.${dig},cpf_atendido.eq.${cpfFmt}`);
+      qv = qv.eq('cpf', dig);
+    } else {
+      qa = qa.ilike('nome_atendido', nomeLimpo);
+      qv = qv.ilike('nome_responsavel', nomeLimpo);
+    }
+    const [ra, rv] = await Promise.all([
+      qa.order('data_atendimento', { ascending: false }).limit(100),
+      qv.order('data_agendada', { ascending: false }).limit(100)
+    ]);
+    if (ra.error) console.warn('Passagens (atendimentos) indisponíveis:', ra.error.message);
+    if (rv.error) console.warn('Passagens (visitas) indisponíveis:', rv.error.message);
+    const lista = [];
+    (ra.data || []).forEach(a => lista.push({ tipo: 'at', data: a.data_atendimento, hora: a.horario ? String(a.horario).slice(0, 5) : '', cras: (a.cras && a.cras.nome) || '—', motivo: a.motivo || 'Atendimento', nome: a.nome_atendido }));
+    (rv.data || []).forEach(v => lista.push({ tipo: 'ed', data: v.data_agendada, hora: v.hora_prevista ? String(v.hora_prevista).slice(0, 5) : '', cras: (v.cras && v.cras.nome) || '—', motivo: v.motivo || 'Entrevista domiciliar', nome: v.nome_responsavel, status: VS_ST_LABEL[v.status] || v.status || '', urgente: !!v.urgente }));
+    lista.sort((x, y) => String(y.data || '').localeCompare(String(x.data || '')) || String(y.hora || '').localeCompare(String(x.hora || '')));
+    return { lista, erro: !!(ra.error && rv.error) };
+  }
+
+  function htmlPassagens(res){
+    if (res.erro) return '<p class="tl-desc">Não foi possível carregar os locais deste CPF agora.</p>';
+    const eds = res.lista.filter(x => x.tipo === 'ed');
+    const resumo = eds.length
+      ? `<p class="tl-desc"><b style="color:#B45309">Teve entrevista domiciliar: Sim (${eds.length})</b></p>`
+      : '<p class="tl-desc"><b>Teve entrevista domiciliar: Não</b></p>';
+    if (!res.lista.length) return resumo + '<p class="tl-desc">Nenhuma passagem encontrada para este CPF/nome.</p>';
+    const linhas = res.lista.map(x => `<p class="tl-desc" style="margin:3px 0">
+      <b>${escapeHtml(x.data ? fmtData(x.data) : 'Sem data')}${x.hora ? ' · ' + escapeHtml(x.hora) : ''}</b> — ${escapeHtml(x.cras)}
+      <span style="color:var(--muted)"> · ${escapeHtml(x.motivo)}</span>
+      ${x.tipo === 'ed' ? `<span class="vs-tipo-tag" style="background:#FEF3C7;color:#92400E">Entrevista domiciliar${x.status ? ' · ' + escapeHtml(x.status) : ''}</span>${x.urgente ? ' <span class="vs-tipo-tag" style="background:#FEE2E2;color:#B91C1C">Urgente</span>' : ''}` : ''}
+    </p>`).join('');
+    return resumo + linhas;
+  }
+
+  async function alternarHistorico(btn, atendimentoId, cpf, nome){
     const box = btn.closest('.tl-item').querySelector('.fluxo-historico');
     if (box.style.display === 'block'){ box.style.display = 'none'; btn.textContent = 'Ver histórico de edições'; return; }
     box.style.display = 'block';
     btn.textContent = 'Ocultar histórico de edições';
     if (box.dataset.loaded) return;
     box.innerHTML = '<p class="tl-desc">Carregando...</p>';
-    const historico = await buscarHistoricoEdicoes(atendimentoId);
+    const [historico, passagens] = await Promise.all([
+      buscarHistoricoEdicoes(atendimentoId),
+      buscarPassagens(cpf, nome).catch(e => { console.warn(e); return { lista: [], erro: true }; })
+    ]);
     box.dataset.loaded = '1';
-    if (historico === null){
-      box.innerHTML = '<p class="tl-desc">Histórico de edições ainda não disponível para este atendimento.</p>';
-    } else if (!historico.length){
-      box.innerHTML = '<p class="tl-desc">Nenhuma edição registrada neste atendimento.</p>';
-    } else {
-      box.innerHTML = historico.map(linhaHistorico).join('');
-    }
+    let edicoes;
+    if (historico === null) edicoes = '<p class="tl-desc">Histórico de edições ainda não disponível para este atendimento.</p>';
+    else if (!historico.length) edicoes = '<p class="tl-desc">Nenhuma edição registrada neste atendimento.</p>';
+    else edicoes = historico.map(linhaHistorico).join('');
+    box.innerHTML = `<div style="font-weight:700;font-size:12.5px;margin:2px 0 4px">Locais e entrevistas deste CPF/nome</div>${htmlPassagens(passagens)}
+      <div style="font-weight:700;font-size:12.5px;margin:10px 0 4px;padding-top:8px;border-top:1px solid var(--line)">Edições deste atendimento</div>${edicoes}`;
   }
 
   function itemFluxo(a){
@@ -4808,9 +4927,54 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <div class="tl-date">${escapeHtml(fmtData(a.data_atendimento))}${a.horario ? ' · ' + escapeHtml(a.horario.slice(0, 5)) : ''}</div>
         <div class="tl-title">${escapeHtml(a.nome_atendido || 'Sem nome')} — ${escapeHtml(a.motivo || 'Atendimento')}</div>
         <p class="tl-desc">${escapeHtml(cras)}${a.submotivo ? ' · ' + escapeHtml(a.submotivo) : ''} · Entrevistador(es): ${escapeHtml(quem)}</p>
-        <a href="#" class="fluxo-hist-toggle" style="font-size:12.5px;color:var(--blue)" data-id="${a.id}">Ver histórico de edições</a>
+        <a href="#" class="fluxo-hist-toggle" style="font-size:12.5px;color:var(--blue)" data-id="${a.id}" data-cpf="${escapeHtml(a.cpf_atendido || '')}" data-nome="${escapeHtml(a.nome_atendido || '')}">Ver histórico de edições</a>
         <div class="fluxo-historico" style="display:none;margin-top:6px"></div>
       </div>`;
+  }
+
+  // Último resultado exibido (é ele que vai para a impressão)
+  let fluxoUltimo = { lista: [], filtros: {} };
+  const FLUXO_LIMITE = 200;
+
+  function fluxoAtualizaBtnImprimir(){
+    const b = el('fluxoImprimirBtn');
+    if (b) b.disabled = !fluxoUltimo.lista.length;
+  }
+
+  function imprimirFluxo(){
+    const { lista, filtros } = fluxoUltimo;
+    if (!lista.length){ showToast('Faça uma busca com resultados antes de imprimir.'); return; }
+    const crasNome = filtros.cras ? ((typeof mapaCrasFluxo !== 'undefined' && mapaCrasFluxo[filtros.cras]) || '') : 'Todos';
+    let periodo = 'Todo o período';
+    if (filtros.ini && filtros.fim) periodo = `${fmtData(filtros.ini)} a ${fmtData(filtros.fim)}`;
+    else if (filtros.ini) periodo = `a partir de ${fmtData(filtros.ini)}`;
+    else if (filtros.fim) periodo = `até ${fmtData(filtros.fim)}`;
+    const meta = `<p class="meta">
+      <b>Busca (nome/CPF):</b> ${escapeHtml(filtros.busca || '—')} &nbsp;|&nbsp;
+      <b>CRAS:</b> ${escapeHtml(crasNome)} &nbsp;|&nbsp;
+      <b>Período:</b> ${escapeHtml(periodo)}<br>
+      <b>Emitido em:</b> ${escapeHtml(new Date().toLocaleString('pt-BR'))}</p>`;
+    const linhas = lista.map(a => {
+      const motivo = (a.motivo || '') + (a.submotivo ? ' - ' + a.submotivo : '');
+      const quem = (a.ents || []).map(e => e.func && e.func.nome).filter(Boolean).join(' / ');
+      return `<tr>
+        <td class="nw">${escapeHtml(fmtData(a.data_atendimento))}${a.horario ? ' ' + escapeHtml(String(a.horario).slice(0, 5)) : ''}</td>
+        <td>${escapeHtml(a.nome_atendido || '')}</td>
+        <td class="nw">${escapeHtml(rpCpf(a.cpf_atendido))}</td>
+        <td>${escapeHtml(motivo)}</td>
+        <td>${escapeHtml((a.cras && a.cras.nome) || '')}</td>
+        <td>${escapeHtml(quem)}</td></tr>`;
+    });
+    const aviso = lista.length >= FLUXO_LIMITE
+      ? `<p class="rodape">Atenção: a busca exibe no máximo ${FLUXO_LIMITE} registros; podem existir mais resultados para estes filtros.</p>` : '';
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Fluxos de atendimento</title><style>${rpDetCss}</style></head><body>
+      <section class="sec">
+        <h1>Fluxos de atendimento</h1>${meta}
+        <div class="kpis"><div class="kpi"><span>Registros</span><b>${lista.length}</b></div></div>
+        ${rpTabela([{ t: 'Data / Hora' }, { t: 'Nome' }, { t: 'CPF' }, { t: 'Motivo' }, { t: 'CRAS' }, { t: 'Entrevistadores' }], linhas, 'Nenhum registro.')}
+        ${aviso}
+      </section></body></html>`;
+    rpImprimirDoc(html);
   }
 
   async function buscarFluxo(){
@@ -4825,15 +4989,17 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     el('fluxoResumo').textContent = 'Buscando...';
     el('fluxoResultado').querySelectorAll('.tl-item, p').forEach(n => n.remove());
     // Busca de fluxo: sem o escopo da unidade, para o atendente ver o resultado em qualquer CRAS
-    let q = sbClient.from('atendimentos').select(SEL_ATEND).or(FILTRO_DATA_POSSIVEL).lte('data_atendimento', hoje());
+    let q = sbClient.from('atendimentos').select(SEL_ATEND + ', cpf_atendido').or(FILTRO_DATA_POSSIVEL).lte('data_atendimento', hoje());
     if (busca) q = q.or(`nome_atendido.ilike.%${busca}%,cpf_atendido.ilike.%${busca}%`);
     if (cras) q = q.eq('cras_origem_id', cras);
     if (ini) q = q.gte('data_atendimento', ini);
     if (fim) q = q.lte('data_atendimento', fim);
-    q = q.order('data_atendimento', { ascending: false }).order('horario', { ascending: false, nullsFirst: false }).limit(200);
+    q = q.order('data_atendimento', { ascending: false }).order('horario', { ascending: false, nullsFirst: false }).limit(FLUXO_LIMITE);
     const { data, error } = await q;
-    if (error){ console.error(error); el('fluxoResumo').textContent = 'Erro ao buscar.'; showToast('Erro ao buscar fluxo: ' + error.message); return; }
+    if (error){ console.error(error); fluxoUltimo = { lista: [], filtros: {} }; fluxoAtualizaBtnImprimir(); el('fluxoResumo').textContent = 'Erro ao buscar.'; showToast('Erro ao buscar fluxo: ' + error.message); return; }
     const lista = data || [];
+    fluxoUltimo = { lista, filtros: { busca, cras, ini, fim } };
+    fluxoAtualizaBtnImprimir();
     el('fluxoResumo').textContent = lista.length
       ? `${lista.length} registro(s) encontrado(s)`
       : 'Nenhum registro encontrado';
@@ -4847,12 +5013,15 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const link = e.target.closest('.fluxo-hist-toggle');
     if (!link) return;
     e.preventDefault();
-    alternarHistorico(link, link.dataset.id);
+    alternarHistorico(link, link.dataset.id, link.dataset.cpf, link.dataset.nome);
   });
   el('fluxoBuscarBtn').addEventListener('click', buscarFluxo);
+  el('fluxoImprimirBtn').addEventListener('click', imprimirFluxo);
   el('fluxoBusca').addEventListener('keydown', (e) => { if (e.key === 'Enter') buscarFluxo(); });
   el('fluxoLimparBtn').addEventListener('click', () => {
     ['fluxoBusca', 'fluxoCras', 'fluxoIni', 'fluxoFim'].forEach(i => el(i).value = '');
+    fluxoUltimo = { lista: [], filtros: {} };
+    fluxoAtualizaBtnImprimir();
     el('fluxoResumo').textContent = 'Use a busca acima';
     el('fluxoResultado').querySelectorAll('.tl-item, p').forEach(n => n.remove());
     el('fluxoResultado').insertAdjacentHTML('beforeend',
@@ -4933,7 +5102,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if (/failed to fetch|networkerror|load failed|network request/i.test(msg)) return 'Sem conexão com a internet. Confira a rede e tente de novo.';
     if (/jwt|token.*expir|not authenticated/i.test(msg)) return 'Sua sessão expirou. Saia e entre de novo.';
     if (code === '42501' || /row-level security|permission denied|RLS/i.test(msg)) return 'Você não tem permissão para fazer isso. Fale com o administrador.';
-    if (/chk_max_2_entrevistadores/.test(msg)) return 'Escolha no máximo 2 entrevistadores por visita.';
+    if (/chk_max_2_entrevistadores/.test(msg)) return 'O banco ainda limita a 2 entrevistadores por visita. Peça ao administrador para remover a regra chk_max_2_entrevistadores.';
     if (code === '57014' || /statement timeout|timeout/i.test(msg)) return 'A consulta demorou demais. Tente de novo ou use um período menor.';
     if (code === '23505' || /duplicate key/i.test(msg)) return 'Já existe um registro igual a este.';
     if (code === '23503') return 'Este registro está ligado a outros dados e não pode ser alterado assim.';
@@ -4995,6 +5164,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         por('vsEndereco', v.endereco);
         por('vsBairro', v.bairro);
         por('vsTelefone', v.telefone, vsFmtTel);
+        if (Array.isArray(v.tipo_imovel) && v.tipo_imovel.length && !vsTipoGet().length){ vsTipoSet(v.tipo_imovel); n++; }
         if (n) showToast('✨ Dados preenchidos a partir da última visita deste CPF');
       } catch (e) { console.warn('Autopreenchimento por CPF não disponível:', e); }
     }
@@ -5039,10 +5209,34 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const endereco = document.getElementById('vsEndereco').value.trim() || null;
     const bairro = document.getElementById('vsBairro').value.trim() || null;
     const cepDig = document.getElementById('vsCep').value.replace(/\D/g, '');
-    if (cepDig && cepDig.length !== 8){ showToast('⚠️ CEP incompleto: use 8 números (ex.: 94800-000)'); document.getElementById('vsCep').focus(); return; }
+    if (cepDig && cepDig.length !== 8){ showToast('⚠️ CEP incompleto: use 8 números (ex.: 94810-020)'); document.getElementById('vsCep').focus(); return; }
     const cep = cepDig ? vsFmtCep(cepDig) : null;   // só vai para o banco quando preenchido
+    // CEP preenchido precisa existir (ViaCEP). Visita já salva com o mesmo CEP não é reconferida.
+    if (cepDig && cepDig !== String(vsCepOriginal || '').replace(/\D/g, '') && vsCepGeral(cepDig)){
+      const info = document.getElementById('vsCepInfo');
+      info.textContent = VS_MSG_CEP_GERAL; info.style.color = 'var(--coral)';
+      showToast('⚠️ ' + VS_MSG_CEP_GERAL);
+      document.getElementById('vsCep').focus();
+      return;
+    }
+    if (cepDig && cepDig !== String(vsCepOriginal || '').replace(/\D/g, '')){
+      const resCep = await vsConsultarCep(cepDig);
+      if (resCep.status === 'erro'){
+        const info = document.getElementById('vsCepInfo');
+        info.textContent = 'CEP não encontrado. Corrija o CEP para poder agendar.'; info.style.color = 'var(--coral)';
+        showToast('⚠️ CEP inválido: esse CEP não existe. Corrija ou apague o CEP para agendar.');
+        document.getElementById('vsCep').focus();
+        return;
+      }
+      if (resCep.status === 'indisponivel'){
+        showToast('⚠️ Não consegui conferir o CEP agora (sem conexão com o serviço de CEP). Tente de novo.');
+        document.getElementById('vsCep').focus();
+        return;
+      }
+    }
     const telefone = document.getElementById('vsTelefone').value.replace(/\D/g, '') || null;
     const demanda = document.getElementById('vsDemanda').value.trim() || null;
+    const tipoImovel = vsTipoGet();   // ['casa'] | ['apartamento','condominio'] | []
     const urgente = document.getElementById('vsUrgente').checked;
     const status = document.getElementById('vsStatus').value || 'agendada';
     const entrevistadores = Array.from(document.querySelectorAll('#vsEntrev input:checked')).map(i => i.value);
@@ -5050,11 +5244,6 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     // Validações
     if (!nome || !cpf || !data || !cras || !motivo || entrevistadores.length === 0) {
       showToast('⚠️ Preencha todos os campos obrigatórios (*)');
-      return;
-    }
-
-    if (entrevistadores.length > 2) {
-      showToast('⚠️ Selecione no máximo 2 técnicos responsáveis');
       return;
     }
 
@@ -5074,6 +5263,17 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const btnSalvar = document.getElementById('saveVisitaBtn');
     btnSalvar.disabled = true;
     btnSalvar.textContent = 'Salvando...';
+    // Foto do formulário: se o banco recusar depois de a tela já ter limpado, devolvemos o que foi digitado
+    const vsSnap = { tipo: vsTipoGet(), v: ['vsNome','vsCpf','vsData','vsHora','vsCras','vsMotivo','vsBeneficio','vsObs','vsEndereco','vsCep','vsBairro','vsTelefone','vsDemanda','vsStatus'].map(i => [i, document.getElementById(i).value]), urgente, entrevistadores };
+    let vsLimpou = false;
+    const vsRestaurar = () => {
+      if (document.getElementById('vsNome').value.trim() || document.getElementById('vsCpf').value.trim()) return;   // já começou outro: não sobrescreve
+      vsSnap.v.forEach(([i, val]) => { document.getElementById(i).value = val; });
+      document.getElementById('vsData').dispatchEvent(new Event('change'));
+      document.getElementById('vsUrgente').checked = vsSnap.urgente; vsTipoSet(vsSnap.tipo);
+      document.querySelectorAll('#vsEntrev input').forEach(i => { i.checked = vsSnap.entrevistadores.includes(i.value); });
+      vsFiltrarEntrev(); vsAtualizarEntrevSel(); vsAjustarDetalhes(false);
+    };
 
     try {
       if (editandoVisitaId) {
@@ -5091,6 +5291,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           ...((cep || vsCepOriginal) ? { cep: cep } : {}),
           telefone: telefone,
           demanda: demanda,
+          ...((tipoImovel.length || vsTipoOriginal) ? { tipo_imovel: tipoImovel } : {}),   // só mexe na coluna quando há o que gravar
           urgente: urgente,
           status: status,
           entrevistadores: entrevistadores
@@ -5108,21 +5309,24 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         res: { nome, data, motivo },
         reg: {
           nome_responsavel: nome, cpf: cpf.replace(/\D/g, ''), data_agendada: data, hora_prevista: hora || null, cras_id: cras, motivo: motivo,
-          beneficio: beneficio || null, observacao: observacao || null, endereco: endereco, bairro: bairro, ...(cep ? { cep: cep } : {}), telefone: telefone, demanda: demanda,
+          beneficio: beneficio || null, observacao: observacao || null, endereco: endereco, bairro: bairro, ...(cep ? { cep: cep } : {}), telefone: telefone, demanda: demanda, ...(tipoImovel.length ? { tipo_imovel: tipoImovel } : {}),
           urgente: urgente, entrevistadores: entrevistadores, status: status, data_criacao: new Date().toISOString()
-        }
+        },
+        // limpa os campos assim que a visita fica guardada no computador (sem esperar o servidor responder)
+        aoGuardar: () => { vsLimpou = true; document.getElementById('vsLimparBtn').click(); btnSalvar.disabled = false; btnSalvar.textContent = 'Agendar visita'; }
       });
-      document.getElementById('vsLimparBtn').click();
       if (res.estado === 'enviado'){ showToast('✅ Visita agendada com sucesso!'); loadVisitas(); }
       else showToast('📴 Sem conexão estável: visita guardada neste computador. Será enviada sozinha quando a internet voltar.', 6000);
     } catch (err) {
-      console.error('Erro ao salvar:', err);
-      showToast('❌ Não foi possível salvar a visita. ' + (/cep/i.test(String(err && err.message)) && /column|coluna|schema/i.test(String(err && err.message)) ? 'A coluna "cep" ainda não existe no banco (rode o SQL de instalação do CEP).' : erroAmigavel(err)));
+      console.error('Erro ao salvar:', err); if (vsLimpou) vsRestaurar();
+      showToast('❌ Não foi possível salvar a visita. ' + (/tipo_imovel/i.test(String(err && err.message)) ? 'A coluna "tipo_imovel" ainda não existe no banco (rode o SQL 2026-10-tipo-imovel-visitas.sql no Supabase).' : /cep/i.test(String(err && err.message)) && /column|coluna|schema/i.test(String(err && err.message)) ? 'A coluna "cep" ainda não existe no banco (rode o SQL de instalação do CEP).' : erroAmigavel(err)));
     } finally {
       btnSalvar.disabled = false;
       btnSalvar.textContent = editandoVisitaId ? 'Salvar alterações' : 'Agendar visita';
     }
   });
+
+  document.getElementById('vsLimparTopoBtn').addEventListener('click', () => document.getElementById('vsLimparBtn').click());
 
   document.getElementById('vsLimparBtn').addEventListener('click', () => {
     editandoVisitaId = null;
@@ -5146,6 +5350,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('vsBairro').value = '';
     document.getElementById('vsTelefone').value = '';
     document.getElementById('vsDemanda').value = '';
+    vsTipoSet([]); vsTipoOriginal = false;
     document.getElementById('vsUrgente').checked = false;
     document.querySelectorAll('#vsEntrev input:checked').forEach(i => { i.checked = false; });
     document.getElementById('vsEntrevBusca').value = '';
@@ -5172,8 +5377,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const nomes = [...document.querySelectorAll('#vsEntrev input:checked')]
       .map(i => (i.parentElement.textContent || '').trim());
     document.getElementById('vsEntrevSel').innerHTML = nomes.length
-      ? `Selecionados (${nomes.length}/2): <b>${nomes.map(escapeHtml).join(', ')}</b>`
-      : 'Nenhum selecionado (máx. 2)';
+      ? `Selecionados (${nomes.length}): <b>${nomes.map(escapeHtml).join(', ')}</b>`
+      : 'Nenhum selecionado';
   }
 
   document.getElementById('vsEntrevBusca').addEventListener('input', vsFiltrarEntrev);
@@ -5233,6 +5438,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('vsBairro').value = v.bairro || '';
     document.getElementById('vsTelefone').value = vsFmtTel(v.telefone);
     document.getElementById('vsDemanda').value = v.demanda || '';
+    vsTipoSet(v.tipo_imovel); vsTipoOriginal = Array.isArray(v.tipo_imovel) && v.tipo_imovel.length > 0;
 
     const ids = (v.entrevistadores || []).map(String);
     document.querySelectorAll('#vsEntrev input[type=checkbox]').forEach(i => { i.checked = ids.includes(String(i.value)); });
@@ -5265,6 +5471,25 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   // ---- CEP: ao digitar o CEP completo, preenche Endereço e Bairro (continuam editáveis) ----
   const vsFmtCep = (c) => { const d = String(c || '').replace(/\D/g, '').slice(0, 8); return d.length > 5 ? d.slice(0, 5) + '-' + d.slice(5) : d; };
+  // Consulta o CEP no ViaCEP. status: 'ok' (existe), 'erro' (não existe) ou 'indisponivel' (sem rede/timeout).
+  // Só 'ok' e 'erro' ficam em cache; 'indisponivel' é tentado de novo.
+  const vsCepCache = {};
+  // CEP geral (de localidade/município) termina em -000 (ex.: 94800-000): não identifica a rua, então não é aceito
+  const vsCepGeral = (d) => /^\d{5}000$/.test(String(d || '').replace(/\D/g, ''));
+  const VS_MSG_CEP_GERAL = 'CEP geral (final -000) não é aceito. Informe o CEP da rua.';
+  async function vsConsultarCep(d){
+    if (vsCepCache[d]) return vsCepCache[d];
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 8000);
+    try {
+      const r = await fetch('https://viacep.com.br/ws/' + d + '/json/', { signal: ctl.signal });
+      if (r.status === 400) return (vsCepCache[d] = { status: 'erro' });
+      const j = await r.json();
+      if (!r.ok) return { status: 'indisponivel' };
+      return (vsCepCache[d] = j.erro ? { status: 'erro' } : { status: 'ok', j });
+    } catch (e){
+      return { status: 'indisponivel' };
+    } finally { clearTimeout(t); }
+  }
   (function(){
     const cepEl = document.getElementById('vsCep'), info = document.getElementById('vsCepInfo');
     if (!cepEl) return;
@@ -5277,36 +5502,46 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     };
     async function buscar(d){
       marcar('Buscando CEP...');
-      const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 8000);
-      try {
-        const r = await fetch('https://viacep.com.br/ws/' + d + '/json/', { signal: ctl.signal });
-        const j = await r.json();
-        if (!r.ok || j.erro){ marcar('CEP não encontrado. Preencha o endereço manualmente.', true); return; }
-        const a = preencher('vsEndereco', j.logradouro);
-        preencher('vsBairro', j.bairro);
-        marcar([j.localidade, j.uf].filter(Boolean).join('/'));
-        vsAjustarDetalhes();
-        if (a){ const e = document.getElementById('vsEndereco'); e.focus(); const n = e.value.length; e.setSelectionRange(n, n); }   // falta só o número/complemento
-      } catch (e){
-        marcar('Não foi possível buscar o CEP agora. Preencha o endereço manualmente.', true);
-      } finally { clearTimeout(t); }
+      const res = await vsConsultarCep(d);
+      if (d !== cepEl.dataset.ultimo) return;   // a pessoa já mudou o CEP enquanto buscava
+      if (res.status === 'erro'){ marcar('CEP não encontrado. Corrija o CEP para poder agendar.', true); return; }
+      if (res.status === 'indisponivel'){ marcar('Não foi possível conferir o CEP agora.', true); return; }
+      const j = res.j;
+      const a = preencher('vsEndereco', j.logradouro);
+      preencher('vsBairro', j.bairro);
+      marcar([j.localidade, j.uf].filter(Boolean).join('/'));
+      vsAjustarDetalhes();
+      if (a){ const e = document.getElementById('vsEndereco'); e.focus(); const n = e.value.length; e.setSelectionRange(n, n); }   // falta só o número/complemento
     }
     cepEl.addEventListener('input', () => {
       cepEl.value = vsFmtCep(cepEl.value);
       const d = cepEl.value.replace(/\D/g, '');
       if (d.length < 8){ cepEl.dataset.ultimo = ''; marcar(''); return; }
+      if (vsCepGeral(d)){ cepEl.dataset.ultimo = d; marcar(VS_MSG_CEP_GERAL, true); return; }
       if (d !== cepEl.dataset.ultimo){ cepEl.dataset.ultimo = d; buscar(d); }
     });
   })();
   let vsCepOriginal = '';   // CEP que a visita já tinha ao abrir para editar
+  let vsTipoOriginal = false;   // a visita já tinha tipo de moradia gravado ao abrir para editar
 
-  // ---- Agenda: detalhes recolhidos | Filtros: "Mais filtros" ----
+  // ---- Tipo de moradia (checklist): casa / apartamento / condomínio. Grava em visitas_domiciliares.tipo_imovel (text[]) ----
+  const VS_TIPO_LABEL = { casa: 'Casa', apartamento: 'Apartamento', condominio: 'Condomínio' };
+  const vsTipoGet = () => Array.from(document.querySelectorAll('#vsTipoImovel input:checked')).map(i => i.value);
+  const vsTipoSet = (arr) => { const a = Array.isArray(arr) ? arr : []; document.querySelectorAll('#vsTipoImovel input').forEach(i => { i.checked = a.includes(i.value); }); };
+  const vsTipoTexto = (arr) => (Array.isArray(arr) ? arr : []).map(t => VS_TIPO_LABEL[t] || t).join(' / ');
+  document.getElementById('vsTipoImovel').addEventListener('change', (e) => {
+    const t = e.target; if (!t || !t.checked) return;
+    // casa e apartamento não andam juntos; condomínio combina com qualquer um dos dois
+    const outro = t.value === 'casa' ? 'apartamento' : (t.value === 'apartamento' ? 'casa' : null);
+    if (outro){ const o = document.querySelector('#vsTipoImovel input[value="' + outro + '"]'); if (o) o.checked = false; }
+  });
+
+  // ---- Agenda: indicador de dados preenchidos | Filtros: "Mais filtros" ----
   function vsAjustarDetalhes(abrir){
     const d = document.getElementById('vsDetalhes'); if (!d) return;
     const cheio = ['vsBeneficio', 'vsCep', 'vsEndereco', 'vsBairro', 'vsTelefone', 'vsDemanda', 'vsObs']
-      .some(i => (document.getElementById(i).value || '').trim());
-    d.classList.toggle('preenchido', cheio);                      // bolinha verde: há dados dentro
-    if (abrir === true) d.open = cheio; else if (abrir === false) d.open = false;
+      .some(i => (document.getElementById(i).value || '').trim()) || vsTipoGet().length > 0;
+    d.classList.toggle('preenchido', cheio);
   }
   setInterval(() => vsAjustarDetalhes(), 1500);
   (function(){
@@ -5414,7 +5649,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
                 <div class="vs-hora">${v.hora_prevista ? escapeHtml(String(v.hora_prevista).slice(0, 5)) : '—'}</div>
                 ${Array.isArray(v.historico_reagendamentos) && v.historico_reagendamentos.length ? `<div class="vs-reag-tag">↻ Reagendada ${v.historico_reagendamentos.length}×</div>` : ''}
               </td>
-              <td class="vs-nome">${escapeHtml(v.nome_responsavel)}${v.urgente ? '<span class="vs-badge-urg">Urgente</span>' : ''}${(v.bairro || v.telefone) ? `<div class="vs-sub"${v.endereco ? ` title="${escapeHtml(v.endereco)}"` : ''}>${[v.bairro, vsFmtTel(v.telefone)].filter(Boolean).map(escapeHtml).join(' · ')}</div>` : ''}</td>
+              <td class="vs-nome">${escapeHtml(v.nome_responsavel)}${v.urgente ? '<span class="vs-badge-urg">Urgente</span>' : ''}${(Array.isArray(v.tipo_imovel) && v.tipo_imovel.length) ? `<span class="vs-tipo-tag">${escapeHtml(vsTipoTexto(v.tipo_imovel))}</span>` : ''}${(v.bairro || v.telefone) ? `<div class="vs-sub"${v.endereco ? ` title="${escapeHtml(v.endereco)}"` : ''}>${[v.bairro, vsFmtTel(v.telefone)].filter(Boolean).map(escapeHtml).join(' · ')}</div>` : ''}</td>
               <td class="vs-motivo">
                 <div>${escapeHtml(v.motivo)}</div>
                 <div class="vs-sub">${escapeHtml(v.cras && v.cras.nome) || '—'}</div>
@@ -5434,6 +5669,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="17.5" cy="17.5" r="4.5"/><path d="M17.5 15.5v2l1.2 1"/></svg>
                     ${Array.isArray(v.historico_reagendamentos) && v.historico_reagendamentos.length ? `<span class="vs-reag-badge">${v.historico_reagendamentos.length}</span>` : ''}
                   </button>
+                  <button type="button" class="vs-btn-icon" data-acao="imprimir" data-id="${escapeHtml(v.id)}" title="Imprimir ficha do agendamento" aria-label="Imprimir ficha do agendamento"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="6" y="14" width="12" height="7"/><path d="M6 17H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/></svg></button>
                   <button type="button" class="vs-btn-icon" data-acao="formulario" data-id="${escapeHtml(v.id)}" title="Formulário de campo (imprimir)" aria-label="Formulário de campo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></button>
                   <button type="button" class="vs-btn-icon editar" data-acao="editar" data-id="${escapeHtml(v.id)}" title="Editar" aria-label="Editar visita">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
@@ -5811,6 +6047,78 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     else if (btn.dataset.acao === 'excluir') vsExcluir(v);
     else if (btn.dataset.acao === 'reagendar') vsAbrirReag(v);
     else if (btn.dataset.acao === 'formulario') abrirFormularioCampo(v);
+    else if (btn.dataset.acao === 'imprimir') vsImprimirFicha(vsDadosFicha(v));
+  });
+
+
+  // ====== IMPRIMIR: ficha do agendamento (formulário digitado ou visita já agendada) e lista da tela ======
+  const vsFichaCss = rpDetCss + `
+    h1{ font-size:18px; } .ficha-sub{ color:#444; font-size:11px; margin:0 0 10px; }
+    .ficha td.k{ width:28%; background:#f3f5fb; font-weight:700; font-size:10px; text-transform:uppercase; }
+    .ficha td{ font-size:12px; padding:6px 8px; } .ficha .obs{ min-height:90px; white-space:pre-wrap; }
+    .urg{ display:inline-block; border:1px solid #B91C1C; color:#B91C1C; font-weight:700; padding:1px 8px; border-radius:4px; font-size:11px; margin-left:8px; }
+    .ass{ display:flex; gap:30px; margin-top:42px; } .ass div{ flex:1; border-top:1px solid #333; text-align:center; font-size:10px; padding-top:3px; }
+  `;
+  // Lê o que está digitado no formulário da Agenda ED
+  function vsDadosForm(){
+    const v = (id) => (document.getElementById(id).value || '').trim();
+    const txt = (id) => { const e = document.getElementById(id); const o = e && e.options && e.options[e.selectedIndex]; return o && e.value ? o.textContent.trim() : ''; };
+    return {
+      nome: v('vsNome'), cpf: rpCpf(v('vsCpf')), data: v('vsData'), hora: v('vsHora'),
+      cras: txt('vsCras'), motivo: txt('vsMotivo'), status: txt('vsStatus'),
+      urgente: document.getElementById('vsUrgente').checked,
+      entrev: Array.from(document.querySelectorAll('#vsEntrev input:checked')).map(i => (i.closest('label').textContent || '').trim()).filter(Boolean).join(' / '),
+      tipo: vsTipoTexto(vsTipoGet()), cep: v('vsCep'), endereco: v('vsEndereco'), bairro: v('vsBairro'), telefone: v('vsTelefone'),
+      beneficio: v('vsBeneficio'), demanda: v('vsDemanda'), obs: v('vsObs')
+    };
+  }
+  // Converte uma visita já agendada (linha da tabela) para o mesmo formato
+  function vsDadosFicha(x){
+    return {
+      nome: x.nome_responsavel || '', cpf: rpCpf(x.cpf), data: x.data_agendada ? String(x.data_agendada).slice(0, 10) : '', hora: x.hora_prevista ? String(x.hora_prevista).slice(0, 5) : '',
+      cras: (x.cras && x.cras.nome) || mapaCrasFluxo[x.cras_id] || '', motivo: x.motivo || '', status: VS_ST_LABEL[x.status] || x.status || '',
+      urgente: !!x.urgente, entrev: (x.entrevistadores || []).map(id => mapaFuncFluxo[id]).filter(Boolean).join(' / '),
+      tipo: vsTipoTexto(x.tipo_imovel), cep: vsFmtCep(x.cep), endereco: x.endereco || '', bairro: x.bairro || '', telefone: vsFmtTel(x.telefone),
+      beneficio: x.beneficio || '', demanda: x.demanda || '', obs: x.observacao || ''
+    };
+  }
+  function vsImprimirFicha(d){
+    if (!d.nome){ showToast('⚠️ Digite ao menos o nome do atendido para imprimir'); return; }
+    const e = escapeHtml, L = (k, val) => `<tr><td class="k">${k}</td><td>${e(val || '—')}</td></tr>`;
+    const dataTxt = d.data ? d.data.split('-').reverse().join('/') : '';
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Agendamento de entrevista domiciliar</title><style>${vsFichaCss}</style></head><body>
+      <section class="sec">
+        <h1>Agendamento de entrevista domiciliar${d.urgente ? '<span class="urg">URGENTE</span>' : ''}</h1>
+        <p class="ficha-sub">Emitido em ${e(new Date().toLocaleString('pt-BR'))}</p>
+        <table class="ficha"><tbody>
+          ${L('Nome do atendido', d.nome)}${L('CPF', d.cpf)}
+          ${L('Data', dataTxt)}${L('Horário previsto', d.hora)}
+          ${L('CRAS', d.cras)}${L('Motivo', d.motivo)}${L('Status', d.status)}
+          ${L('Entrevistador(es)', d.entrev)}
+          ${L('Tipo de moradia', d.tipo)}${L('CEP', d.cep)}${L('Endereço', d.endereco)}${L('Bairro', d.bairro)}${L('Telefone', d.telefone)}
+          ${L('Benefício', d.beneficio)}${L('Demanda', d.demanda)}
+          <tr><td class="k">Observação</td><td class="obs">${e(d.obs)}</td></tr>
+        </tbody></table>
+        <div class="ass"><div>Entrevistador(a)</div><div>Data / horário da visita</div></div>
+      </section></body></html>`;
+    rpImprimirDoc(html);
+  }
+  document.getElementById('vsImprimirBtn').addEventListener('click', () => vsImprimirFicha(vsDadosForm()));
+  document.getElementById('vsImprimirListaBtn').addEventListener('click', () => {
+    if (!vsTabelaCache.length){ showToast('Não há entrevistas na lista para imprimir.'); return; }
+    const e = escapeHtml;
+    const linhas = vsTabelaCache.map(x => { const d = vsDadosFicha(x); return `<tr>
+      <td class="nw">${e(d.data ? d.data.split('-').reverse().join('/') : 'Sem data')}${d.hora ? ' ' + e(d.hora) : ''}</td>
+      <td>${e(d.nome)}${d.urgente ? ' <b>(URGENTE)</b>' : ''}</td><td class="nw">${e(d.cpf)}</td>
+      <td>${e(d.motivo)}<br>${e(d.cras)}</td>
+      <td>${[d.tipo, d.endereco, d.bairro, d.telefone].filter(Boolean).map(e).join(' · ')}</td>
+      <td>${e(d.entrev)}</td><td>${e(d.status)}</td></tr>`; });
+    const resumo = (document.getElementById('vsResumo').textContent || '').trim();
+    rpImprimirDoc(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Entrevistas domiciliares</title><style>${rpDetCss}</style></head><body><section class="sec">
+      <h1>Entrevistas domiciliares agendadas</h1>
+      <p class="meta">${resumo ? e(resumo) + '<br>' : ''}<b>Emitido em:</b> ${e(new Date().toLocaleString('pt-BR'))}</p>
+      ${rpTabela([{ t: 'Data / Hora' }, { t: 'Nome' }, { t: 'CPF' }, { t: 'Motivo / CRAS' }, { t: 'Moradia / Endereço / Contato' }, { t: 'Entrevistadores' }, { t: 'Status' }], linhas, 'Nenhuma entrevista.')}
+    </section></body></html>`);
   });
 
   // ====== FORMULÁRIO DE CAMPO (Anexo II): preencher na tela e imprimir ======
@@ -6143,15 +6451,7 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
   // (populado por popularSelectCras(), que usa a tabela real "funcionarios")
 
   // ====== RESTRIÇÃO DE ENTREVISTADORES PARA VISITAS ======
-  const vsEntrevSelect = document.getElementById('vsEntrev');
-  if (vsEntrevSelect) {
-    vsEntrevSelect.addEventListener('change', (e) => {
-      if (vsEntrevSelect.querySelectorAll('input:checked').length > 2) {
-        e.target.checked = false;
-        alert('Máximo de 2 técnicos responsáveis por visita domiciliar.');
-      }
-    });
-  }
+  // (sem limite: pode marcar quantos entrevistadores forem necessários)
 
   // Motivos de Atendimentos/Agenda ED já são carregados a partir de MOTIVOS/SUBMOTIVOS (ver acima)
   // Dados de CRAS e técnicos já são carregados por popularSelectCras()
@@ -6586,6 +6886,7 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
   // 1) grava neste computador ANTES de enviar (aba fechada/queda de energia no meio do envio não perde nada)
   // 2) envia; se demorar ou falhar a rede, devolve { estado: 'pendente' } e a fila reenvia sozinha
   async function salvar(item){
+    const aoGuardar = item.aoGuardar; delete item.aoGuardar;   // callback da tela; não vai para o armazenamento
     item.uid = novoUid(); item.userId = meuId(); item.criadoEm = new Date().toISOString(); item.tentativas = 0;
     item.ambiguo = true; fila.push(item);          // gravado como "pode ter chegado": se a página cair, o reenvio procura duplicado antes
     if (!persistir()){
@@ -6594,6 +6895,7 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
       e.code = 'OUTBOX'; throw e;
     }
     render();
+    if (typeof aoGuardar === 'function'){ try { aoGuardar(); } catch (e) { console.error(e); } }   // registro seguro: a tela já pode limpar
     if (navigator.onLine === false) return { estado: 'pendente' };
     item.ambiguo = false;                          // só em memória: na 1ª tentativa não precisa procurar duplicado
     let lento = false;
@@ -6831,7 +7133,7 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
             'Data agendada': fmtBR(v.data_agendada), 'Hora prevista': v.hora_prevista ? String(v.hora_prevista).slice(0, 5) : '',
             'Nome': v.nome_responsavel || '', 'CPF': fmtCpf(v.cpf), 'CRAS': mapaCrasFluxo[v.cras_id] || '',
             'Motivo': v.motivo || '', 'Benefício': v.beneficio || '', 'Observação': v.observacao || '',
-            'Endereço': v.endereco || '', 'CEP': v.cep || '', 'Bairro': v.bairro || '', 'Telefone': soDig(v.telefone), 'Demanda': v.demanda || '',
+            'Endereço': v.endereco || '', 'CEP': v.cep || '', 'Bairro': v.bairro || '', 'Telefone': soDig(v.telefone), 'Tipo de moradia': Array.isArray(v.tipo_imovel) ? v.tipo_imovel.map(t => ({ casa: 'Casa', apartamento: 'Apartamento', condominio: 'Condomínio' }[t] || t)).join(' / ') : '', 'Demanda': v.demanda || '',
             'Urgente': v.urgente ? 'Sim' : 'Não', 'Status': VS_ST_LABEL[v.status] || v.status || '',
             'Entrevistadores': nomesFunc(v.entrevistadores), 'Criada em': v.data_criacao || ''
           }));
@@ -6975,7 +7277,6 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
     const hora = parseHora(g(r, 'hora prevista', 'hora', 'horario')); if (hora === null) erros.push('hora inválida');
     const status = statusPorTexto(g(r, 'status', 'situacao')); if (!status) erros.push(`status "${txt(g(r, 'status', 'situacao'))}" desconhecido`);
     const ents = resolverEntrevs(g(r, 'entrevistadores', 'entrevistador'), erros, true);   // migração: visita pode vir sem entrevistador
-    if (ents.length > 2) erros.push('no máximo 2 entrevistadores');
     if (erros.length) return { data, erros };
     const urg = norm(g(r, 'urgente'));
     const cri = txt(g(r, 'criada em', 'data criacao')); const criD = cri ? new Date(cri) : null;
