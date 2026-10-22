@@ -1602,6 +1602,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .btn-print:hover:not(:disabled){ filter:brightness(1.12); box-shadow:0 4px 12px rgba(0,0,0,.24); transform:translateY(-1px); }
   .btn-print:active:not(:disabled){ transform:translateY(0); }
   .btn-print:focus-visible{ outline:3px solid var(--gold); outline-offset:2px; }
+  .btn-print-sm{ padding:5px 13px; font-size:12.5px; gap:6px; box-shadow:0 1px 4px rgba(0,0,0,.18); }
+  .btn-print-sm svg{ width:15px; height:15px; }
   .btn-print:disabled{ background:var(--line); color:var(--muted); box-shadow:none; cursor:not-allowed; }
   body.dark .btn-print:not(:disabled){ color:#0F1F1B; }
   .vs-table .vs-btn-icon[data-acao="imprimir"]{ color:var(--blue); }
@@ -5022,9 +5024,49 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <div class="tl-date">${escapeHtml(fmtData(a.data_atendimento))}${a.horario ? ' · ' + escapeHtml(a.horario.slice(0, 5)) : ''}</div>
         <div class="tl-title">${escapeHtml(a.nome_atendido || 'Sem nome')} — ${escapeHtml(a.motivo || 'Atendimento')}</div>
         <p class="tl-desc">${escapeHtml(cras)}${a.submotivo ? ' · ' + escapeHtml(a.submotivo) : ''} · Entrevistador(es): ${escapeHtml(quem)}</p>
-        <a href="#" class="fluxo-hist-toggle" style="font-size:12.5px;color:var(--blue)" data-id="${a.id}" data-cpf="${escapeHtml(a.cpf_atendido || '')}" data-nome="${escapeHtml(a.nome_atendido || '')}">Ver histórico de edições</a>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:4px">
+          <a href="#" class="fluxo-hist-toggle" style="font-size:12.5px;color:var(--blue)" data-id="${a.id}" data-cpf="${escapeHtml(a.cpf_atendido || '')}" data-nome="${escapeHtml(a.nome_atendido || '')}">Ver histórico de edições</a>
+          <button type="button" class="btn-print btn-print-sm fluxo-item-print" data-id="${a.id}" title="Imprimir este atendimento com o histórico de locais e edições"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="6" y="14" width="12" height="7" rx="1"/><path d="M6 17H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/></svg><span>Imprimir</span></button>
+        </div>
         <div class="fluxo-historico" style="display:none;margin-top:6px"></div>
       </div>`;
+  }
+
+
+  // Imprime um atendimento do Fluxo com os locais/entrevistas do CPF e as edições
+  async function imprimirItemFluxo(btn){
+    const a = fluxoUltimo.lista.find(x => String(x.id) === String(btn.dataset.id));
+    if (!a){ showToast('Faça a busca de novo para imprimir este item.'); return; }
+    btn.disabled = true;
+    try {
+      const [historico, passagens] = await Promise.all([
+        buscarHistoricoEdicoes(a.id),
+        buscarPassagens(a.cpf_atendido, a.nome_atendido).catch(() => ({ lista: [], erro: true }))
+      ]);
+      const e = escapeHtml;
+      const quem = (a.ents || []).map(x => x.func && x.func.nome).filter(Boolean).join(' / ') || '—';
+      const motivo = (a.motivo || 'Atendimento') + (a.submotivo ? ' - ' + a.submotivo : '');
+      const eds = passagens.lista.filter(x => x.tipo === 'ed');
+      const linhasP = passagens.lista.map(x => `<tr><td class="nw">${e(x.data ? fmtData(x.data) : 'Sem data')}${x.hora ? ' ' + e(x.hora) : ''}</td>
+        <td>${x.tipo === 'ed' ? '<b>Entrevista domiciliar</b>' : 'Atendimento'}</td><td>${e(x.cras)}</td><td>${e(x.motivo)}</td><td>${e(x.tipo === 'ed' ? (x.status || '') + (x.urgente ? ' (URGENTE)' : '') : '')}</td></tr>`);
+      const linhasH = (historico || []).map(h => `<tr><td>${e(CAMPO_LABELS[h.campo] || h.campo)}</td><td>${e(traduzirValorCampo(h.campo, h.valor_antigo))}</td><td>${e(traduzirValorCampo(h.campo, h.valor_novo))}</td>
+        <td>${e(mapaFuncFluxo[h.alterado_por] || h.alterado_por || '')}</td><td class="nw">${e(h.alterado_em ? new Date(h.alterado_em).toLocaleString('pt-BR') : '')}</td></tr>`);
+      const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Fluxo de atendimento</title><style>${rpDetCss}</style></head><body><section class="sec">
+        <h1>Fluxo de atendimento</h1>
+        <p class="meta"><b>Nome:</b> ${e(a.nome_atendido || '—')} &nbsp;|&nbsp; <b>CPF:</b> ${e(rpCpf(a.cpf_atendido) || '—')}<br><b>Emitido em:</b> ${e(new Date().toLocaleString('pt-BR'))}</p>
+        <h2>Atendimento</h2>
+        ${rpTabela([{ t: 'Data / Hora' }, { t: 'Motivo' }, { t: 'CRAS' }, { t: 'Entrevistadores' }],
+          [`<tr><td class="nw">${e(fmtData(a.data_atendimento))}${a.horario ? ' ' + e(String(a.horario).slice(0, 5)) : ''}</td><td>${e(motivo)}</td><td>${e((a.cras && a.cras.nome) || '')}</td><td>${e(quem)}</td></tr>`], '')}
+        <h2>Locais e entrevistas deste CPF/nome</h2>
+        <p class="meta"><b>Teve entrevista domiciliar:</b> ${eds.length ? 'Sim (' + eds.length + ')' : 'Não'}</p>
+        ${passagens.erro ? '<p class="vazio">Não foi possível carregar os locais deste CPF.</p>'
+          : rpTabela([{ t: 'Data / Hora' }, { t: 'Tipo' }, { t: 'CRAS' }, { t: 'Motivo' }, { t: 'Status' }], linhasP, 'Nenhuma passagem encontrada.')}
+        <h2>Edições deste atendimento</h2>
+        ${historico === null ? '<p class="vazio">Histórico de edições ainda não disponível.</p>'
+          : rpTabela([{ t: 'Campo' }, { t: 'De' }, { t: 'Para' }, { t: 'Quem' }, { t: 'Quando' }], linhasH, 'Nenhuma edição registrada neste atendimento.')}
+      </section></body></html>`;
+      rpImprimirDoc(html);
+    } finally { btn.disabled = false; }
   }
 
   // Último resultado exibido (é ele que vai para a impressão)
@@ -5105,6 +5147,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   }
 
   el('fluxoResultado').addEventListener('click', (e) => {
+    const pr = e.target.closest('.fluxo-item-print');
+    if (pr){ e.preventDefault(); imprimirItemFluxo(pr); return; }
     const link = e.target.closest('.fluxo-hist-toggle');
     if (!link) return;
     e.preventDefault();
