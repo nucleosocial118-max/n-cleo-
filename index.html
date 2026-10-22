@@ -835,14 +835,17 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .vs-dest-head b{ display:block; font-size:15px; font-weight:700; color:var(--ink); }
   .vs-dest-head small{ display:block; font-size:12px; color:var(--muted); margin-top:1px; }
   .vs-detalhes.vs-destaque>.field-grid{ padding:14px 16px 16px; }
-  .vs-tipo-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
-  .vs-tipo-op{ display:flex; align-items:center; gap:8px; padding:10px 12px; border:1px solid var(--campo-borda,var(--line)); border-radius:10px; background:var(--card); cursor:pointer; font-size:13.5px; font-weight:600; color:var(--ink); transition:background .12s ease, border-color .12s ease; }
-  .vs-tipo-op:hover{ background:var(--page-bg); }
-  .vs-tipo-op input[type=checkbox]{ width:18px; height:18px; min-width:18px; margin:0; padding:0; accent-color:var(--blue); cursor:pointer; }
-  .vs-tipo-op:has(input:checked){ background:#EEF2FF; border-color:var(--blue); color:#1E3FA8; }
+  .vs-tipo-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+  /* seletores com .visita-two-col .field para vencer '.visita-two-col .field input{width:100%}' e '.field label' */
+  .visita-two-col .field .vs-tipo-grid .vs-tipo-op{ display:grid; grid-template-columns:18px 22px 1fr; align-items:center; column-gap:10px; min-height:44px; box-sizing:border-box; padding:10px 14px; border:1px solid var(--campo-borda,var(--line)); border-radius:10px; background:var(--card); cursor:pointer; font-size:13.5px; font-weight:600; color:var(--ink); text-align:left; transition:background .12s ease, border-color .12s ease; }
+  .visita-two-col .field .vs-tipo-grid .vs-tipo-op:hover{ background:var(--page-bg); }
+  .visita-two-col .field .vs-tipo-grid .vs-tipo-op input[type=checkbox]{ width:18px; height:18px; min-width:18px; max-width:18px; margin:0; padding:0; border:0; border-radius:4px; background:transparent; accent-color:var(--blue); cursor:pointer; }
+  .visita-two-col .field .vs-tipo-grid .vs-tipo-ico{ font-size:18px; line-height:1; text-align:center; }
+  .visita-two-col .field .vs-tipo-grid .vs-tipo-nome{ min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .visita-two-col .field .vs-tipo-grid .vs-tipo-op:has(input:checked){ background:#EEF2FF; border-color:var(--blue); color:#1E3FA8; }
   .vs-table .vs-tipo-tag{ display:inline-block; margin-left:6px; padding:1px 7px; border-radius:999px; background:#EEF2FF; color:#3B4FCB; font-size:11px; font-weight:600; vertical-align:1px; }
   body.dark .vs-detalhes.vs-destaque{ border-color:#5FB39E; background:linear-gradient(180deg, rgba(95,179,158,.10), rgba(95,179,158,0) 90px), var(--card); box-shadow:none; }
-  body.dark .vs-tipo-op:has(input:checked){ background:rgba(95,179,158,.18); border-color:#5FB39E; color:#BFE8DC; }
+  body.dark .visita-two-col .field .vs-tipo-grid .vs-tipo-op:has(input:checked){ background:rgba(95,179,158,.18); border-color:#5FB39E; color:#BFE8DC; }
   body.dark .vs-table .vs-tipo-tag{ background:rgba(95,179,158,.18); color:#BFE8DC; }
   @media (max-width:560px){ .vs-tipo-grid{ grid-template-columns:1fr; } }
   .vs-table .vs-det{ margin-top:6px; }
@@ -2042,9 +2045,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
             <div class="field-grid">
             <div class="field span-2 vs-tipo-campo"><label>Tipo de moradia <small style="font-weight:400;font-size:12px;color:var(--muted)">(marque o que se aplica)</small></label>
               <div class="vs-tipo-grid" id="vsTipoImovel" role="group" aria-label="Tipo de moradia">
-                <label class="vs-tipo-op"><input type="checkbox" value="casa"><span>&#127968; Casa</span></label>
-                <label class="vs-tipo-op"><input type="checkbox" value="apartamento"><span>&#127970; Apartamento</span></label>
-                <label class="vs-tipo-op"><input type="checkbox" value="condominio"><span>&#127984; Condom&iacute;nio</span></label>
+                <label class="vs-tipo-op"><input type="checkbox" value="casa"><span class="vs-tipo-ico" aria-hidden="true">&#127968;</span><span class="vs-tipo-nome">Casa</span></label>
+                <label class="vs-tipo-op"><input type="checkbox" value="apartamento"><span class="vs-tipo-ico" aria-hidden="true">&#127970;</span><span class="vs-tipo-nome">Apartamento</span></label>
+                <label class="vs-tipo-op"><input type="checkbox" value="condominio"><span class="vs-tipo-ico" aria-hidden="true">&#127984;</span><span class="vs-tipo-nome">Condom&iacute;nio</span></label>
               </div>
             </div>
             <div class="field"><label>Benefício</label><input type="text" id="vsBeneficio" placeholder="Informe o benefício..."></div>
