@@ -709,6 +709,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .vs-ck-op input{ margin-top:3px; }
   .vs-ck-op b{ display:block; font-size:13.5px; color:var(--ink); }
   .vs-ck-op small{ display:block; font-size:12px; color:var(--muted); }
+  .vs-ck-op input:disabled + div{ opacity:.45; }
+  #atExtraLista .vs-ck-op{ align-items:center; }
+  #atExtraLista .vs-ck-op small{ margin-top:2px; display:flex; align-items:center; }
+  body.dark .vs-ck-op:has(input:checked){ background:rgba(95,179,158,.18); border-color:#5FB39E; }
   .vs-ck-feito{ border:1px solid var(--line); border-radius:10px; padding:12px 14px; font-size:13.5px; background:var(--page-bg); }
   .vs-ck-feito p{ margin:0 0 6px; }
   .vs-ck-feito p:last-child{ margin:0; }
@@ -1592,6 +1596,15 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .btn-ghost{ background:var(--page-bg); color:var(--ink); border:none; border-radius:999px; padding:11px 22px; letter-spacing:.02em; transition:background .15s; }
   .btn-ghost:hover{ background:var(--line); }
   .btn-ghost:disabled{ opacity:.55; cursor:default; }
+  /* Botões de imprimir: destaque com ícone de impressora */
+  .btn-print{ display:inline-flex; align-items:center; gap:8px; padding:10px 20px; border:none; border-radius:999px; background:var(--blue); color:#fff; font-size:14px; font-weight:700; letter-spacing:.02em; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.18); transition:filter .15s, transform .1s, box-shadow .15s; }
+  .btn-print svg{ width:18px; height:18px; flex:none; }
+  .btn-print:hover:not(:disabled){ filter:brightness(1.12); box-shadow:0 4px 12px rgba(0,0,0,.24); transform:translateY(-1px); }
+  .btn-print:active:not(:disabled){ transform:translateY(0); }
+  .btn-print:focus-visible{ outline:3px solid var(--gold); outline-offset:2px; }
+  .btn-print:disabled{ background:var(--line); color:var(--muted); box-shadow:none; cursor:not-allowed; }
+  body.dark .btn-print:not(:disabled){ color:#0F1F1B; }
+  .vs-table .vs-btn-icon[data-acao="imprimir"]{ color:var(--blue); }
   .search, .field input, .field select, .field textarea, .vs-f-chip{ background:var(--page-bg); border:1px solid transparent; border-radius:999px; }
   .field textarea, .field select[multiple]{ border-radius:16px; }
   .field input:focus, .field select:focus, .field textarea:focus{ outline:none; border-color:var(--gold); background:var(--card); }
@@ -1851,7 +1864,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <div class="field"><label>CRAS *</label><select id="atCras"></select></div>
         <div class="field"><label>Motivo * <small style="font-weight:400;color:var(--muted)">(digite o número para localizar)</small></label><select id="atMotivo"></select></div>
         <div class="field" id="atSubBox" style="display:none"><label>Submotivo</label><select id="atSub"></select><input type="text" id="atSubOutros" maxlength="120" placeholder="Escreva o que aconteceu" style="display:none;margin-top:8px"></div>
-        <div class="field span-2"><label id="atEntrevLabel">Entrevistador(es) * (clique para selecionar; Ctrl para vários)</label><select id="atEntrev" multiple style="height:120px;width:100%"></select></div>
+        <div class="field span-2"><label id="atEntrevLabel">Entrevistador(es) * (clique para selecionar; Ctrl para vários)</label><select id="atEntrev" multiple style="height:120px;width:100%"></select>
+          <div id="atEntrevExtraWrap" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px">
+            <button type="button" class="btn-ghost" id="atEntrevExtraBtn">&#10133; Adicionar atendentes</button>
+            <small class="hint" id="atEntrevExtraHint" style="margin:0">Opcional: até 2 atendentes além de você.</small>
+          </div></div>
       </div>
       <div id="atDupBox" style="display:none;margin-top:14px;padding:12px 14px;border-radius:12px;background:#fff4e5;border:1px solid #f5b971;color:#7a4a00;font-size:13.5px"></div>
       <div class="form-actions">
@@ -1947,7 +1964,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <h3>Resultado</h3>
           <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
             <span class="status-hint" id="fluxoResumo">Use a busca acima</span>
-            <button type="button" class="btn-ghost" id="fluxoImprimirBtn" disabled title="Imprimir os resultados filtrados">Imprimir</button>
+            <button type="button" class="btn-print" id="fluxoImprimirBtn" disabled title="Imprimir os resultados filtrados (faça uma busca primeiro)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="6" y="14" width="12" height="7" rx="1"/><path d="M6 17H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/></svg><span>Imprimir resultado</span></button>
           </div>
         </div>
         <p style="color:var(--muted);font-size:13.5px;padding:6px 0 14px">Digite um nome, um CPF ou um período e clique em "Buscar fluxo".</p>
@@ -2041,7 +2058,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
           <div class="form-actions">
             <button class="btn-ghost" id="vsLimparBtn">Limpar</button>
-            <button type="button" class="btn-ghost" id="vsImprimirBtn" title="Imprimir a ficha com o que está digitado neste formulário">&#128424; Imprimir</button>
+            <button type="button" class="btn-print" id="vsImprimirBtn" title="Imprimir a ficha com o que está digitado neste formulário"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="6" y="14" width="12" height="7" rx="1"/><path d="M6 17H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/></svg><span>Imprimir ficha</span></button>
             <button class="btn-primary" id="saveVisitaBtn">Agendar visita</button>
           </div>
         </div>
@@ -2054,7 +2071,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <div class="section-head">
           <h3>Últimas entrevistas domiciliares</h3>
           <span class="status-hint" id="vsResumo"></span>
-          <button type="button" class="btn-ghost" id="vsImprimirListaBtn" title="Imprimir a lista de entrevistas que está na tela (respeita os filtros)">&#128424; Imprimir lista</button>
+          <button type="button" class="btn-print" id="vsImprimirListaBtn" title="Imprimir a lista de entrevistas que está na tela (respeita os filtros)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="6" y="14" width="12" height="7" rx="1"/><path d="M6 17H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/></svg><span>Imprimir lista</span></button>
           <button type="button" class="btn-ghost" id="fcAbrirBranco" title="Preencher e imprimir o formulário de campo (Anexo II)">Formulário</button>
         </div>
         <div class="vs-filtros" id="vsFiltros">
@@ -2501,11 +2518,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   }
 
   async function listarFuncs(){
-    let r = await sbClient.from('funcionarios').select('id, nome, ativo').order('nome');
-    if (r.error) r = await sbClient.from('funcionarios').select('id, nome').order('nome');   // antes de existir a coluna "ativo"
+    let r = await sbClient.from('funcionarios').select('id, nome, ativo, role').order('nome');
+    if (r.error) r = await sbClient.from('funcionarios').select('id, nome, role').order('nome');           // antes de existir a coluna "ativo"
+    if (r.error) r = await sbClient.from('funcionarios').select('id, nome, ativo').order('nome');
+    if (r.error) r = await sbClient.from('funcionarios').select('id, nome').order('nome');
     return r;
   }
   let atEntrevBaseHtml = null;
+  let atListaAtendentes = [];   // atendentes ativos (para o popup "Adicionar atendentes")
   async function popularSelectCras(){
     let [c, f] = await Promise.all([
       sbClient.from('cras').select('id, nome').order('nome'),
@@ -2527,6 +2547,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const soAtendentes = (f.data || []).filter(x => x.role === 'atendente');
     document.getElementById('atEntrev').innerHTML = optF(soAtendentes, '', true);
     atEntrevBaseHtml = document.getElementById('atEntrev').innerHTML;   // lista-base (para restaurar ao limpar/cancelar)
+    atListaAtendentes = soAtendentes.filter(x => x.ativo !== false);
     document.getElementById('fEntrev').innerHTML = optF(soAtendentes, '<option value="">Todos</option>', false);
     document.getElementById('vsEntrev').innerHTML = (f.data || []).map(x =>
       `<label><input type="checkbox" value="${x.id}"${x.ativo === false ? ' disabled' : ''}><span>${escapeHtml(x.nome)}${x.ativo === false ? ' (desativado)' : ''}</span></label>`).join('');
@@ -2977,7 +2998,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     el('atMotivo').value = sn.motivo; el('atMotivo').dispatchEvent(new Event('change'));
     el('atSub').value = sn.sub; subMostrarOutros(); el('atSubOutros').value = sn.subOutros;
     el('atNasc').value = sn.nasc; nascAtualizar(); generoDefinir(sn.genero);
+    sn.entrevs.forEach(id => { if (![...el('atEntrev').options].some(o => o.value === id)) el('atEntrev').add(new Option((mapaFuncFluxo && mapaFuncFluxo[id]) || 'Atendente', id)); });
     [...el('atEntrev').options].forEach(o => { o.selected = sn.entrevs.includes(o.value); });
+    ajustarCaixaEntrev();
   }
 
   el('saveAtendimentoBtn').addEventListener('click', async () => {
@@ -3994,6 +4017,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   let canalPresenca = null;
   const BOLA = (cor, brilho) => `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${cor};margin-right:7px;${brilho ? 'box-shadow:0 0 0 3px rgba(34,197,94,.25)' : ''}"></span>`;
   function atualizarPresenca(){
+    if (typeof atPopupAtualizar === 'function') atPopupAtualizar();   // popup "Adicionar atendentes" aberto: atualiza online/offline
     if (!podeGerir()) return;                               // só coordenador e adm enxergam
     const estado = canalPresenca ? canalPresenca.presenceState() : {}, on = new Set(Object.keys(estado));
     let qtd = 0;
@@ -4264,7 +4288,78 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     sel.size = Math.max(1, Math.min(n, 4)); sel.style.height = 'auto';
     const lab = document.getElementById('atEntrevLabel');
     if (lab) lab.textContent = n > 1 ? 'Entrevistador(es) *' : 'Entrevistador(a) *';
+    sel.style.pointerEvents = 'none';   // quem entra/sai é escolhido no popup (evita desmarcar sem querer ao clicar na lista)
+    const wrap = document.getElementById('atEntrevExtraWrap'), btn = document.getElementById('atEntrevExtraBtn');
+    if (wrap) wrap.style.display = 'flex';
+    if (btn) btn.innerHTML = n > 1 ? `&#9998; Alterar atendentes (${n - 1}/2)` : '&#10133; Adicionar atendentes';
   }
+
+  // Popup: além do usuário logado, escolhe até 2 atendentes (opcional), online ou offline. Eles entram no campo Entrevistador(es).
+  const AT_EXTRA_MAX = 2;
+  let atPopupAtualizar = null;   // redesenha a lista do popup quando alguém entra/sai (presença)
+  function atAbrirPopupExtras(){
+    if (!currentFuncionario) return;
+    const sel = document.getElementById('atEntrev');
+    const jaIds = [...sel.options].map(o => o.value).filter(v => v !== currentFuncionario.id);
+    let ov = document.getElementById('atExtraOverlay'); if (ov) ov.remove();
+    ov = document.createElement('div'); ov.id = 'atExtraOverlay'; ov.className = 'vs-modal-overlay';
+    ov.innerHTML = `<div class="vs-modal" role="dialog" aria-modal="true" aria-labelledby="atExtraTit">
+      <div class="vs-modal-head"><div><h3 id="atExtraTit">Adicionar atendentes</h3><p>Você (${escapeHtml(currentFuncionario.nome)}) já está no atendimento. Marque até ${AT_EXTRA_MAX} colegas, se quiser.</p></div>
+        <button type="button" class="vs-modal-x" id="atExtraX" aria-label="Fechar">&times;</button></div>
+      <div class="vs-modal-body">
+        <input type="text" id="atExtraBusca" placeholder="Buscar atendente pelo nome..." autocomplete="off" style="width:100%">
+        <small class="hint" id="atExtraOnline"></small>
+        <div class="vs-ck-ops" id="atExtraLista"></div>
+        <small class="hint" id="atExtraCont"></small>
+      </div>
+      <div class="vs-modal-foot"><button type="button" class="btn-ghost" id="atExtraCancelar">Cancelar</button><button type="button" class="btn-primary" id="atExtraOk">Aplicar</button></div></div>`;
+    document.body.appendChild(ov);
+    const lista = ov.querySelector('#atExtraLista');
+    const marcados = new Set(jaIds);                       // escolhas (sobrevivem ao redesenho)
+    const onlineIds = () => new Set(canalPresenca ? Object.keys(canalPresenca.presenceState()) : []);
+    const desenhar = () => {
+      const on = onlineIds();
+      const outros = atListaAtendentes.filter(x => x.id !== currentFuncionario.id)
+        .sort((x, y) => (on.has(y.id) - on.has(x.id)) || String(x.nome).localeCompare(String(y.nome), 'pt-BR'));   // online primeiro
+      const t = normalizeText(ov.querySelector('#atExtraBusca').value.trim());
+      lista.innerHTML = outros.length ? outros.map(x => {
+        const ligado = on.has(x.id);
+        return `<label class="vs-ck-op" data-nome="${escapeHtml(normalizeText(x.nome))}"${t && !normalizeText(x.nome).includes(t) ? ' style="display:none"' : ''}>
+          <input type="checkbox" value="${x.id}"${marcados.has(x.id) ? ' checked' : ''}>
+          <div><b>${escapeHtml(x.nome)}</b><small>${ligado ? BOLA('#22c55e', true) + '<span style="color:#15803d;font-weight:600">Online</span>' : BOLA('#c5ccd3', false) + 'Offline'}</small></div></label>`;
+      }).join('') : '<p class="vs-vazio">Nenhum outro atendente cadastrado.</p>';
+      const n = outros.filter(x => on.has(x.id)).length;
+      ov.querySelector('#atExtraOnline').textContent = outros.length ? `${n} de ${outros.length} atendente(s) online agora` : '';
+      contar();
+    };
+    const boxes = () => [...lista.querySelectorAll('input')];
+    function contar(){
+      const n = marcados.size;
+      boxes().forEach(i => { i.disabled = !i.checked && n >= AT_EXTRA_MAX; });   // chegou no limite: trava os demais
+      ov.querySelector('#atExtraCont').textContent = `${n} de ${AT_EXTRA_MAX} selecionado(s)`;
+    }
+    lista.addEventListener('change', (e) => { const i = e.target; if (!i || i.type !== 'checkbox') return; if (i.checked) marcados.add(i.value); else marcados.delete(i.value); contar(); });
+    ov.querySelector('#atExtraBusca').addEventListener('input', desenhar);
+    const fechar = () => { ov.remove(); document.removeEventListener('keydown', esc); atPopupAtualizar = null; };
+    const esc = (e) => { if (e.key === 'Escape') fechar(); };
+    document.addEventListener('keydown', esc);
+    ov.addEventListener('mousedown', (e) => { if (e.target === ov) fechar(); });
+    ov.querySelector('#atExtraX').addEventListener('click', fechar);
+    ov.querySelector('#atExtraCancelar').addEventListener('click', fechar);
+    ov.querySelector('#atExtraOk').addEventListener('click', () => {
+      const escolhidos = [...marcados].slice(0, AT_EXTRA_MAX);
+      const nomes = Object.fromEntries(atListaAtendentes.map(x => [x.id, x.nome]));
+      sel.innerHTML = `<option value="${currentFuncionario.id}" selected>${escapeHtml(currentFuncionario.nome)}</option>`
+        + escolhidos.map(id => `<option value="${id}" selected>${escapeHtml(nomes[id] || 'Atendente')}</option>`).join('');
+      ajustarCaixaEntrev();
+      fechar();
+      if (escolhidos.length) showToast(`✅ ${escolhidos.length} atendente(s) adicionado(s) a este atendimento`);
+    });
+    atPopupAtualizar = desenhar;
+    desenhar();
+    ov.querySelector('#atExtraBusca').focus();
+  }
+  document.getElementById('atEntrevExtraBtn').addEventListener('click', atAbrirPopupExtras);
 
   el('usuCriarBtn').addEventListener('click', async () => {
     const b = { nome: el('usuNome').value.trim(), email: el('usuEmail').value.trim(), senha: el('usuSenha').value,
