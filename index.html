@@ -5102,11 +5102,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   function itemFluxo(a){
     const quem = (a.ents || []).map(e => e.func && e.func.nome).filter(Boolean).join(' / ') || '—';
     const cras = (a.cras && a.cras.nome) || '—';
+    const cpfDig = rpCpf(a.cpf_atendido);
+    const cpfTxt = cpfDig.length === 11 ? `${cpfDig.slice(0, 3)}.${cpfDig.slice(3, 6)}.${cpfDig.slice(6, 9)}-${cpfDig.slice(9)}` : (cpfDig || 'não informado');
     return `
       <div class="tl-item">
         <div class="tl-dot" style="--dot:var(--blue)"></div>
         <div class="tl-date">${escapeHtml(fmtData(a.data_atendimento))}${a.horario ? ' · ' + escapeHtml(a.horario.slice(0, 5)) : ''}</div>
         <div class="tl-title">${escapeHtml(a.nome_atendido || 'Sem nome')} — ${escapeHtml(a.motivo || 'Atendimento')}</div>
+        <p class="tl-desc"><b>CPF:</b> ${escapeHtml(cpfTxt)}</p>
         <p class="tl-desc">${escapeHtml(cras)}${a.submotivo ? ' · ' + escapeHtml(a.submotivo) : ''} · Entrevistador(es): ${escapeHtml(quem)}</p>
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:4px">
           <a href="#" class="fluxo-hist-toggle" style="font-size:12.5px;color:var(--blue)" data-id="${a.id}" data-cpf="${escapeHtml(a.cpf_atendido || '')}" data-nome="${escapeHtml(a.nome_atendido || '')}">Ver histórico de edições</a>
