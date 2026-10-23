@@ -837,7 +837,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .vs-detalhes.vs-destaque>.field-grid{ padding:14px 16px 16px; }
   .vs-tipo-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
   /* seletores com .visita-two-col .field para vencer '.visita-two-col .field input{width:100%}' e '.field label' */
-  .visita-two-col .field .vs-tipo-grid .vs-tipo-op{ display:grid; grid-template-columns:18px 22px 1fr; align-items:center; column-gap:10px; min-height:44px; box-sizing:border-box; padding:10px 14px; border:1px solid var(--campo-borda,var(--line)); border-radius:10px; background:var(--card); cursor:pointer; font-size:13.5px; font-weight:600; color:var(--ink); text-align:left; transition:background .12s ease, border-color .12s ease; }
+  .visita-two-col .field .vs-tipo-grid .vs-tipo-op{ display:grid; grid-template-columns:18px 1fr; align-items:center; column-gap:10px; min-height:44px; box-sizing:border-box; padding:10px 14px; border:1px solid var(--campo-borda,var(--line)); border-radius:10px; background:var(--card); cursor:pointer; font-size:13.5px; font-weight:600; color:var(--ink); text-align:left; transition:background .12s ease, border-color .12s ease; }
   .visita-two-col .field .vs-tipo-grid .vs-tipo-op:hover{ background:var(--page-bg); }
   .visita-two-col .field .vs-tipo-grid .vs-tipo-op input[type=checkbox]{ width:18px; height:18px; min-width:18px; max-width:18px; margin:0; padding:0; border:0; border-radius:4px; background:transparent; accent-color:var(--blue); cursor:pointer; }
   .visita-two-col .field .vs-tipo-grid .vs-tipo-ico{ font-size:18px; line-height:1; text-align:center; }
@@ -848,6 +848,19 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   body.dark .visita-two-col .field .vs-tipo-grid .vs-tipo-op:has(input:checked){ background:rgba(95,179,158,.18); border-color:#5FB39E; color:#BFE8DC; }
   body.dark .vs-table .vs-tipo-tag{ background:rgba(95,179,158,.18); color:#BFE8DC; }
   @media (max-width:560px){ .vs-tipo-grid{ grid-template-columns:1fr; } }
+
+  /* Endereço, contato e observações: recolhe e abre como uma janela (fecha de baixo para cima) */
+  .vs-dest-head{ cursor:pointer; user-select:none; }
+  .vs-dest-head:focus-visible{ outline:2px solid var(--blue); outline-offset:-2px; }
+  .vs-dest-head::after{ content:''; flex:0 0 auto; margin-left:auto; width:9px; height:9px; border-right:2px solid var(--muted); border-bottom:2px solid var(--muted); transform:rotate(-135deg) translate(-2px,-2px); transition:transform .3s ease; }
+  .vs-detalhes.fechado .vs-dest-head::after{ transform:rotate(45deg) translate(-2px,-2px); }
+  .vs-dest-corpo{ display:grid; grid-template-rows:1fr; transition:grid-template-rows .3s ease; }
+  .vs-dest-int{ min-height:0; overflow:hidden; transition:opacity .25s ease; }
+  .vs-detalhes.fechado .vs-dest-corpo{ grid-template-rows:0fr; }
+  .vs-detalhes.fechado .vs-dest-int{ opacity:0; visibility:hidden; transition:opacity .2s ease, visibility 0s linear .3s; }
+  .vs-detalhes.fechado .vs-dest-head{ border-bottom-color:transparent; }
+  .vs-detalhes.fechado.preenchido .vs-dest-head b::after{ content:''; display:inline-block; width:8px; height:8px; margin-left:8px; border-radius:50%; background:#1E7F45; vertical-align:1px; }
+  @media (prefers-reduced-motion:reduce){ .vs-dest-corpo, .vs-dest-int, .vs-dest-head::after{ transition:none !important; } }
   .vs-table .vs-det{ margin-top:6px; }
   .vs-table .vs-det>summary{ cursor:pointer; list-style:none; font-size:12px; font-weight:600; color:#3B4FCB; }
   .vs-table .vs-det>summary::-webkit-details-marker{ display:none; }
@@ -2041,13 +2054,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
               <span class="vs-urg-txt"><b>Visita urgente</b><small>Destaca esta visita em vermelho no calendário, na lista lateral e na tabela</small></span>
             </label>
             <section class="vs-detalhes vs-destaque" id="vsDetalhes">
-            <div class="vs-dest-head"><span class="vs-dest-ico" aria-hidden="true">&#127968;</span><div><b>Endereço, contato e observações</b><small>Dados do local da visita: confira antes de agendar</small></div></div>
+            <div class="vs-dest-head" id="vsDestHead" role="button" tabindex="0" aria-expanded="true" aria-controls="vsDestCorpo" title="Clique para recolher ou abrir"><span class="vs-dest-ico" aria-hidden="true">&#127968;</span><div><b>Endereço, contato e observações</b><small>Dados do local da visita: confira antes de agendar</small></div></div>
+            <div class="vs-dest-corpo" id="vsDestCorpo"><div class="vs-dest-int">
             <div class="field-grid">
             <div class="field span-2 vs-tipo-campo"><label>Tipo de moradia <small style="font-weight:400;font-size:12px;color:var(--muted)">(marque o que se aplica)</small></label>
               <div class="vs-tipo-grid" id="vsTipoImovel" role="group" aria-label="Tipo de moradia">
-                <label class="vs-tipo-op"><input type="checkbox" value="casa"><span class="vs-tipo-ico" aria-hidden="true">&#127968;</span><span class="vs-tipo-nome">Casa</span></label>
-                <label class="vs-tipo-op"><input type="checkbox" value="apartamento"><span class="vs-tipo-ico" aria-hidden="true">&#127970;</span><span class="vs-tipo-nome">Apartamento</span></label>
-                <label class="vs-tipo-op"><input type="checkbox" value="condominio"><span class="vs-tipo-ico" aria-hidden="true">&#127984;</span><span class="vs-tipo-nome">Condom&iacute;nio</span></label>
+                <label class="vs-tipo-op"><input type="checkbox" value="casa"><span class="vs-tipo-nome">Casa</span></label>
+                <label class="vs-tipo-op"><input type="checkbox" value="apartamento"><span class="vs-tipo-nome">Apartamento</span></label>
+                <label class="vs-tipo-op"><input type="checkbox" value="condominio"><span class="vs-tipo-nome">Condom&iacute;nio</span></label>
               </div>
             </div>
             <div class="field"><label>Benefício</label><input type="text" id="vsBeneficio" placeholder="Informe o benefício..."></div>
@@ -2058,7 +2072,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
             <div class="field"><label>Telefone</label><input type="text" id="vsTelefone" placeholder="(51) 90000-0000"></div>
             <div class="field span-2"><label>Demanda</label><input type="text" id="vsDemanda" placeholder="Ex.: atualização unipessoal, inclusão, averiguação..."></div>
             <div class="field" id="vsObsBox" style="grid-column:1/-1"><label>Observação</label><textarea id="vsObs" rows="3" placeholder="Histórico, tentativas, recados sobre a família..."></textarea></div>
-            </div></section>
+            </div></div></div></section>
           </div>
 
           <div class="form-actions">
@@ -3770,6 +3784,57 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.addEventListener('visibilitychange', () => { if (!document.hidden) atualizar(true); });
   })();
 
+  // Atualização automática dos demais painéis (Atendimentos, Visitas, Cadastros) + aviso de nova versão do sistema
+  (function autoAtualizarOutrosPaineis(){
+    const INTERVALO = 45000;   // 45s: leve para o plano gratuito (só consulta o painel que está aberto na tela)
+    const visivel = (id) => { const x = document.getElementById(id); return !document.hidden && !!x && x.offsetParent !== null; };
+    let tick = 0, rodando = false, ultima = 0;
+
+    async function atualizarPainelAberto(){
+      if (rodando || document.hidden) return;
+      rodando = true; ultima = Date.now(); tick++;
+      try {
+        // Atendimentos: aba Histórico ou aba Novo (lista "recentes")
+        if (visivel('atLista') && typeof listarAtendimentos === 'function') listarAtendimentos(paginaAt);
+        else if (visivel('atTabForm') && typeof listarRecentes === 'function') listarRecentes();
+
+        // Visitas e Cadastros: só recarrega se algo mudou no banco (evita piscar a tela)
+        const vsAberto = visivel('vsLista'), cadAberto = visivel('cadListaCoordenacao');
+        if ((vsAberto || cadAberto) && typeof vsChecarMudanca === 'function') {
+          const mudou = await vsChecarMudanca();
+          if (vsAberto && mudou && typeof loadVisitas === 'function') loadVisitas();
+          if (cadAberto && (mudou || tick % 4 === 0)) { const nav = document.getElementById('navCadernos'); if (nav) nav.click(); }
+        }
+      } catch (e) { console.warn('Atualização automática:', e); }
+      finally { rodando = false; }
+    }
+    setInterval(atualizarPainelAberto, INTERVALO);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - ultima > 15000) atualizarPainelAberto(); });
+
+    // ---- Aviso de nova versão: compara o "carimbo" do index.html no servidor (GitHub Pages) a cada 5 min ----
+    let versaoInicial = null, avisou = false;
+    function mostrarAvisoVersao(){
+      if (avisou) return; avisou = true;
+      const b = document.createElement('div');
+      b.style.cssText = 'position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:99999;background:#1e293b;color:#fff;padding:12px 16px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.35);font:500 14px Inter,system-ui,sans-serif;display:flex;gap:12px;align-items:center;max-width:92vw';
+      b.innerHTML = '<span>🔄 Há uma nova versão do sistema.</span><button type="button" style="background:#22c55e;color:#fff;border:0;border-radius:8px;padding:7px 12px;font:600 13px inherit;cursor:pointer">Atualizar agora</button><button type="button" aria-label="Depois" style="background:transparent;color:#cbd5e1;border:0;font-size:18px;cursor:pointer">×</button>';
+      const [bt, fx] = b.querySelectorAll('button');
+      bt.addEventListener('click', () => location.reload());
+      fx.addEventListener('click', () => b.remove());
+      document.body.appendChild(b);
+    }
+    async function checarVersao(){
+      if (!/^https?:$/.test(location.protocol) || document.hidden) return;
+      try {
+        const r = await fetch(location.pathname + (location.search || ''), { method: 'HEAD', cache: 'no-store' });
+        const v = r.headers.get('etag') || r.headers.get('last-modified'); if (!v) return;
+        if (versaoInicial === null) versaoInicial = v;
+        else if (v !== versaoInicial) mostrarAvisoVersao();
+      } catch (e) {}
+    }
+    checarVersao(); setInterval(checarVersao, 300000);
+  })();
+
   (function ligarPgUltAtend(){
     const abrir = () => document.querySelector('.nav-item[data-panel="panel-atendimentos"]')?.click();
     document.getElementById('pgUltAtendVerTudo')?.addEventListener('click', abrir);
@@ -3791,6 +3856,22 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   // Monta a query com os filtros da tela de Histórico, sem aplicar paginação.
   // Reaproveitada pela listagem em tela e pela exportação em PDF/Excel.
+  // Busca por nome ou CPF: o CPF pode ser digitado com pontos e traço ou só com números,
+  // e acha o registro tanto se estiver gravado com máscara (123.456.789-00) quanto sem (12345678900)
+  function filtroNomeCpf(texto){
+    const busca = String(texto || '').trim().replace(/[,()%*]/g, '');
+    if (!busca) return '';
+    const partes = [`nome_atendido.ilike.%${busca}%`, `cpf_atendido.ilike.%${busca}%`];
+    if (/^[\d.\-\s]+$/.test(busca)){
+      const d = busca.replace(/\D/g, '');
+      if (d){
+        const m = [d.slice(0, 3), d.slice(3, 6), d.slice(6, 9)].filter(Boolean).join('.') + (d.length > 9 ? '-' + d.slice(9, 11) : '');
+        partes.push(`cpf_atendido.ilike.%${d}%`, `cpf_atendido.ilike.%${m}%`);
+      }
+    }
+    return partes.join(',');
+  }
+
   function montarQueryFiltrada(){
     const fEnt = el('fEntrev').value;
     const sel = 'id, data_atendimento, horario, nome_atendido, motivo, submotivo, cras:cras_origem_id(nome), ents:atendimento_entrevistadores(func:funcionario_id(nome))'
@@ -3802,8 +3883,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if (el('fFim').value) q = q.lte('data_atendimento', el('fFim').value);
     const ms = [...el('fMotivo').selectedOptions].map(o => o.value);
     if (ms.length) q = q.in('motivo', ms);
-    const busca = el('fBusca').value.trim().replace(/[,()%*]/g, '');
-    if (busca) q = q.or(`nome_atendido.ilike.%${busca}%,cpf_atendido.ilike.%${busca}%`);
+    const filtroBusca = filtroNomeCpf(el('fBusca').value);
+    if (filtroBusca) q = q.or(filtroBusca);
     return q.order('data_atendimento', { ascending: false }).order('created_at', { ascending: false });
   }
 
@@ -5130,7 +5211,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     el('fluxoResultado').querySelectorAll('.tl-item, p').forEach(n => n.remove());
     // Busca de fluxo: sem o escopo da unidade, para o atendente ver o resultado em qualquer CRAS
     let q = sbClient.from('atendimentos').select(SEL_ATEND + ', cpf_atendido').or(FILTRO_DATA_POSSIVEL).lte('data_atendimento', hoje());
-    if (busca) q = q.or(`nome_atendido.ilike.%${busca}%,cpf_atendido.ilike.%${busca}%`);
+    if (busca && filtroNomeCpf(busca)) q = q.or(filtroNomeCpf(busca));
     if (cras) q = q.eq('cras_origem_id', cras);
     if (ini) q = q.gte('data_atendimento', ini);
     if (fim) q = q.lte('data_atendimento', fim);
@@ -5686,6 +5767,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     d.classList.toggle('preenchido', cheio);
   }
   setInterval(() => vsAjustarDetalhes(), 1500);
+  // Endereço, contato e observações: clique no título para recolher (de baixo para cima) ou abrir
+  (function(){
+    const box = document.getElementById('vsDetalhes'), head = document.getElementById('vsDestHead');
+    if (!box || !head) return;
+    const alternar = () => { const fechou = box.classList.toggle('fechado'); head.setAttribute('aria-expanded', String(!fechou)); vsAjustarDetalhes(); };
+    head.addEventListener('click', alternar);
+    head.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); alternar(); } });
+  })();
   (function(){
     const btn = document.getElementById('vfMaisBtn'), box = document.getElementById('vfAvancados'), badge = document.getElementById('vfBadge');
     const mostrar = (v) => { box.style.display = v ? '' : 'none'; btn.setAttribute('aria-expanded', v ? 'true' : 'false'); };
