@@ -1635,6 +1635,17 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   #atRecentes tr:hover .at-det, #atTabHist tr:hover .at-det, #atRecentes tr:focus-within .at-det{ display:block; }
   #atRecentes tr:hover td, #atTabHist tr:hover td{ background:var(--page-bg); }
 
+  /* Controle de atendimentos: endereço vindo da Agenda ED (painel azul ao editar) */
+  .at-end-box{ margin-top:14px; padding:12px 14px; border-radius:12px; background:#EAF2FF; border:1px solid #9DB9F2; color:#17356F; font-size:13.5px; }
+  .at-end-box .at-end-tit{ font-weight:700; margin-bottom:8px; }
+  .at-end-box .at-end-item{ padding:8px 0; border-top:1px solid #C5D7F7; }
+  .at-end-box .at-end-item:first-of-type{ border-top:0; padding-top:0; }
+  .at-end-box .at-end-lin{ margin:2px 0; }
+  .at-end-box .at-end-meta{ font-size:12px; opacity:.85; margin-top:3px; }
+  .at-end-box .at-end-alerta{ font-weight:600; }
+  body.dark .at-end-box{ background:rgba(47,111,237,.16); border-color:#3F5FA8; color:#C9DAFF; }
+  body.dark .at-end-box .at-end-item{ border-top-color:#34508F; }
+
   /* Modo escuro: Agenda ED e Últimas entrevistas (textos legíveis, destaques sem fundo claro) */
   body.dark .visita-two-col .vs-urgente-box:has(input:checked){ background:rgba(220,38,38,.18); border-color:#B94A4A; }
   body.dark .visita-two-col .vs-urgente-box:has(input:checked) b{ color:#FCA5A5; }
@@ -1906,6 +1917,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           </div></div>
       </div>
       <div id="atDupBox" style="display:none;margin-top:14px;padding:12px 14px;border-radius:12px;background:#fff4e5;border:1px solid #f5b971;color:#7a4a00;font-size:13.5px"></div>
+      <div id="atEndBox" class="at-end-box" style="display:none" aria-live="polite"></div>
       <div class="form-actions">
         <button class="btn-ghost" id="atLimparBtn">Limpar</button>
         <button class="btn-primary" id="saveAtendimentoBtn">Salvar atendimento</button>
@@ -3002,7 +3014,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   function limparAtendimento(){
     editandoId = null; editandoEntrevs = [];
     el('atEntrev').closest('.field').style.display = '';   // volta a mostrar o Entrevistador (some só ao atendente editar)
-    el('atDupBox').style.display = 'none';
+    el('atDupBox').style.display = 'none'; atEndEsconder();
     el('saveAtendimentoBtn').textContent = 'Salvar atendimento'; el('atLimparBtn').textContent = 'Limpar';
     el('atNome').value = ''; el('atCpf').value = ''; atCpfAtualizar(); generoDefinir(null); el('atNasc').value = ''; nascAtualizar(); el('atData').value = hoje();
     el('atMotivo').value = ''; el('atSub').value = ''; subMostrarOutros(); el('atSubBox').style.display = 'none';
@@ -4967,6 +4979,75 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     listarAtendimentos(paginaAt); listarRecentes(); carregarRelatorioMes();
   }
 
+  // ---- Endereço da Agenda ED ao editar um atendimento (mesmo CPF ou mesmo nome) ----
+  function atEndEsconder(){
+    const b = el('atEndBox'); if (!b) return;
+    b._seq = (b._seq || 0) + 1;   // invalida qualquer busca em andamento
+    b.style.display = 'none'; b.innerHTML = '';
+  }
+  async function atEndBuscar(cpfBruto, nomeBruto){
+    const box = el('atEndBox'); if (!box) return;
+    const seq = (box._seq = (box._seq || 0) + 1);
+    box.style.display = 'none'; box.innerHTML = '';
+    if (navigator.onLine === false) return;
+    const cpf = String(cpfBruto || '').replace(/\D/g, '');
+    const nome = String(nomeBruto || '').replace(/\s+/g, ' ').trim();
+    const cpfs = (cpf.length >= 9 && cpf.length <= 11) ? [...new Set([cpf.padStart(11, '0'), cpf.replace(/^0+/, '')])] : [];
+    if (!cpfs.length && nome.length < 3) return;
+    const COLS = 'id, nome_responsavel, cpf, data_agendada, status, endereco, bairro, cep, telefone, cras:cras_id(nome)';
+    const base = () => escoparVs(sbClient.from('visitas_domiciliares').select(COLS))
+      .order('data_agendada', { ascending: false }).limit(20).retry(false);
+    const buscas = [];
+    if (cpfs.length) buscas.push((async () => ({ por: 'cpf', r: await base().in('cpf', cpfs) }))());
+    if (nome.length >= 3) buscas.push((async () => ({ por: 'nome', r: await base().ilike('nome_responsavel', nome.replace(/[\\%_]/g, '\\$&')) }))());
+    let res;
+    try { res = await Promise.all(buscas); } catch (err){ console.error(err); return; }
+    if (box._seq !== seq) return;   // o usuário já limpou, cancelou ou abriu outro atendimento
+    const mapa = new Map();
+    res.forEach(x => {
+      if (x.r.error){ console.error(x.r.error); return; }
+      (x.r.data || []).forEach(v => {
+        const atual = mapa.get(v.id);
+        if (!atual) mapa.set(v.id, Object.assign({}, v, { _cpf: x.por === 'cpf' }));
+        else if (x.por === 'cpf') atual._cpf = true;
+      });
+    });
+    const visitas = [...mapa.values()].sort((a, b) => String(b.data_agendada || '').localeCompare(String(a.data_agendada || '')));
+    if (!visitas.length) return;
+    const temEnd = (v) => !!((v.endereco || '').trim() || (v.bairro || '').trim() || (v.cep || '').trim());
+    const comEnd = visitas.filter(temEnd);
+    const e = escapeHtml;
+    let corpo = '';
+    if (!comEnd.length){
+      corpo = '<div class="at-end-lin">Há visita desta pessoa na Agenda ED, mas sem endereço preenchido.</div>';
+    } else {
+      const vistos = new Set(); const grupos = [];
+      comEnd.forEach(v => {
+        const k = [v.endereco, v.bairro, String(v.cep || '').replace(/\D/g, '')].map(t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim()).join('|');
+        if (vistos.has(k)) return; vistos.add(k); grupos.push(v);
+      });
+      corpo = grupos.slice(0, 3).map(v => {
+        const cepD = String(v.cep || '').replace(/\D/g, '').slice(0, 8);
+        const cepTxt = cepD.length > 5 ? cepD.slice(0, 5) + '-' + cepD.slice(5) : cepD;
+        const telD = String(v.telefone || '').replace(/\D/g, '');
+        const telTxt = telD.length === 11 ? telD.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3') : telD.length === 10 ? telD.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3') : (v.telefone || '');
+        const vCpf = String(v.cpf || '').replace(/\D/g, '');
+        const homonimo = !v._cpf && cpfs.length && vCpf && !cpfs.includes(vCpf);
+        const como = v._cpf ? 'mesmo CPF' : (homonimo ? 'mesmo nome, CPF diferente — confira se é a mesma pessoa' : 'mesmo nome');
+        const linhas = [
+          v.endereco ? `<div class="at-end-lin"><b>Endereço:</b> ${e(v.endereco)}</div>` : '',
+          v.bairro ? `<div class="at-end-lin"><b>Bairro:</b> ${e(v.bairro)}</div>` : '',
+          cepTxt ? `<div class="at-end-lin"><b>CEP:</b> ${e(cepTxt)}</div>` : '',
+          telTxt ? `<div class="at-end-lin"><b>Telefone:</b> ${e(telTxt)}</div>` : ''
+        ].join('');
+        const meta = `Visita de ${e(fmtData(String(v.data_agendada || '').slice(0, 10)) || 'sem data')}${v.cras && v.cras.nome ? ' · ' + e(v.cras.nome) : ''}${v.status ? ' · ' + e(VS_ST_LABEL[v.status] || v.status) : ''} · <span${homonimo ? ' class="at-end-alerta"' : ''}>${e(como)}</span>`;
+        return `<div class="at-end-item">${linhas}<div class="at-end-meta">${meta}</div></div>`;
+      }).join('');
+    }
+    box.innerHTML = `<div class="at-end-tit">📍 Endereço encontrado na Agenda ED</div>${corpo}`;
+    box.style.display = 'block';
+  }
+
   async function editarAtendimento(e){
     const a = e.target.closest('.at-edit'); if (!a) return;
     e.preventDefault();
@@ -4998,6 +5079,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     el('atEntrev').closest('.field').style.display = (currentFuncionario && currentFuncionario.role === 'atendente') ? 'none' : '';
     editandoId = data.id;
     verificarCpfDuplicado();
+    atEndBuscar(data.cpf_atendido, data.nome_atendido);   // endereço na Agenda ED (mesmo CPF ou mesmo nome)
     el('saveAtendimentoBtn').textContent = 'Salvar alterações';
     el('atLimparBtn').textContent = 'Cancelar edição';
     abrirAba(false);
