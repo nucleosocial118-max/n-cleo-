@@ -3146,7 +3146,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           data_atendimento: el('atData').value, nome_atendido: nome, cpf_atendido: cpf,
           cras_origem_id: el('atCras').value, motivo: el('atMotivo').value, submotivo: subValor(),
           ...(generoOk ? { genero: generoValor() } : {}),
-          ...(bpcOk ? { bpc: bpcValor() } : {}),
+          ...(bpcOk ? { bpc_tipo: bpcValor() } : {}),
           ...(nascOk ? { data_nascimento: el('atNasc').value || null } : {})
         }).eq('id', editandoId).select('id');
         if (eu) throw eu;
@@ -3174,7 +3174,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           cras_origem_id: el('atCras').value, motivo: el('atMotivo').value,
           submotivo: subValor(), profissional_id: currentFuncionario.id,
           ...(generoOk && generoValor() ? { genero: generoValor() } : {}),
-          ...(bpcOk && bpcValor() ? { bpc: bpcValor() } : {}),
+          ...(bpcOk && bpcValor() ? { bpc_tipo: bpcValor() } : {}),
           ...(nascOk && el('atNasc').value ? { data_nascimento: el('atNasc').value } : {})
         },
         ents: entrevs,
@@ -3409,9 +3409,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     ] : [];
     // BPC (opcional): só aparece quando a coluna existe no banco
     const gruposBpc = bpcOk ? [
-      { id: 'bpc_t', t: 'BPC (total)', test: a => a.bpc === 'DEF' || a.bpc === 'IDOSO', cor: 'var(--orange)' },
-      { id: 'bpc_d', t: 'BPC — DEF', test: a => a.bpc === 'DEF', cor: 'var(--blue)' },
-      { id: 'bpc_i', t: 'BPC — Idoso', test: a => a.bpc === 'IDOSO', cor: 'var(--cyan)' }
+      { id: 'bpc_t', t: 'BPC (total)', test: a => a.bpc_tipo === 'DEF' || a.bpc_tipo === 'IDOSO', cor: 'var(--orange)' },
+      { id: 'bpc_d', t: 'BPC — DEF', test: a => a.bpc_tipo === 'DEF', cor: 'var(--blue)' },
+      { id: 'bpc_i', t: 'BPC — Idoso', test: a => a.bpc_tipo === 'IDOSO', cor: 'var(--cyan)' }
     ] : [];
     rpAt = at; rpGrupos = grupos.concat(gruposGen, gruposBpc);
     const kpisBpc = gruposBpc.map(g => { const n = at.filter(g.test).length; return rpKpi(g.t, n, pct(n, at.length) + ' do total', g.cor, g.id); }).join('');
@@ -3651,7 +3651,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     try {
       const [at, vs, semLista, exc] = await Promise.all([
         rpBuscar(() => { let q = sbClient.from('atendimentos')
-          .select('id, data_atendimento, motivo, submotivo' + (generoOk ? ', genero' : '') + (bpcOk ? ', bpc' : '') + ', cras:cras_origem_id(nome), ents:atendimento_entrevistadores(func:funcionario_id(nome))')
+          .select('id, data_atendimento, motivo, submotivo' + (generoOk ? ', genero' : '') + (bpcOk ? ', bpc_tipo' : '') + ', cras:cras_origem_id(nome), ents:atendimento_entrevistadores(func:funcionario_id(nome))')
           .gte('data_atendimento', de).lte('data_atendimento', ate).or(FILTRO_DATA_POSSIVEL).lte('data_atendimento', hoje()).order('data_atendimento').order('id');
           return escoparAt(cras ? q.in('cras_origem_id', cras) : q); }),
         rpBuscar(() => { let q = sbClient.from('visitas_domiciliares')
@@ -3718,9 +3718,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   function rpSecAtendimentos(at, meta){
     const rotulo = (a) => (a.motivo || '') + (a.motivo === 'ED N localizada' && a.submotivo ? ' - ' + a.submotivo : '');
-    const ehBpc = (a) => a.bpc === 'DEF' || a.bpc === 'IDOSO' || a.bpc === true || /bpc/i.test((a.motivo || '') + ' ' + (a.submotivo || ''));
-    const bpcTxt = (a) => a.bpc === 'DEF' ? 'DEF' : a.bpc === 'IDOSO' ? 'IDOSO' : (ehBpc(a) ? 'SIM' : 'NÃO');
-    const nDef = at.filter(a => a.bpc === 'DEF').length, nIdo = at.filter(a => a.bpc === 'IDOSO').length;
+    const ehBpc = (a) => a.bpc_tipo === 'DEF' || a.bpc_tipo === 'IDOSO' || a.bpc === true || /bpc/i.test((a.motivo || '') + ' ' + (a.submotivo || ''));
+    const bpcTxt = (a) => a.bpc_tipo === 'DEF' ? 'DEF' : a.bpc_tipo === 'IDOSO' ? 'IDOSO' : (ehBpc(a) ? 'SIM' : 'NÃO');
+    const nDef = at.filter(a => a.bpc_tipo === 'DEF').length, nIdo = at.filter(a => a.bpc_tipo === 'IDOSO').length;
     const nBpc = at.filter(ehBpc).length;
     const resumo = rpCont(at, a => rotulo(a) || 'Sem motivo');
     const linhas = at.map(a => `<tr>
@@ -4615,14 +4615,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   el('atGenero').addEventListener('change', (e) => {   // marca só uma opção por vez; clicar de novo desmarca
     if (e.target.checked) el('atGenero').querySelectorAll('input').forEach(i => { if (i !== e.target) i.checked = false; });
   });
-  // ---- BPC do atendido (DEF / IDOSO; opcional). Coluna "bpc" em supabase/sql/2026-10-bpc-atendimentos.sql ----
+  // ---- BPC do atendido (DEF / IDOSO; opcional). Coluna "bpc_tipo" (a coluna "bpc" antiga é booleana e não é usada aqui) em supabase/sql/2026-10-bpc-tipo-atendimentos.sql ----
   var bpcOk = null;   // var de propósito: limparAtendimento() roda no carregamento, antes desta linha
   async function bpcVerificar(){
     if (bpcOk !== null && bpcOk !== undefined) return bpcOk;
     try {
-      const r = await sbClient.from('atendimentos').select('bpc').limit(1);
+      const r = await sbClient.from('atendimentos').select('bpc_tipo').limit(1);
       if (!r.error) bpcOk = true;
-      else if (/bpc/i.test(r.error.message || '') || r.error.code === '42703' || r.error.code === 'PGRST204') bpcOk = false;
+      else if (/bpc_tipo/i.test(r.error.message || '') || r.error.code === '42703' || r.error.code === 'PGRST204') bpcOk = false;
       else return false;
     } catch (_) { return false; }
     bpcAplicarUI();
@@ -4632,7 +4632,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const box = el('atBpc'), hint = el('atBpcHint'); if (!box) return;
     box.querySelectorAll('input').forEach(i => { i.disabled = bpcOk === false; });
     hint.style.display = bpcOk === false ? '' : 'none';
-    hint.textContent = bpcOk === false ? 'Ainda não ativado: falta criar a coluna "bpc" no banco (veja o arquivo SQL entregue junto).' : '';
+    hint.textContent = bpcOk === false ? 'Ainda não ativado: falta criar a coluna "bpc_tipo" no banco (veja o arquivo SQL entregue junto).' : '';
   }
   const bpcValor = () => { const c = el('atBpc').querySelector('input:checked'); return c ? c.value : null; };
   function bpcDefinir(v){ el('atBpc').querySelectorAll('input').forEach(i => { i.checked = (i.value === v); }); }
@@ -5149,7 +5149,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     e.preventDefault();
     await generoVerificar(); await nascVerificar(); await bpcVerificar();
     const { data, error } = await sbClient.from('atendimentos')
-      .select('id, data_atendimento, nome_atendido, cpf_atendido, cras_origem_id, motivo, submotivo' + (generoOk ? ', genero' : '') + (bpcOk ? ', bpc' : '') + (nascOk ? ', data_nascimento' : '') + ', atendimento_entrevistadores(funcionario_id)')
+      .select('id, data_atendimento, nome_atendido, cpf_atendido, cras_origem_id, motivo, submotivo' + (generoOk ? ', genero' : '') + (bpcOk ? ', bpc_tipo' : '') + (nascOk ? ', data_nascimento' : '') + ', atendimento_entrevistadores(funcionario_id)')
       .eq('id', a.dataset.id).single();
     if (error || !data){ showToast('Não foi possível carregar o atendimento'); return; }
     const garantir = (sel, v) => { if (v && ![...sel.options].some(o => o.value === v)) sel.add(new Option(v, v)); sel.value = v || ''; };
@@ -5157,7 +5157,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     el('atNome').value = data.nome_atendido || '';
     el('atCpf').value = data.cpf_atendido || ''; atCpfAtualizar();
     el('atCras').value = data.cras_origem_id || '';
-    generoDefinir(data.genero || null); bpcDefinir(data.bpc || null);
+    generoDefinir(data.genero || null); bpcDefinir(data.bpc_tipo || null);
     el('atNasc').value = data.data_nascimento || ''; nascAtualizar();
     garantir(el('atMotivo'), data.motivo);
     el('atMotivo').dispatchEvent(new Event('change'));
