@@ -770,6 +770,18 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .vs-f-chip.urg:has(input:checked){ background:#FEF2F2; border-color:#FCA5A5; color:#B91C1C; font-weight:600; }
   .vs-f-chip.reag:has(input:checked){ background:#FFF7ED; border-color:#FDBA74; color:#C2410C; font-weight:600; }
   .vs-filtros-rodape .btn-ghost:disabled{ opacity:.45; cursor:default; }
+
+  /* Barra de CRAS (filtro rápido) */
+  .vs-cras-bar{ margin-top:12px; }
+  .vs-cras-bar .vs-cras-tit{ font-size:12px; font-weight:600; color:var(--muted,#64748B); margin-bottom:6px; }
+  .vs-cras-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+  .vs-cras-chip{ display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border:1px solid var(--line); border-radius:999px; background:var(--card); color:var(--ink); font-size:13px; cursor:pointer; font-family:inherit; }
+  .vs-cras-chip:hover{ border-color:#3B4FCB; }
+  .vs-cras-chip .n{ font-size:11px; font-weight:700; padding:1px 7px; border-radius:9px; background:rgba(100,116,139,.15); }
+  .vs-cras-chip.zero{ opacity:.55; }
+  .vs-cras-chip.ativo{ background:#3B4FCB; border-color:#3B4FCB; color:#fff; font-weight:600; opacity:1; }
+  .vs-cras-chip.ativo .n{ background:rgba(255,255,255,.25); color:#fff; }
+  .vs-cras-chip:disabled{ cursor:wait; }
   .vs-mais{ display:flex; justify-content:center; margin-top:12px; }
   @media (max-width:900px){
     .vs-filtros-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
@@ -2158,6 +2170,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
             <div class="field"><label>Status</label><select id="vfStatus"></select></div>
             <div class="field vs-f-toggle"><label>&nbsp;</label><button type="button" class="btn-ghost" id="vfMaisBtn" aria-expanded="false">Mais filtros<span class="vs-f-badge" id="vfBadge" style="display:none"></span></button></div>
           </div>
+          <div class="vs-cras-bar">
+            <div class="vs-cras-tit">CRAS — clique para ver todas as pessoas de um CRAS e depois use o campo Buscar</div>
+            <div class="vs-cras-chips" id="vfCrasChips" role="group" aria-label="Filtrar por CRAS"></div>
+          </div>
           <div class="vs-filtros-grid" id="vfAvancados" style="display:none;margin-top:12px">
             <div class="field"><label>Data de</label><input type="date" id="vfDe"></div>
             <div class="field"><label>Data até</label><input type="date" id="vfAte"></div>
@@ -2496,6 +2512,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   const veTodosCras = () => !!currentFuncionario && ['adm', 'coordenador'].includes(currentFuncionario.role);
   const escoparAt = (q) => veTodosCras() ? q : q.eq('cras_origem_id', currentFuncionario ? currentFuncionario.cras_id : null);
   const escoparVs = (q) => veTodosCras() ? q : q.eq('cras_id', currentFuncionario ? currentFuncionario.cras_id : null);
+  // Aba "Últimas entrevistas": TODOS os perfis (atendente, coordenador, adm) veem as entrevistas de TODOS os CRAS.
+  const escoparVsLista = (q) => q;
+  // Agenda/calendário/resumo do dia continuam só com a unidade do atendente (a lista acima não afeta eles).
+  const vsMinhaUnidade = (arr) => veTodosCras() ? (arr || []) : (arr || []).filter(v => currentFuncionario && String(v.cras_id) === String(currentFuncionario.cras_id));
   let familiasCache = [];          // [{ id, nome_responsavel }]
   let mapaCrasFluxo = {};          // { [cras_id]: nome } — usado pra traduzir ids no comparador de edições
   let mapaFuncFluxo = {};          // { [funcionario_id]: nome }
@@ -3236,7 +3256,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('pgRsAtendTxt').textContent = plural(nAt, 'atendimento hoje', 'atendimentos hoje');
 
     // Visitas de hoje
-    const dia = (Array.isArray(vsTabelaCache) ? vsTabelaCache : [])
+    const dia = vsMinhaUnidade(Array.isArray(vsTabelaCache) ? vsTabelaCache : [])
       .filter(v => String(v.data_agendada || '').slice(0, 10) === hojeStr);
     const restantes = dia.filter(v => VS_ST_ABERTO.includes(v.status));
     const urgentes = restantes.filter(v => v.urgente);
@@ -4106,7 +4126,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
     // Somente as visitas agendadas para o dia de hoje (mesma fonte da aba Visitas domiciliares)
     const hojeStr = hoje();
-    const doDia = vsTabelaCache
+    const doDia = vsMinhaUnidade(vsTabelaCache)
       .filter(v => String(v.data_agendada || '').slice(0, 10) === hojeStr)
       .sort((a, b) => (a.hora_prevista || '99:99').localeCompare(b.hora_prevista || '99:99'));
 
@@ -5984,7 +6004,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       document.getElementById('vfUrgente').checked || document.getElementById('vfReag').checked || document.getElementById('vfSemData').checked;
   }
 
-  function vsFiltrarVisitas(lista){
+  function vsFiltrarVisitas(lista, ignorarCras){
     const g = (id) => document.getElementById(id).value;
     const busca = vsNorm(g('vfBusca').trim());
     const digitos = g('vfBusca').replace(/\D/g, '');
@@ -6001,7 +6021,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       const d = String(v.data_agendada || '').slice(0, 10);
       if (de && d < de) return false;
       if (ate && d > ate) return false;
-      if (cras && String(v.cras_id) !== cras) return false;
+      if (!ignorarCras && cras && String(v.cras_id) !== cras) return false;
       if (motivo && v.motivo !== motivo) return false;
       if (statusF && (v.status || 'agendada') !== statusF) return false;
       if (entrev && !(v.entrevistadores || []).map(String).includes(entrev)) return false;
@@ -6070,7 +6090,65 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       document.getElementById('vsMaisBtn').textContent = `Ver mais (${filtradas.length - pagina.length} restantes)`;
     }
     document.getElementById('vfLimpar').disabled = !filtrando;
+    vsRenderCrasChips();
   }
+
+  // ---- Barra de CRAS: todos os CRAS sempre visíveis, com contagem; clicar filtra (e busca no banco inteiro) ----
+  let vsCrasCarregando = false;
+  function vsRenderCrasChips(){
+    const box = document.getElementById('vfCrasChips'), sel = document.getElementById('vfCras');
+    if (!box || !sel) return;
+    const opcoes = [...sel.options].filter(o => o.value);
+    const base = vsFiltrarVisitas(vsTabelaCache || [], true);
+    const cont = {};
+    base.forEach(v => { const k = String(v.cras_id); cont[k] = (cont[k] || 0) + 1; });
+    const atual = sel.value;
+    const chip = (valor, texto, n) => `<button type="button" class="vs-cras-chip${valor === atual ? ' ativo' : ''}${n === 0 ? ' zero' : ''}" data-cras="${escapeHtml(valor)}" aria-pressed="${valor === atual}"${vsCrasCarregando ? ' disabled' : ''}>${escapeHtml(texto)}<span class="n">${n}</span></button>`;
+    box.innerHTML = chip('', 'Todos os CRAS', base.length) + opcoes.map(o => chip(o.value, o.textContent, cont[o.value] || 0)).join('');
+  }
+
+  // Traz do banco TODAS as entrevistas do CRAS escolhido (sem limite de data) e junta ao que já está na tela
+  async function vsCarregarTodasDoCras(crasId){
+    if (!crasId) return;
+    vsCrasCarregando = true; vsRenderCrasChips();
+    try {
+      let novos = [];
+      for (let i = 0; i < 30; i++){
+        const r = await escoparVsLista(sbClient.from('visitas_domiciliares').select('*, cras:cras_id(nome)'))
+          .eq('cras_id', crasId)
+          .order('data_agendada', { ascending: false, nullsFirst: false }).order('id')
+          .range(i * 1000, i * 1000 + 999);
+        if (r.error) throw r.error;
+        novos = novos.concat(r.data || []);
+        if ((r.data || []).length < 1000) break;
+      }
+      const ids = new Set((vsTabelaCache || []).map(v => String(v.id)));
+      const extras = novos.filter(v => !ids.has(String(v.id)));
+      extras.forEach(v => {
+        v.entrevistadores_nomes = (v.entrevistadores || []).map(id => (typeof mapaFuncFluxo !== 'undefined' ? mapaFuncFluxo[id] : null)).filter(Boolean);
+        vsTabelaCache.push(v);
+      });
+      if (extras.length) vsTabelaCache.sort((a, b) => String(b.data_agendada || '9999').localeCompare(String(a.data_agendada || '9999')));
+    } catch (e) {
+      console.log('Não foi possível carregar o CRAS:', e.message);
+      if (typeof showToast === 'function') showToast('❌ Não foi possível carregar todas as entrevistas desse CRAS');
+    } finally {
+      vsCrasCarregando = false;
+      vsRenderTabela();
+    }
+  }
+
+  (function ligarChipsCras(){
+    const box = document.getElementById('vfCrasChips'); if (!box) return;
+    box.addEventListener('click', (e) => {
+      const b = e.target.closest('.vs-cras-chip'); if (!b || vsCrasCarregando) return;
+      const sel = document.getElementById('vfCras');
+      const v = b.dataset.cras;
+      sel.value = (sel.value === v) ? '' : v;      // clicar de novo no CRAS ativo desmarca
+      sel.dispatchEvent(new Event('change', { bubbles: true }));   // atualiza lista e badge de filtros
+      if (sel.value) vsCarregarTodasDoCras(sel.value);
+    });
+  })();
 
   function vsAplicarFiltros(){ vsLimiteTabela = VS_PAGINA_TABELA; vsRenderTabela(); }
 
@@ -6102,7 +6180,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         partes.push(`cpf.ilike.%${dig}%`);
         if (dig.length === 11) partes.push(`cpf.ilike.%${dig.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}%`);
       }
-      const { data, error } = await escoparVs(sbClient.from('visitas_domiciliares')
+      const { data, error } = await escoparVsLista(sbClient.from('visitas_domiciliares')
           .select('*, cras:cras_id(nome)'))
         .or(partes.join(','))
         .order('data_agendada', { ascending: false, nullsFirst: false })
@@ -6609,7 +6687,7 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
   var vsAssinatura = null;
   async function vsChecarMudanca(){
     try {
-      const { data, count, error } = await escoparVs(sbClient.from('visitas_domiciliares')
+      const { data, count, error } = await escoparVsLista(sbClient.from('visitas_domiciliares')
         .select('updated_at', { count: 'exact' }))
         .order('updated_at', { ascending: false, nullsFirst: false }).limit(1);
       if (error) return true;
@@ -6645,7 +6723,7 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
         // Modo "Todos": traz tudo o que há no banco (em páginas de 1000, até 30 mil registros)
         data = [];
         for (let i = 0; i < 30; i++){
-          const r = await escoparVs(sbClient.from('visitas_domiciliares').select('*, cras:cras_id(nome)'))
+          const r = await escoparVsLista(sbClient.from('visitas_domiciliares').select('*, cras:cras_id(nome)'))
             .order('data_agendada', { ascending: false, nullsFirst: false }).order('id')
             .range(i * 1000, i * 1000 + 999);
           if (r.error){ error = r.error; break; }
@@ -6653,7 +6731,7 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
           if ((r.data || []).length < 1000) break;
         }
       } else {
-        ({ data, error } = await escoparVs(sbClient
+        ({ data, error } = await escoparVsLista(sbClient
           .from('visitas_domiciliares')
           .select('*, cras:cras_id(nome)'))
           .or(`data_agendada.gte.${desde},data_agendada.is.null`)
@@ -6673,18 +6751,20 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
         });
 
         if (typeof vsDatasComVisita !== 'undefined') {
-          vsDatasComVisita = new Set(data.map(v => v.data_agendada));
-          vsDatasUrgentes = new Set(data.filter(v => v.urgente).map(v => v.data_agendada));
+          const dataAg = vsMinhaUnidade(data);
+          vsDatasComVisita = new Set(dataAg.map(v => v.data_agendada));
+          vsDatasUrgentes = new Set(dataAg.filter(v => v.urgente).map(v => v.data_agendada));
           const histDe = (v) => Array.isArray(v.historico_reagendamentos) ? v.historico_reagendamentos : [];
-          vsDatasReagendadas = new Set(data.filter(v => histDe(v).length).map(v => v.data_agendada));
-          vsDatasOrigemReag = new Set(data.flatMap(v => histDe(v).map(h => h.de_data)).filter(Boolean));
+          vsDatasReagendadas = new Set(dataAg.filter(v => histDe(v).length).map(v => v.data_agendada));
+          vsDatasOrigemReag = new Set(dataAg.flatMap(v => histDe(v).map(h => h.de_data)).filter(Boolean));
           if (typeof renderVsCalendar === 'function') renderVsCalendar();
         }
-        if (typeof vsVisitasCache !== 'undefined') vsVisitasCache = data.filter(v => v.data_agendada);
+        if (typeof vsVisitasCache !== 'undefined') vsVisitasCache = vsMinhaUnidade(data).filter(v => v.data_agendada);
         if (typeof renderVsMiniList === 'function') renderVsMiniList();
         vsTabelaCache = data;
         vsPopularFiltros(data);
         vsRenderTabela();
+        { const sc = document.getElementById('vfCras'); if (sc && sc.value && !vsTodos) vsCarregarTodasDoCras(sc.value); }
         if (typeof cadCarregarMapa === 'function') cadCarregarMapa().then(() => vsRenderTabela());
         renderPgProximasVisitas();
         renderPgResumoDia();
