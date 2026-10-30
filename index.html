@@ -458,6 +458,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .gen-opt input:checked + span{ border-color:var(--blue); background:rgba(37,99,235,.10); color:var(--blue); font-weight:600; }
   .gen-opt input:focus-visible + span{ outline:2px solid var(--blue); outline-offset:2px; }
   .gen-opt input:disabled + span{ opacity:.5; cursor:not-allowed; }
+  .bpc-opts .gen-opt span{ border-radius:999px; padding:9px 18px; font-weight:600; color:var(--muted); background:#fff; }
+  .bpc-opts .gen-opt input:checked + span{ color:var(--blue); }
   .pg-atend{ cursor:pointer; }
   .pg-atend:hover h5{ color:var(--blue); }
   .pg-atend h5, .pg-atend p{ margin:0; }
@@ -1949,6 +1951,13 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           </div>
           <small class="hint" id="atGeneroHint" style="display:none;color:#B45309"></small>
         </div>
+        <div class="field"><label>BPC <small style="font-weight:400;color:var(--muted)">(marque se for o caso)</small></label>
+          <div class="gen-opts bpc-opts" id="atBpc" role="group" aria-label="BPC do atendido">
+            <label class="gen-opt" title="BPC - Pessoa com deficiência"><input type="checkbox" value="DEF"><span>DEF</span></label>
+            <label class="gen-opt" title="BPC - Idoso"><input type="checkbox" value="IDOSO"><span>Idoso</span></label>
+          </div>
+          <small class="hint" id="atBpcHint" style="display:none;color:#B45309"></small>
+        </div>
         <div class="field"><label>CRAS *</label><select id="atCras"></select></div>
         <div class="field"><label>Motivo * <small style="font-weight:400;color:var(--muted)">(digite o número para localizar)</small></label><select id="atMotivo"></select></div>
         <div class="field" id="atSubBox" style="display:none"><label>Submotivo</label><select id="atSub"></select><input type="text" id="atSubOutros" maxlength="120" placeholder="Escreva o que aconteceu" style="display:none;margin-top:8px"></div>
@@ -2649,6 +2658,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     mapaFuncFluxo = Object.fromEntries((f.data || []).map(x => [x.id, x.nome]));
     if (currentFuncionario && currentFuncionario.cras_id) document.getElementById('atCras').value = currentFuncionario.cras_id;
     if (currentFuncionario) [...document.getElementById('atEntrev').options].forEach(o => o.selected = o.value === currentFuncionario.id);
+    if (currentFuncionario && currentFuncionario.role === 'adm') document.getElementById('atEntrevLabel').textContent = 'Entrevistador(es) (opcional: se não marcar, fica o seu nome)';
     // "Entrevista em Domicílio" costuma ser o CRAS padrão da tela de ED
     const crasED = (c.data || []).find(x => { const n = normalizeText(x.nome); return n.includes('entrevista em domic') || /(^|\s)smas ed$/.test(n.trim()); });
     let crasLembrado = ''; try { crasLembrado = localStorage.getItem('vsUltimoCras') || ''; } catch (e) {}
@@ -2714,7 +2724,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         appShell.style.display = 'flex';          // tela abre já; os dados chegam em paralelo
         popularSelectCras();                       // dispara listas, visitas e relatório
         if (window.Outbox) Outbox.iniciar();       // reenvia o que ficou guardado
-        generoVerificar(); nascVerificar();
+        generoVerificar(); nascVerificar(); bpcVerificar();
         carregarFamilias();                        // segundo plano: não segura mais a tela
         iniciarPresenca();                         // aparece como online para a coordenação
         [3000, 9000].forEach(ms => setTimeout(desenharSino, ms));   // selo do sininho (as visitas chegam depois)
@@ -2728,7 +2738,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           if (pf){
             usuarioCarregado = sv.user.id; modoOffline = true; currentFuncionario = pf;
             aplicarFuncionarioNaTela(pf); loginScreen.style.display = 'none'; appShell.style.display = 'flex';
-            popularSelectCras(); if (window.Outbox) Outbox.iniciar(); carregarFamilias(); generoVerificar(); nascVerificar();
+            popularSelectCras(); if (window.Outbox) Outbox.iniciar(); carregarFamilias(); generoVerificar(); nascVerificar(); bpcVerificar();
             showToast('📴 Modo offline: o que você salvar será enviado quando a internet voltar', 5000);
             return;
           }
@@ -3063,7 +3073,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     el('atEntrev').closest('.field').style.display = '';   // volta a mostrar o Entrevistador (some só ao atendente editar)
     el('atDupBox').style.display = 'none'; atEndEsconder();
     el('saveAtendimentoBtn').textContent = 'Salvar atendimento'; el('atLimparBtn').textContent = 'Limpar';
-    el('atNome').value = ''; el('atCpf').value = ''; atCpfAtualizar(); generoDefinir(null); el('atNasc').value = ''; nascAtualizar(); el('atData').value = hoje();
+    el('atNome').value = ''; el('atCpf').value = ''; atCpfAtualizar(); generoDefinir(null); bpcDefinir(null); el('atNasc').value = ''; nascAtualizar(); el('atData').value = hoje();
     el('atMotivo').value = ''; el('atSub').value = ''; subMostrarOutros(); el('atSubBox').style.display = 'none';
     // atendente: ao editar, outros entrevistadores do registro são adicionados à lista; ao cancelar/limpar,
     // a lista volta a ter somente o usuário logado
@@ -3084,7 +3094,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const g = [...el('atGenero').querySelectorAll('input')].find(i => i.checked);
     return { data: el('atData').value, nome: el('atNome').value, cpf: el('atCpf').value, cras: el('atCras').value,
       motivo: el('atMotivo').value, sub: el('atSub').value, subOutros: el('atSubOutros').value, nasc: el('atNasc').value,
-      genero: g ? g.value : null, entrevs: [...el('atEntrev').selectedOptions].map(o => o.value) };
+      genero: g ? g.value : null, bpc: bpcValor(), entrevs: [...el('atEntrev').selectedOptions].map(o => o.value) };
   }
   function atRestaurar(sn){
     if (el('atNome').value.trim() || el('atCpf').value.trim()) return;   // já começou outro registro: não sobrescreve
@@ -3092,7 +3102,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     el('atCras').value = sn.cras;
     el('atMotivo').value = sn.motivo; el('atMotivo').dispatchEvent(new Event('change'));
     el('atSub').value = sn.sub; subMostrarOutros(); el('atSubOutros').value = sn.subOutros;
-    el('atNasc').value = sn.nasc; nascAtualizar(); generoDefinir(sn.genero);
+    el('atNasc').value = sn.nasc; nascAtualizar(); generoDefinir(sn.genero); bpcDefinir(sn.bpc);
     sn.entrevs.forEach(id => { if (![...el('atEntrev').options].some(o => o.value === id)) el('atEntrev').add(new Option((mapaFuncFluxo && mapaFuncFluxo[id]) || 'Atendente', id)); });
     [...el('atEntrev').options].forEach(o => { o.selected = sn.entrevs.includes(o.value); });
     ajustarCaixaEntrev();
@@ -3105,6 +3115,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     // atendente editando: o campo Entrevistador fica oculto e os entrevistadores do registro são mantidos como estão
     const atendenteEditando = !!editandoId && !!currentFuncionario && currentFuncionario.role === 'atendente';
     const entrevs = atendenteEditando ? editandoEntrevs.slice() : [...el('atEntrev').selectedOptions].map(o => o.value);
+    // administrador: se não marcar ninguém, o próprio nome dele fica como entrevistador
+    const admSemEntrev = !!currentFuncionario && currentFuncionario.role === 'adm' && !entrevs.length;
+    if (admSemEntrev) entrevs.push(currentFuncionario.id);
     const faltando = [];
     if (!el('atData').value) faltando.push('data');
     if (!nome) faltando.push('nome');
@@ -3124,7 +3137,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const dups = await Promise.race([verificarCpfDuplicado(), new Promise(r => setTimeout(() => r([]), 4000))]);
     if (dups.length && !confirm(`Já existe(m) ${dups.length} atendimento(s) com este CPF.\n\nSalvar mesmo assim, em duplicidade?`)) return;
     if (el('atSub').value === 'Outros' && !el('atSubOutros').value.trim()){ showToast('⚠️ Escreva o que aconteceu em "Outros"'); el('atSubOutros').focus(); return; }
-    await generoVerificar(); await nascVerificar();
+    await generoVerificar(); await nascVerificar(); await bpcVerificar();
     btn.disabled = true; btn.textContent = 'Salvando...';
     const atSnap = atSnapshot(); let atLimpou = false;
     try {
@@ -3133,6 +3146,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           data_atendimento: el('atData').value, nome_atendido: nome, cpf_atendido: cpf,
           cras_origem_id: el('atCras').value, motivo: el('atMotivo').value, submotivo: subValor(),
           ...(generoOk ? { genero: generoValor() } : {}),
+          ...(bpcOk ? { bpc: bpcValor() } : {}),
           ...(nascOk ? { data_nascimento: el('atNasc').value || null } : {})
         }).eq('id', editandoId).select('id');
         if (eu) throw eu;
@@ -3160,6 +3174,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           cras_origem_id: el('atCras').value, motivo: el('atMotivo').value,
           submotivo: subValor(), profissional_id: currentFuncionario.id,
           ...(generoOk && generoValor() ? { genero: generoValor() } : {}),
+          ...(bpcOk && bpcValor() ? { bpc: bpcValor() } : {}),
           ...(nascOk && el('atNasc').value ? { data_nascimento: el('atNasc').value } : {})
         },
         ents: entrevs,
@@ -3392,7 +3407,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       ...(at.some(a => a.genero === 'O') ? [{ id: 'gen_o', t: 'Outros (O) — registros antigos', test: a => a.genero === 'O', cor: 'var(--cyan)' }] : []),
       { id: 'gen_n', t: 'Gênero não informado', test: a => !a.genero, cor: 'var(--muted)' }
     ] : [];
-    rpAt = at; rpGrupos = grupos.concat(gruposGen);
+    // BPC (opcional): só aparece quando a coluna existe no banco
+    const gruposBpc = bpcOk ? [
+      { id: 'bpc_t', t: 'BPC (total)', test: a => a.bpc === 'DEF' || a.bpc === 'IDOSO', cor: 'var(--orange)' },
+      { id: 'bpc_d', t: 'BPC — DEF', test: a => a.bpc === 'DEF', cor: 'var(--blue)' },
+      { id: 'bpc_i', t: 'BPC — Idoso', test: a => a.bpc === 'IDOSO', cor: 'var(--cyan)' }
+    ] : [];
+    rpAt = at; rpGrupos = grupos.concat(gruposGen, gruposBpc);
+    const kpisBpc = gruposBpc.map(g => { const n = at.filter(g.test).length; return rpKpi(g.t, n, pct(n, at.length) + ' do total', g.cor, g.id); }).join('');
     const kpisGen = gruposGen.map(g => { const n = at.filter(g.test).length; return rpKpi(g.t, n, pct(n, at.length) + ' do total', g.cor, g.id); }).join('');
     const kpisAt = grupos.map(g => {
       const n = at.filter(g.test).length;
@@ -3415,6 +3437,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         ${excKpi(excAt)}
       </div>
       ${kpisGen ? `<div class="rp-pop-tit" style="margin:16px 0 8px">Gênero dos atendidos <span style="font-weight:400;color:var(--muted)">(clique para detalhar)</span></div><div class="rp-kpis">${kpisGen}</div>` : ''}
+      ${kpisBpc ? `<div class="rp-pop-tit" style="margin:16px 0 8px">BPC <span style="font-weight:400;color:var(--muted)">(clique para detalhar)</span></div><div class="rp-kpis">${kpisBpc}</div>` : ''}
       <div class="rp-cards">
         ${rpCard('Atendimentos por dia', dias.length ? `<div class="rp-cols">${dias.map(([d, n]) => `<div class="rp-col" title="${fmtData(d)}: ${n}"><i style="height:${n / Math.max(...dias.map(x => x[1])) * 100}%"></i>${d.slice(8, 10)}</div>`).join('')}</div>` : '<p class="hint" style="margin:0">Sem dados no período.</p>')}
         ${rpCard('Por motivo', rpBarras(rpCont(at, a => a.motivo || 'Sem motivo'), at.length, 'var(--blue)', k => `data-rpmot="${escapeHtml(k)}"`))}
@@ -3624,11 +3647,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     // null = sem filtro (todos); caso contrário, só os CRAS marcados
     const cras = (veTodosCras() && marcados.length && marcados.length < totalCras) ? marcados : null;
     box.innerHTML = skelKpis(8);
-    await generoVerificar();
+    await generoVerificar(); await bpcVerificar();
     try {
       const [at, vs, semLista, exc] = await Promise.all([
         rpBuscar(() => { let q = sbClient.from('atendimentos')
-          .select('id, data_atendimento, motivo, submotivo' + (generoOk ? ', genero' : '') + ', cras:cras_origem_id(nome), ents:atendimento_entrevistadores(func:funcionario_id(nome))')
+          .select('id, data_atendimento, motivo, submotivo' + (generoOk ? ', genero' : '') + (bpcOk ? ', bpc' : '') + ', cras:cras_origem_id(nome), ents:atendimento_entrevistadores(func:funcionario_id(nome))')
           .gte('data_atendimento', de).lte('data_atendimento', ate).or(FILTRO_DATA_POSSIVEL).lte('data_atendimento', hoje()).order('data_atendimento').order('id');
           return escoparAt(cras ? q.in('cras_origem_id', cras) : q); }),
         rpBuscar(() => { let q = sbClient.from('visitas_domiciliares')
@@ -3695,7 +3718,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   function rpSecAtendimentos(at, meta){
     const rotulo = (a) => (a.motivo || '') + (a.motivo === 'ED N localizada' && a.submotivo ? ' - ' + a.submotivo : '');
-    const ehBpc = (a) => a.bpc === true || /^(sim|s|true)$/i.test(String(a.bpc == null ? '' : a.bpc)) || /bpc/i.test((a.motivo || '') + ' ' + (a.submotivo || ''));
+    const ehBpc = (a) => a.bpc === 'DEF' || a.bpc === 'IDOSO' || a.bpc === true || /bpc/i.test((a.motivo || '') + ' ' + (a.submotivo || ''));
+    const bpcTxt = (a) => a.bpc === 'DEF' ? 'DEF' : a.bpc === 'IDOSO' ? 'IDOSO' : (ehBpc(a) ? 'SIM' : 'NÃO');
+    const nDef = at.filter(a => a.bpc === 'DEF').length, nIdo = at.filter(a => a.bpc === 'IDOSO').length;
     const nBpc = at.filter(ehBpc).length;
     const resumo = rpCont(at, a => rotulo(a) || 'Sem motivo');
     const linhas = at.map(a => `<tr>
@@ -3705,10 +3730,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <td>${escapeHtml(rotulo(a))}</td>
       <td>${escapeHtml((a.cras && a.cras.nome) || '')}</td>
       <td>${escapeHtml((a.ents || []).map(e => e.func && e.func.nome).filter(Boolean).join(' / '))}</td>
-      <td class="nw">${ehBpc(a) ? 'SIM' : 'NÃO'}</td></tr>`);
+      <td class="nw">${bpcTxt(a)}</td></tr>`);
     return `<section class="sec">
       <h1>Relatório de Atendimentos</h1>${meta}
-      <div class="kpis"><div class="kpi"><span>Total</span><b>${at.length}</b></div><div class="kpi"><span>BPC</span><b>${nBpc}</b></div></div>
+      <div class="kpis"><div class="kpi"><span>Total</span><b>${at.length}</b></div><div class="kpi"><span>BPC</span><b>${nBpc}</b></div><div class="kpi"><span>BPC DEF</span><b>${nDef}</b></div><div class="kpi"><span>BPC Idoso</span><b>${nIdo}</b></div></div>
       <h2>Resumo por Motivo</h2>
       ${resumo.length ? `<table class="resumo"><thead><tr><th>Motivo</th><th class="n">Total</th></tr></thead><tbody>${resumo.map(([k, n]) => `<tr><td>${escapeHtml(k)}</td><td class="n">${n}</td></tr>`).join('')}</tbody></table>` : '<p class="vazio">Sem atendimentos no período.</p>'}
       <h2>Atendimentos</h2>
@@ -4590,6 +4615,30 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   el('atGenero').addEventListener('change', (e) => {   // marca só uma opção por vez; clicar de novo desmarca
     if (e.target.checked) el('atGenero').querySelectorAll('input').forEach(i => { if (i !== e.target) i.checked = false; });
   });
+  // ---- BPC do atendido (DEF / IDOSO; opcional). Coluna "bpc" em supabase/sql/2026-10-bpc-atendimentos.sql ----
+  var bpcOk = null;   // var de propósito: limparAtendimento() roda no carregamento, antes desta linha
+  async function bpcVerificar(){
+    if (bpcOk !== null && bpcOk !== undefined) return bpcOk;
+    try {
+      const r = await sbClient.from('atendimentos').select('bpc').limit(1);
+      if (!r.error) bpcOk = true;
+      else if (/bpc/i.test(r.error.message || '') || r.error.code === '42703' || r.error.code === 'PGRST204') bpcOk = false;
+      else return false;
+    } catch (_) { return false; }
+    bpcAplicarUI();
+    return bpcOk;
+  }
+  function bpcAplicarUI(){
+    const box = el('atBpc'), hint = el('atBpcHint'); if (!box) return;
+    box.querySelectorAll('input').forEach(i => { i.disabled = bpcOk === false; });
+    hint.style.display = bpcOk === false ? '' : 'none';
+    hint.textContent = bpcOk === false ? 'Ainda não ativado: falta criar a coluna "bpc" no banco (veja o arquivo SQL entregue junto).' : '';
+  }
+  const bpcValor = () => { const c = el('atBpc').querySelector('input:checked'); return c ? c.value : null; };
+  function bpcDefinir(v){ el('atBpc').querySelectorAll('input').forEach(i => { i.checked = (i.value === v); }); }
+  el('atBpc').addEventListener('change', (e) => {   // só uma opção por vez; clicar de novo desmarca
+    if (e.target.checked) el('atBpc').querySelectorAll('input').forEach(i => { if (i !== e.target) i.checked = false; });
+  });
   // ---- Data de nascimento do atendido (coluna "data_nascimento"; sem a coluna no banco o campo fica desativado) ----
   var nascOk = null;   // var de propósito: limparAtendimento() roda no carregamento, antes desta linha
   async function nascVerificar(){
@@ -5098,9 +5147,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   async function editarAtendimento(e){
     const a = e.target.closest('.at-edit'); if (!a) return;
     e.preventDefault();
-    await generoVerificar(); await nascVerificar();
+    await generoVerificar(); await nascVerificar(); await bpcVerificar();
     const { data, error } = await sbClient.from('atendimentos')
-      .select('id, data_atendimento, nome_atendido, cpf_atendido, cras_origem_id, motivo, submotivo' + (generoOk ? ', genero' : '') + (nascOk ? ', data_nascimento' : '') + ', atendimento_entrevistadores(funcionario_id)')
+      .select('id, data_atendimento, nome_atendido, cpf_atendido, cras_origem_id, motivo, submotivo' + (generoOk ? ', genero' : '') + (bpcOk ? ', bpc' : '') + (nascOk ? ', data_nascimento' : '') + ', atendimento_entrevistadores(funcionario_id)')
       .eq('id', a.dataset.id).single();
     if (error || !data){ showToast('Não foi possível carregar o atendimento'); return; }
     const garantir = (sel, v) => { if (v && ![...sel.options].some(o => o.value === v)) sel.add(new Option(v, v)); sel.value = v || ''; };
@@ -5108,7 +5157,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     el('atNome').value = data.nome_atendido || '';
     el('atCpf').value = data.cpf_atendido || ''; atCpfAtualizar();
     el('atCras').value = data.cras_origem_id || '';
-    generoDefinir(data.genero || null);
+    generoDefinir(data.genero || null); bpcDefinir(data.bpc || null);
     el('atNasc').value = data.data_nascimento || ''; nascAtualizar();
     garantir(el('atMotivo'), data.motivo);
     el('atMotivo').dispatchEvent(new Event('change'));
