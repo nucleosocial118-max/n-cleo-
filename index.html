@@ -1599,6 +1599,84 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .vs-gaveta-head{ display:flex; align-items:center; justify-content:space-between; font-size:15px; color:var(--ink); }
   .vs-gaveta-head button{ width:32px; height:32px; border-radius:10px; border:1px solid var(--line); background:var(--card); color:var(--muted); font-size:18px; line-height:1; cursor:pointer; }
   .visita-left-col .mini-visits-list{ max-height:max(180px, calc(100vh - 520px)); }
+
+  /* ===== Calendário e visitas: POPUP grande (quase tela inteira) ===== */
+  .vs-gaveta-fundo{ background:rgba(14,27,51,.55); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); }
+  .visita-left-col{
+    top:3vh; bottom:3vh; left:50%; right:auto; width:min(1360px,96vw);
+    display:grid; grid-template-columns:minmax(320px,410px) minmax(0,1fr); grid-template-rows:auto minmax(0,1fr);
+    gap:14px 22px; padding:20px 24px 24px; overflow:hidden; border-radius:24px;
+    box-shadow:0 30px 80px rgba(14,27,51,.38);
+    transform:translate(-50%,14px) scale(.98); opacity:0;
+    transition:transform .25s ease, opacity .25s ease, visibility 0s linear .25s;
+  }
+  .vs-gaveta-aberta .visita-left-col{ transform:translate(-50%,0) scale(1); opacity:1; visibility:visible; transition:transform .25s ease, opacity .25s ease; }
+  .visita-left-col .vs-gaveta-head{ grid-column:1 / -1; align-items:flex-start; padding-bottom:12px; border-bottom:1px solid var(--line); }
+  .visita-left-col .vs-gaveta-head b{ font-size:21px; letter-spacing:.01em; }
+  .visita-left-col .vs-gaveta-head small{ display:block; margin-top:3px; font-size:12.5px; color:var(--muted); }
+  .visita-left-col .vs-gaveta-head button{ width:38px; height:38px; font-size:22px; }
+  .vs-modal-esq{ grid-column:1; grid-row:2; min-height:0; overflow-y:auto; padding-right:2px; }
+  .vs-modal-esq .calendar-card{ padding:20px 20px 22px; }
+  .vs-resumo{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:14px; }
+  .vs-resumo .rs{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:10px 8px; text-align:center; }
+  .vs-resumo .rs b{ display:block; font-size:24px; line-height:1.1; color:var(--ink); }
+  .vs-resumo .rs span{ font-size:11px; font-weight:600; color:var(--muted); }
+  .vs-resumo .rs.urg b{ color:#DC2626; }
+  .vs-resumo .rs.reag b{ color:#C2410C; }
+  .visita-left-col .mini-visits-card{ grid-column:2; grid-row:2; display:flex; flex-direction:column; min-height:0; overflow:hidden; }
+  .visita-left-col .mini-visits-card .section-head h4{ font-size:16px !important; }
+  .visita-left-col .mini-visits-list{
+    max-height:none; flex:1; min-height:0; overflow-y:auto; padding:2px 6px 2px 0;
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:12px; align-content:start;
+  }
+  .visita-left-col .mini-visits-list > .hint{ grid-column:1 / -1; }
+
+  /* card detalhado de cada visita */
+  .visita-left-col .mini-visit-item.mv-card{ background:var(--page-bg); border:1px solid var(--line); border-radius:14px; padding:13px 15px 14px; display:flex; flex-direction:column; gap:9px; transition:border-color .12s ease, box-shadow .12s ease, transform .12s ease; }
+  .visita-left-col .mini-visit-item.mv-card:hover{ background:var(--page-bg); border-color:var(--blue); box-shadow:0 8px 22px rgba(34,64,59,.14); transform:translateY(-1px); }
+  .visita-left-col .mini-visit-item.mv-card:hover .mini-visit-date{ color:var(--blue); }
+  .visita-left-col .mini-visit-item.mv-card:hover .mini-visit-name{ color:var(--ink); }
+  .visita-left-col .mini-visit-item.mv-card.urgente{ background:#FEF2F2; border-color:#FECACA; box-shadow:inset 4px 0 0 #DC2626; }
+  .visita-left-col .mini-visit-item.mv-card.urgente:hover{ background:#FEF2F2; border-color:#DC2626; }
+  .visita-left-col .mini-visit-item.mv-card.urgente .mini-visit-date{ color:#DC2626; }
+  .visita-left-col .mini-visit-item.mv-card.reag-origem{ background:#FFFBF5; border:1px dashed #FDBA74; }
+  .visita-left-col .mini-visit-item.mv-card.reag-origem:hover{ background:#FFFBF5; border-color:#F97316; }
+  .visita-left-col .mini-visit-item.mv-card.reag-origem .mini-visit-date{ color:#C2410C; }
+  body.dark .visita-left-col .mini-visit-item.mv-card.urgente,
+  body.dark .visita-left-col .mini-visit-item.mv-card.urgente:hover{ background:rgba(220,38,38,.16); border-color:#8A3A3A; }
+  body.dark .visita-left-col .mini-visit-item.mv-card.reag-origem,
+  body.dark .visita-left-col .mini-visit-item.mv-card.reag-origem:hover{ background:rgba(249,115,22,.12); border-color:#9A5A2A; }
+  .mv-topo{ display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+  .mv-topo .mini-visit-date{ font-size:12.5px; }
+  .mv-badges{ display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end; }
+  .mv-badges > span{ margin-top:0 !important; }
+  .mv-card .mini-visit-name{ font-size:15.5px; margin-top:0; line-height:1.25; }
+  .mv-motivo{ background:rgba(95,179,158,.14); border:1px solid rgba(95,179,158,.35); border-radius:10px; padding:7px 10px; }
+  .mv-motivo span{ display:block; font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+  .mv-motivo b{ display:block; margin-top:1px; font-size:13px; font-weight:600; color:var(--ink); line-height:1.3; }
+  .mv-campos{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 12px; }
+  .mv-campo{ min-width:0; }
+  .mv-campo.span2{ grid-column:1 / -1; }
+  .mv-campo span{ display:block; font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+  .mv-campo b{ display:block; margin-top:1px; font-size:12.5px; font-weight:600; color:var(--ink); word-break:break-word; }
+  .mv-obs{ font-size:12px; color:var(--muted); line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; border-top:1px dashed var(--line); padding-top:8px; }
+
+  .vs-mfiltros{ display:flex; flex-wrap:wrap; gap:10px 12px; align-items:flex-end; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid var(--line); }
+  .vs-mfiltros .vf-item{ display:flex; flex-direction:column; gap:3px; min-width:0; }
+  .vs-mfiltros .vf-item.vf-motivo{ flex:1 1 280px; }
+  .vs-mfiltros .vf-item span{ font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+  .vs-mfiltros select, .vs-mfiltros input[type=date]{ font:inherit; font-size:13px; color:var(--ink); background:var(--card); border:1px solid var(--campo-borda,var(--line)); border-radius:10px; padding:8px 10px; min-height:38px; box-sizing:border-box; width:100%; }
+  .vs-mfiltros input[type=date]{ width:auto; }
+  .vs-mfiltros .vf-limpar{ min-height:38px; padding:0 14px; border-radius:10px; border:1px solid var(--line); background:var(--card); color:var(--ink); font:inherit; font-size:13px; font-weight:600; cursor:pointer; }
+  .vs-mfiltros .vf-limpar:hover{ background:var(--page-bg); border-color:var(--blue); }
+
+  @media (max-width:900px){
+    .visita-left-col{ top:0; bottom:0; left:0; width:100vw; border-radius:0; display:flex; flex-direction:column; gap:14px; overflow-y:auto; padding:16px 14px 24px; transform:translateY(16px); }
+    .vs-gaveta-aberta .visita-left-col{ transform:none; }
+    .vs-modal-esq{ overflow:visible; }
+    .visita-left-col .mini-visits-card{ overflow:visible; }
+    .visita-left-col .mini-visits-list{ overflow:visible; grid-template-columns:minmax(0,1fr); }
+  }
   .topbar .icon-btn, .topbar .avatar{ width:34px; height:34px; }
   .sidebar{ background:var(--navy); color:#C9DAD5; border-radius:0 30px 30px 0; padding:24px 16px; }
   .side-label{ color:var(--gold); font-weight:600; letter-spacing:.08em; }
@@ -2079,7 +2157,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <div class="vs-gaveta-fundo" id="vsGavetaFundo"></div>
       <div class="visita-two-col">
         <div class="visita-left-col" id="vsGaveta">
-          <div class="vs-gaveta-head"><b>Calendário e visitas</b><button type="button" id="vsCalFechar" aria-label="Fechar">&times;</button></div>
+          <div class="vs-gaveta-head"><div><b>Calendário e visitas</b><small>Clique em um dia para ver quem foi agendado, o motivo, CPF e endereço</small></div><button type="button" id="vsCalFechar" aria-label="Fechar">&times;</button></div>
+          <div class="vs-modal-esq">
           <div class="calendar-card">
             <div class="cal-head">
               <button class="cal-nav-btn" id="vsCalPrev" type="button">&lsaquo;</button>
@@ -2097,11 +2176,19 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
               <span><i class="lg-oco"></i>Data anterior</span>
             </div>
           </div>
+          <div class="vs-resumo" id="vsResumo"></div>
+          </div>
 
           <div class="calendar-card mini-visits-card">
             <div class="section-head" style="margin-bottom:10px">
               <h4 id="vsMiniTitulo" style="margin:0;font-size:13.5px">Visitas domiciliares</h4>
               <button type="button" id="vsMiniLimparFiltro" class="mini-visits-clear" style="display:none">ver todas</button>
+            </div>
+            <div class="vs-mfiltros" id="vsMiniFiltros">
+              <label class="vf-item vf-motivo"><span>Motivo</span><select id="vsfMotivo"><option value="">Todos os motivos</option></select></label>
+              <label class="vf-item"><span>De</span><input type="date" id="vsfDe"></label>
+              <label class="vf-item"><span>Até</span><input type="date" id="vsfAte"></label>
+              <button type="button" class="vf-limpar" id="vsfLimpar" style="display:none">Limpar filtros</button>
             </div>
             <div id="vsMiniList" class="mini-visits-list">
               <span class="skel skel-linha" style="width:92%"></span><span class="skel skel-linha" style="width:78%"></span><span class="skel skel-linha" style="width:86%"></span><span class="skel skel-linha" style="width:64%"></span>
@@ -2957,6 +3044,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         if (typeof vsAtualizarDataInfo === 'function') vsAtualizarDataInfo();
         // Se o dia clicado tem visita agendada, filtra a mini-lista só para esse dia
         vsFiltroData = btn.dataset.temVisita === 'true' ? btn.dataset.data : null;
+        if (el('vsfDe')) { el('vsfDe').value = ''; el('vsfAte').value = ''; }
         renderVsCalendar();
         renderVsMiniList();
       });
@@ -2979,33 +3067,68 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const titulo = el('vsMiniTitulo');
     const limparBtn = el('vsMiniLimparFiltro');
 
+    // opções do filtro de motivo (vêm das próprias visitas carregadas, com a contagem de cada uma)
+    const selMot = el('vsfMotivo');
+    if (selMot) {
+      const cont = {};
+      (data || []).forEach(v => { if (v.motivo) cont[v.motivo] = (cont[v.motivo] || 0) + 1; });
+      const nomes = Object.keys(cont).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+      const sig = nomes.map(n => n + cont[n]).join('|');
+      if (selMot.dataset.sig !== sig) {
+        const atual = selMot.value;
+        selMot.innerHTML = '<option value="">Todos os motivos</option>' + nomes.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)} (${cont[n]})</option>`).join('');
+        selMot.value = nomes.includes(atual) ? atual : '';
+        selMot.dataset.sig = sig;
+      }
+    }
+
     if (!data || !data.length) {
       if (titulo) titulo.textContent = 'Visitas domiciliares';
       if (limparBtn) limparBtn.style.display = 'none';
       box.innerHTML = '<p class="hint" style="margin:0">Nenhuma visita encontrada.</p>';
+      if (el('vsResumo')) el('vsResumo').innerHTML = '';
       return;
     }
 
     const hojeStr = hoje();
     let lista;
+    const fMot = selMot ? selMot.value : '';
+    const fDe = el('vsfDe') ? el('vsfDe').value : '';
+    const fAte = el('vsfAte') ? el('vsfAte').value : '';
+    const filtrando = !!(fMot || fDe || fAte);
+    const dataF = data.filter(v => (!fMot || v.motivo === fMot) && (!fDe || (v.data_agendada || '') >= fDe) && (!fAte || (v.data_agendada || '') <= fAte));
+    const btnLimpaTudo = el('vsfLimpar');
+    if (btnLimpaTudo) btnLimpaTudo.style.display = (filtrando || vsFiltroData) ? '' : 'none';
 
     if (vsFiltroData) {
       const histDe = (v) => Array.isArray(v.historico_reagendamentos) ? v.historico_reagendamentos : [];
-      lista = data
+      lista = dataF
         .filter(v => v.data_agendada === vsFiltroData || histDe(v).some(h => h.de_data === vsFiltroData))
         .sort((a, b) => (a.hora_prevista || '').localeCompare(b.hora_prevista || ''));
       if (titulo) titulo.textContent = `Visitas em ${fmtData(vsFiltroData)}`;
       if (limparBtn) limparBtn.style.display = '';
     } else {
-      const ordenado = [...data].sort((a, b) => (a.data_agendada || '').localeCompare(b.data_agendada || ''));
-      const futuras = ordenado.filter(v => v.data_agendada >= hojeStr);
-      lista = (futuras.length ? futuras : ordenado.slice().reverse()).slice(0, 8);
-      if (titulo) titulo.textContent = 'Visitas domiciliares';
+      const ordenado = [...dataF].sort((a, b) => (a.data_agendada || '').localeCompare(b.data_agendada || '') || (a.hora_prevista || '').localeCompare(b.hora_prevista || ''));
+      if (filtrando) {
+        // com filtro de motivo/data: procura em todas as visitas (inclusive as passadas), em ordem de data
+        lista = ordenado.slice(0, 300);
+      } else {
+        const futuras = ordenado.filter(v => v.data_agendada >= hojeStr);
+        lista = (futuras.length ? futuras : ordenado.slice().reverse()).slice(0, 60);
+      }
+      if (titulo) titulo.textContent = filtrando ? 'Visitas filtradas' : 'Visitas domiciliares';
       if (limparBtn) limparBtn.style.display = 'none';
     }
 
+    if (titulo) titulo.textContent += ' · ' + lista.length + (lista.length === 1 ? ' visita' : ' visitas');
+    const rsBox = el('vsResumo');
+    if (rsBox) {
+      const nUrg = lista.filter(v => v.urgente).length;
+      const nReag = lista.filter(v => Array.isArray(v.historico_reagendamentos) && v.historico_reagendamentos.length).length;
+      rsBox.innerHTML = `<div class="rs"><b>${lista.length}</b><span>Na lista</span></div><div class="rs urg"><b>${nUrg}</b><span>Urgentes</span></div><div class="rs reag"><b>${nReag}</b><span>Reagendadas</span></div>`;
+    }
     if (!lista.length) {
-      box.innerHTML = '<p class="hint" style="margin:0">Nenhuma visita nesta data.</p>';
+      box.innerHTML = '<p class="hint" style="margin:0">' + (filtrando ? 'Nenhuma visita com esses filtros.' : 'Nenhuma visita nesta data.') + '</p>';
     } else {
       const statusLabel = VS_ST_LABEL;
 
@@ -3023,13 +3146,27 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         let nota = '';
         if (saiu) nota = `↻ Reagendada para ${fmtData(v.data_agendada)}${horaTxt(v.hora_prevista)}`;
         else if (hist.length) nota = `↻ Reagendada ${hist.length}× · original ${fmtData(hist[0].de_data)}${horaTxt(hist[0].de_hora)}`;
+        const cpfFmt = (c) => { const d = String(c == null ? '' : c).replace(/\D/g, ''); const p = (d.length >= 9 && d.length < 11) ? d.padStart(11, '0') : d; return p.length === 11 ? p.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4') : p; };
+        const telFmt = (t) => { const d = String(t || '').replace(/\D/g, ''); return d.length === 11 ? d.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3') : d.length === 10 ? d.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3') : (t || ''); };
+        const campo = (rot, val, extra) => val ? `<div class="mv-campo${extra ? ' ' + extra : ''}"><span>${rot}</span><b>${escapeHtml(val)}</b></div>` : '';
+        const endTxt = [v.endereco, v.bairro, v.cep ? 'CEP ' + v.cep : ''].map(t => String(t || '').trim()).filter(Boolean).join(' · ');
+        const entrev = (v.entrevistadores_nomes || []).join(', ');
+        const cras = v.cras && v.cras.nome ? v.cras.nome : '';
         return `
-        <div class="mini-visit-item${v.urgente ? ' urgente' : ''}${saiu ? ' reag-origem' : ''}" data-data="${v.data_agendada}" data-id="${escapeHtml(v.id)}" title="Abrir visita">
-          <div class="mini-visit-date">${dataTxt}</div>
-          <div class="mini-visit-name">${escapeHtml(v.nome_responsavel || '')}</div>
-          <div class="mini-visit-motivo">${escapeHtml(v.motivo || '')}</div>
+        <div class="mini-visit-item mv-card${v.urgente ? ' urgente' : ''}${saiu ? ' reag-origem' : ''}" data-data="${v.data_agendada}" data-id="${escapeHtml(v.id)}" title="Abrir visita">
+          <div class="mv-topo">
+            <div class="mini-visit-date">${dataTxt}</div>
+            <div class="mv-badges"><span class="mini-visit-status">${statusLabel[v.status] || v.status || ''}</span>${v.urgente ? '<span class="mini-visit-urg">Urgente</span>' : ''}${hist.length && v.status !== 'reagendada' ? '<span class="mini-visit-reagtag">Reagendada</span>' : ''}</div>
+          </div>
+          <div class="mini-visit-name">${escapeHtml(v.nome_responsavel || 'Sem nome')}</div>
+          <div class="mv-motivo"><span>Motivo do agendamento</span><b>${escapeHtml(v.motivo || 'Não informado')}</b></div>
+          <div class="mv-campos">
+            ${campo('CPF', cpfFmt(v.cpf))}${campo('Telefone', telFmt(v.telefone))}
+            ${campo('Endereço', endTxt, 'span2')}
+            ${campo('CRAS', cras)}${campo('Entrevistador(es)', entrev)}
+          </div>
+          ${v.observacao ? `<div class="mv-obs">${escapeHtml(v.observacao)}</div>` : ''}
           ${nota ? `<div class="mini-visit-reag">${nota}</div>` : ''}
-          <span class="mini-visit-status">${statusLabel[v.status] || v.status || ''}</span>${v.urgente ? '<span class="mini-visit-urg">Urgente</span>' : ''}${hist.length && v.status !== 'reagendada' ? '<span class="mini-visit-reagtag">Reagendada</span>' : ''}
         </div>`;
       }).join('');
 
@@ -3040,6 +3177,22 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         });
       });
     }
+  }
+
+  // filtros do popup: motivo e período (De / Até)
+  if (el('vsfMotivo')) {
+    el('vsfMotivo').addEventListener('change', () => renderVsMiniList());
+    ['vsfDe', 'vsfAte'].forEach(id => el(id).addEventListener('change', () => {
+      vsFiltroData = null;               // escolher um período substitui o filtro de um único dia
+      renderVsCalendar();
+      renderVsMiniList();
+    }));
+    el('vsfLimpar').addEventListener('click', () => {
+      el('vsfMotivo').value = ''; el('vsfDe').value = ''; el('vsfAte').value = '';
+      vsFiltroData = null;
+      renderVsCalendar();
+      renderVsMiniList();
+    });
   }
 
   if (el('vsMiniLimparFiltro')) {
@@ -6010,9 +6163,13 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     btn.addEventListener('click', () => abrir(!aba.classList.contains('vs-gaveta-aberta')));
     document.getElementById('vsCalFechar').addEventListener('click', () => abrir(false));
     document.getElementById('vsGavetaFundo').addEventListener('click', () => abrir(false));
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') abrir(false); });
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      const sobre = [...document.querySelectorAll('.vs-modal-overlay')].some(o => o.style.display && o.style.display !== 'none');
+      if (sobre) return;                 // há uma janela (visita/reagendar) aberta por cima: o Esc fecha só ela
+      abrir(false);
+    });
     document.getElementById('vsTabs').addEventListener('click', () => abrir(false));
-    document.getElementById('vsMiniList').addEventListener('click', (e) => { if (e.target.closest('.mini-visit-item')) setTimeout(() => abrir(false), 0); });  // abriu uma visita: fecha para mostrar o formulário
   })();
 
   // ====== ABAS: Agenda / Últimas entrevistas ======
