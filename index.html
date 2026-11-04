@@ -1966,6 +1966,98 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     .vs-table .vs-chip{ white-space:normal; }
     .vs-table .vs-st-sel, .vs-table .cad-sel{ width:100%; min-width:105px; max-width:140px; }
   }
+
+  /* ===== Painel por CRAS (dentro de "Calendário e visitas"): dia fixo por CRAS + Manhã/Tarde ===== */
+  .vs-modo-tabs{ display:inline-flex; gap:4px; padding:4px; border-radius:12px; background:var(--card); border:1px solid var(--line); align-self:center; margin:0 12px; flex:0 0 auto; }
+  .vs-modo-tab{ border:0; background:transparent; padding:8px 14px; border-radius:9px; font:inherit; font-weight:600; font-size:13px; color:var(--muted); cursor:pointer; white-space:nowrap; }
+  .vs-modo-tab.active{ background:var(--blue); color:#fff; }
+  /* abas do cabeçalho: sobrescreve a regra '.vs-gaveta-head button' (38x38) que as espremia */
+  .visita-left-col .vs-gaveta-head .vs-modo-tabs{ display:inline-flex; gap:12px; padding:0; background:transparent; border:0; margin:0 auto; align-self:center; }
+  .visita-left-col .vs-gaveta-head .vs-modo-tab{ width:auto; height:auto; min-width:0; padding:10px 20px; font-size:14px; line-height:1.2; font-weight:700; border-radius:12px; border:1px solid var(--line); background:var(--card); color:var(--muted); white-space:nowrap; }
+  .visita-left-col .vs-gaveta-head .vs-modo-tab:hover{ border-color:var(--blue); color:var(--blue); }
+  .visita-left-col .vs-gaveta-head .vs-modo-tab.active{ background:var(--blue); border-color:var(--blue); color:#fff; }
+  .vs-pcras{ display:none; }
+  .visita-left-col.vs-modo-cras .vs-modal-esq,
+  .visita-left-col.vs-modo-cras .mini-visits-card{ display:none; }
+  .visita-left-col.vs-modo-cras .vs-pcras{ display:block; grid-column:1 / -1; grid-row:2; min-height:0; overflow-y:auto; padding-right:4px; }
+  .pc-wrap{ display:grid; grid-template-columns:minmax(250px,300px) minmax(0,1fr); gap:18px; align-items:start; }
+  .pc-lado{ display:flex; flex-direction:column; gap:10px; }
+  .pc-lado-tit{ font-size:12px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); }
+  .pc-dia{ text-align:left; width:100%; border:1px solid var(--line); background:var(--card); border-radius:14px; padding:11px 13px; cursor:pointer; font:inherit; color:var(--ink); display:flex; flex-direction:column; gap:6px; }
+  .pc-dia:hover{ border-color:var(--blue); }
+  .pc-dia.ativo{ border-color:var(--blue); box-shadow:0 0 0 2px rgba(47,111,237,.2); }
+  .pc-dia-top{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
+  .pc-dia-top b{ font-size:14px; }
+  .pc-dia-top small{ color:var(--muted); font-weight:600; }
+  .pc-dia-cras{ display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:12.5px; }
+  .pc-dia-cras .pc-nm{ font-weight:700; }
+  .pc-dia-cras .pc-oc{ color:var(--muted); font-size:11.5px; white-space:nowrap; }
+  .pc-dia-livre{ font-size:12px; color:var(--muted); }
+  .pc-sem-dia{ font-size:12px; color:var(--muted); line-height:1.4; }
+  .pc-folha{ min-width:0; }
+  .pc-bar{ display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; margin-bottom:12px; }
+  .pc-nav{ display:inline-flex; gap:6px; align-items:center; flex-wrap:wrap; }
+  .pc-nav button, .pc-btn{ border:1px solid var(--line); background:var(--card); color:var(--ink); border-radius:10px; padding:8px 12px; font:inherit; font-weight:600; font-size:13px; cursor:pointer; }
+  .pc-nav button:hover, .pc-btn:hover{ border-color:var(--blue); }
+  .pc-nav input[type=date], .pc-selwrap select{ border:1px solid var(--campo-borda, var(--line)); background:var(--card); color:var(--ink); border-radius:10px; padding:8px 10px; font:inherit; font-size:13px; }
+  .pc-selwrap{ display:flex; flex-direction:column; gap:3px; font-size:11.5px; font-weight:600; color:var(--muted); }
+  .pc-titulo{ font-size:17px; margin:2px 0 12px; }
+  .pc-titulo span{ color:var(--muted); font-weight:500; }
+  .pc-aviso{ padding:10px 12px; border-radius:12px; font-size:13px; margin-bottom:12px; background:#FFF7DB; color:#8A6100; border:1px solid #F0DC93; display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+  .pc-aviso.erro{ background:#FDECEC; color:#8A1F1F; border-color:#F1A9A9; }
+  .pc-aviso button{ border:1px solid currentColor; background:transparent; color:inherit; border-radius:9px; padding:5px 10px; font:inherit; font-weight:700; font-size:12.5px; cursor:pointer; }
+  .pc-folha-cras{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px; margin-bottom:14px; }
+  .pc-folha-cras > h4{ margin:0 0 10px; font-size:16px; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
+  .pc-cols{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; }
+  .pc-col{ display:flex; flex-direction:column; gap:8px; min-width:0; }
+  .pc-col-h{ display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border-radius:10px; background:var(--page-bg); }
+  .pc-col-h b{ font-size:13.5px; letter-spacing:.07em; text-transform:uppercase; }
+  .pc-cont{ font-size:12px; font-weight:700; color:var(--green); }
+  .pc-cont.lotado{ color:var(--coral); }
+  .pc-slot{ width:100%; text-align:left; border-radius:12px; padding:10px 12px; font:inherit; color:var(--ink); min-height:88px; display:flex; flex-direction:column; gap:3px; }
+  .pc-slot.cheio{ border:1px solid var(--line); background:var(--page-bg); cursor:pointer; }
+  .pc-slot.cheio:hover{ border-color:var(--blue); }
+  .pc-slot.cheio.urg{ border-color:#F5B5B5; background:rgba(235,87,87,.09); }
+  .pc-lin{ font-size:12.5px; overflow-wrap:anywhere; line-height:1.35; }
+  .pc-lin i{ font-style:normal; color:var(--muted); font-size:11px; font-weight:600; margin-right:4px; }
+  .pc-lin.nm{ font-size:13.5px; font-weight:700; }
+  .pc-tags{ display:flex; gap:6px; flex-wrap:wrap; margin-top:2px; }
+  .pc-tag{ font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:999px; background:#E8F0FE; color:#2050B0; }
+  .pc-tag.urg{ background:#FDECEC; color:#B42318; }
+  .pc-slot.vazio{ border:1.5px dashed var(--line); background:transparent; align-items:center; justify-content:center; cursor:pointer; color:var(--muted); }
+  .pc-slot.vazio:hover{ border-color:var(--blue); color:var(--blue); }
+  .pc-slot.vazio.off{ cursor:default; opacity:.55; }
+  .pc-slot.vazio.off:hover{ border-color:var(--line); color:var(--muted); }
+  .pc-mais{ font-weight:700; font-size:13px; }
+  .pc-fantasma{ font-size:11px; opacity:.75; }
+  .pc-semper{ margin-top:12px; padding:10px 12px; border-radius:12px; border:1px dashed var(--line); font-size:12.5px; }
+  .pc-semper b{ display:block; margin-bottom:6px; }
+  .pc-semper-it{ display:flex; justify-content:space-between; align-items:center; gap:8px; padding:4px 0; flex-wrap:wrap; }
+  .pc-semper-it button{ border:1px solid var(--line); background:var(--card); color:var(--ink); border-radius:8px; padding:3px 9px; font:inherit; font-size:12px; font-weight:600; cursor:pointer; }
+  .pc-fg{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; }
+  .pc-fg .span-2{ grid-column:1 / -1; }
+  .pc-fg .field input, .pc-fg .field select, .pc-fg .field textarea{ width:100%; min-width:0; box-sizing:border-box; }
+  .pc-cfg-lin{ display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1.2fr) 70px 70px; gap:8px; align-items:center; padding:6px 0; border-bottom:1px solid var(--line); font-size:13px; }
+  .pc-cfg-lin.h{ font-size:11.5px; font-weight:700; color:var(--muted); border-bottom:2px solid var(--line); }
+  .pc-cfg-lin select, .pc-cfg-lin input{ width:100%; min-width:0; box-sizing:border-box; border:1px solid var(--campo-borda, var(--line)); background:var(--card); color:var(--ink); border-radius:8px; padding:6px 8px; font:inherit; font-size:13px; }
+
+  .pc-trz-it{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  .pc-trz-it b{ font-size:13.5px; display:block; }
+  .pc-trz-it small{ color:var(--muted); font-size:11.5px; overflow-wrap:anywhere; }
+  .pc-trz-it.urg{ background:rgba(235,87,87,.07); border-radius:8px; padding-left:8px; padding-right:8px; }
+  .pc-trz-bt{ display:flex; gap:6px; }
+  .pc-trz-bt button{ border:1px solid var(--line); background:var(--card); color:var(--ink); border-radius:8px; padding:5px 10px; font:inherit; font-size:12.5px; font-weight:700; cursor:pointer; }
+  .pc-trz-bt button:hover{ border-color:var(--blue); color:var(--blue); }
+  .pc-trz-bt button:disabled{ opacity:.5; cursor:default; }
+  @media (max-width:900px){
+    .pc-wrap{ grid-template-columns:minmax(0,1fr); }
+    .pc-cols{ grid-template-columns:minmax(0,1fr); }
+    .visita-left-col.vs-modo-cras .vs-pcras{ overflow:visible; padding-right:0; }
+    .visita-left-col .vs-gaveta-head .vs-modo-tabs{ margin:8px 0 0; width:100%; }
+    .visita-left-col .vs-gaveta-head .vs-modo-tab{ flex:1 1 0; padding:10px 8px; }
+    .visita-left-col .vs-gaveta-head{ flex-wrap:wrap; }
+  }
+  @media (max-width:600px){ .pc-fg{ grid-template-columns:minmax(0,1fr); } .pc-cfg-lin{ grid-template-columns:minmax(0,1fr) minmax(0,1fr); } .pc-cfg-lin.h{ display:none; } }
 </style>
 </head>
 <body>
@@ -2193,7 +2285,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <div class="vs-gaveta-fundo" id="vsGavetaFundo"></div>
       <div class="visita-two-col">
         <div class="visita-left-col" id="vsGaveta">
-          <div class="vs-gaveta-head"><div><b>Calendário e visitas</b><small>Clique em um dia para ver quem foi agendado, o motivo, CPF e endereço</small></div><button type="button" id="vsCalFechar" aria-label="Fechar">&times;</button></div>
+          <div class="vs-gaveta-head"><div><b>Calendário e visitas</b><small id="vsGavetaSub">Clique em um dia para ver quem foi agendado, o motivo, CPF e endereço</small></div><div class="vs-modo-tabs" role="tablist" aria-label="Modo de exibição"><button type="button" class="vs-modo-tab active" id="vsModoCal" role="tab">Calendário</button><button type="button" class="vs-modo-tab" id="vsModoCras" role="tab">Painel por CRAS</button></div><button type="button" id="vsCalFechar" aria-label="Fechar">&times;</button></div>
           <div class="vs-modal-esq">
           <div class="calendar-card">
             <div class="cal-head">
@@ -2230,6 +2322,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
               <span class="skel skel-linha" style="width:92%"></span><span class="skel skel-linha" style="width:78%"></span><span class="skel skel-linha" style="width:86%"></span><span class="skel skel-linha" style="width:64%"></span>
             </div>
           </div>
+          <div class="vs-pcras" id="vsPainelCras"></div>
         </div>
 
         <div class="form-panel" style="margin-bottom:0">
@@ -6208,6 +6301,479 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('vsTabs').addEventListener('click', () => abrir(false));
   })();
 
+  // ====== PAINEL POR CRAS: cada CRAS tem um dia fixo da semana; a funcionária escolhe Manhã ou Tarde e agenda ======
+  (function(){
+    const g = el('vsGaveta'), raiz = el('vsPainelCras');
+    if (!g || !raiz) return;
+    const DIAS = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+    const HORA = { manha: '09:00', tarde: '14:00' };      // o período é gravado em hora_prevista (antes das 12:00 = manhã)
+    const LS_KEY = 'cras_dia_semana_v1';
+    const S = { cras: [], cfg: {}, banco: true, data: '', crasSel: '', semana: [], abertas: null, ok: false, erro: '', tok: 0 };
+    const esc = escapeHtml;
+
+    const dt = (s) => new Date(s + 'T12:00:00');
+    const iso = (d) => d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+    const soma = (s, n) => { const d = dt(s); d.setDate(d.getDate() + n); return iso(d); };
+    const dow = (s) => dt(s).getDay();
+    const segunda = (s) => { const w = dow(s); return soma(s, w === 0 ? -6 : 1 - w); };
+    const proxima = (dia, desde) => { let s = desde; for (let i = 0; i < 8; i++){ if (dow(s) === dia) return s; s = soma(s, 1); } return desde; };
+    const cfgDe = (id) => S.cfg[String(id)] || { dia: null, vm: 3, vt: 3 };
+    const periodo = (v) => !v.hora_prevista ? 'sem' : (String(v.hora_prevista).slice(0, 5) < '12:00' ? 'manha' : 'tarde');
+    const padrao = () => { const h = hoje(); const w = dow(h); return w === 6 ? soma(h, 2) : w === 0 ? soma(h, 1) : h; };
+    const visivel = () => g.classList.contains('vs-modo-cras') && el('vsTabAgenda') && el('vsTabAgenda').classList.contains('vs-gaveta-aberta');
+
+    // ---------- dados ----------
+    async function garantirCras(){
+      const ops = Array.from(el('vsCras').options).filter(o => o.value).map(o => ({ id: o.value, nome: o.textContent.trim() }));
+      if (ops.length){ S.cras = ops; return; }
+      const r = await sbClient.from('cras').select('id, nome').order('nome');
+      if (!r.error && r.data) S.cras = r.data;
+    }
+    async function carregarConfig(){
+      let rows = [];
+      try {
+        const r = await sbClient.from('cras_dia_semana').select('*');
+        if (r.error) throw r.error;
+        rows = r.data || []; S.banco = true;
+      } catch (e) {
+        S.banco = false;
+        try { rows = JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch (e2) { rows = []; }
+      }
+      S.cfg = {};
+      rows.forEach(r => {
+        const d = (r.dia_semana === null || r.dia_semana === undefined || r.dia_semana === '') ? null : Number(r.dia_semana);
+        S.cfg[String(r.cras_id)] = { dia: d, vm: r.vagas_manha == null ? 3 : Number(r.vagas_manha), vt: r.vagas_tarde == null ? 3 : Number(r.vagas_tarde) };
+      });
+    }
+    async function carregarSemana(silencioso){
+      const tok = ++S.tok, seg = segunda(S.data), sex = soma(seg, 4);
+      try {
+        const { data, error } = await escoparVsLista(sbClient.from('visitas_domiciliares').select('*, cras:cras_id(nome)'))
+          .gte('data_agendada', seg).lte('data_agendada', sex)
+          .order('hora_prevista', { ascending: true, nullsFirst: false }).order('data_criacao', { ascending: true }).limit(1000);
+        if (error) throw error;
+        if (tok !== S.tok) return;
+        (data || []).forEach(v => { v.entrevistadores_nomes = (v.entrevistadores || []).map(id => (typeof mapaFuncFluxo !== 'undefined' ? mapaFuncFluxo[id] : null)).filter(Boolean); });
+        S.semana = data || []; S.erro = '';
+      } catch (e) {
+        if (tok !== S.tok) return;
+        console.warn('Painel por CRAS: não carregou a semana', e);
+        S.erro = erroAmigavel(e);
+        if (!silencioso) showToast('❌ Não foi possível carregar as visitas do painel. ' + S.erro, 5000);
+      }
+    }
+
+    // todas as visitas em aberto (qualquer CRAS, qualquer data) para poder direcioná-las ao painel
+    async function carregarAbertas(){
+      try {
+        let tudo = [];
+        for (let i = 0; i < 20; i++){
+          const r = await escoparVsLista(sbClient.from('visitas_domiciliares').select('*, cras:cras_id(nome)'))
+            .in('status', ['agendada', 'reagendada']).order('id').range(i * 1000, i * 1000 + 999);
+          if (r.error) throw r.error;
+          tudo = tudo.concat(r.data || []);
+          if ((r.data || []).length < 1000) break;
+        }
+        tudo.forEach(v => { v.entrevistadores_nomes = (v.entrevistadores || []).map(id => (typeof mapaFuncFluxo !== 'undefined' ? mapaFuncFluxo[id] : null)).filter(Boolean); });
+        S.abertas = tudo;
+      } catch (e) { console.warn('Painel por CRAS: não carregou as visitas em aberto', e); }
+    }
+    // "direcionada" = data futura, no dia fixo do CRAS e já com manhã/tarde
+    const direcionada = (v) => !!v.data_agendada && v.data_agendada >= hoje() && cfgDe(v.cras_id).dia != null && dow(v.data_agendada) === cfgDe(v.cras_id).dia && periodo(v) !== 'sem';
+    const pendentes = () => (S.abertas || []).filter(v => !direcionada(v));
+
+    // ---------- cálculos ----------
+    const visDia = (c, d) => S.semana.filter(v => v.data_agendada === d && String(v.cras_id) === String(c.id));
+    function ocup(c, d){
+      const l = visDia(c, d), cf = cfgDe(c.id);
+      return { m: l.filter(v => periodo(v) === 'manha').length, t: l.filter(v => periodo(v) === 'tarde').length, vm: cf.vm, vt: cf.vt };
+    }
+    function crasDoDia(){
+      const w = dow(S.data);
+      if (S.crasSel){
+        const c = S.cras.find(x => String(x.id) === String(S.crasSel));
+        if (!c) return { lista: [], aviso: '' };
+        const dia = cfgDe(c.id).dia;
+        if (dia != null && dia !== w){
+          const base = hoje();
+          return { lista: [], aviso: `O dia fixo do ${c.nome} é ${DIAS[dia].toLowerCase()}.`, ir: proxima(dia, S.data < base ? base : S.data) };
+        }
+        return { lista: [c], aviso: dia == null ? `O ${c.nome} ainda não tem dia fixo. A coordenação define em "Definir dia de cada CRAS".` : '' };
+      }
+      const lista = S.cras.filter(c => cfgDe(c.id).dia === w);
+      return { lista, aviso: lista.length ? '' : (w === 0 || w === 6 ? 'Fim de semana: nenhum CRAS tem visita neste dia.' : 'Nenhum CRAS tem este dia da semana como dia fixo.') };
+    }
+
+    // ---------- desenho ----------
+    function slotCheio(v){
+      const tel = v.telefone ? vsFmtTel(v.telefone) : '';
+      const st = (typeof VS_ST_LABEL !== 'undefined' && VS_ST_LABEL[v.status]) || v.status || '';
+      return `<button type="button" class="pc-slot cheio${v.urgente ? ' urg' : ''}" data-id="${esc(v.id)}" title="Abrir visita">
+        <span class="pc-lin nm"><i>Nome:</i>${esc(v.nome_responsavel || '—')}</span>
+        <span class="pc-lin"><i>Endereço:</i>${esc(v.endereco || '—')}</span>
+        <span class="pc-lin"><i>Bairro:</i>${esc(v.bairro || '—')}</span>
+        <span class="pc-lin"><i>Fone:</i>${esc(tel || '—')}</span>
+        <span class="pc-tags">${v.urgente ? '<span class="pc-tag urg">Urgente</span>' : ''}${st ? `<span class="pc-tag">${esc(st)}</span>` : ''}</span>
+      </button>`;
+    }
+    function coluna(c, per, lista, vagas, passado){
+      const livres = Math.max(0, vagas - lista.length);
+      const add = (txt, extra) => `<button type="button" class="pc-slot vazio" data-add="1" data-cras="${esc(c.id)}" data-per="${per}"${extra || ''}><span class="pc-mais">${txt}</span><span class="pc-fantasma">Nome · Endereço · Bairro · Fone</span></button>`;
+      let h = `<div class="pc-col"><div class="pc-col-h"><b>${per === 'manha' ? 'Manhã' : 'Tarde'}</b><span class="pc-cont${livres ? '' : ' lotado'}">${lista.length}/${vagas}${livres ? '' : ' · lotado'}</span></div>`;
+      lista.forEach(v => { h += slotCheio(v); });
+      for (let i = 0; i < livres; i++) h += passado ? '<div class="pc-slot vazio off"><span class="pc-fantasma">Vaga livre</span></div>' : add('+ Agendar visita');
+      if (!livres && !passado && veTodosCras()) h += add('+ Encaixar (acima das vagas)');
+      return h + '</div>';
+    }
+    function folha(c, passado){
+      const cf = cfgDe(c.id), vis = visDia(c, S.data);
+      const m = vis.filter(v => periodo(v) === 'manha'), t = vis.filter(v => periodo(v) === 'tarde'), sp = vis.filter(v => periodo(v) === 'sem');
+      let h = `<div class="pc-folha-cras"><h4><span>${esc(c.nome)}</span><span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><small style="color:var(--muted);font-weight:600">${vis.length} visita${vis.length === 1 ? '' : 's'} no dia</small>${passado ? '' : `<button type="button" class="pc-btn" data-trazer="${esc(c.id)}">⇄ Trazer visita já agendada</button>`}</span></h4>
+        <div class="pc-cols">${coluna(c, 'manha', m, cf.vm, passado)}${coluna(c, 'tarde', t, cf.vt, passado)}</div>`;
+      if (sp.length){
+        h += `<div class="pc-semper"><b>Sem período definido (${sp.length})</b>${sp.map(v => `<div class="pc-semper-it"><span>${esc(v.nome_responsavel || '—')}${v.bairro ? ' · ' + esc(v.bairro) : ''}</span><span><button type="button" data-mover="${esc(v.id)}" data-per="manha">→ Manhã</button> <button type="button" data-mover="${esc(v.id)}" data-per="tarde">→ Tarde</button></span></div>`).join('')}</div>`;
+      }
+      return h + '</div>';
+    }
+    function render(){
+      if (!S.ok){ raiz.innerHTML = '<div class="hint" style="padding:14px">Carregando painel…</div>'; return; }
+      const passado = false, seg = segunda(S.data);   // qualquer data pode ser escolhida
+      let lado = '<div class="pc-lado-tit">Dia fixo de cada CRAS</div>';
+      for (let i = 0; i < 5; i++){
+        const d = soma(seg, i), w = i + 1;
+        const cs = S.cras.filter(c => cfgDe(c.id).dia === w);
+        const corpo = cs.length ? cs.map(c => { const o = ocup(c, d); return `<div class="pc-dia-cras"><span class="pc-nm">${esc(c.nome)}</span><span class="pc-oc">M ${o.m}/${o.vm} · T ${o.t}/${o.vt}</span></div>`; }).join('') : '<div class="pc-dia-livre">Nenhum CRAS neste dia</div>';
+        lado += `<button type="button" class="pc-dia${d === S.data ? ' ativo' : ''}" data-dia="${d}"><div class="pc-dia-top"><b>${DIAS[w]}</b><small>${fmtData(d).slice(0, 5)}</small></div>${corpo}</button>`;
+      }
+      const sem = S.cras.filter(c => cfgDe(c.id).dia == null);
+      if (sem.length) lado += `<div class="pc-sem-dia"><b>Sem dia definido:</b> ${sem.map(c => esc(c.nome)).join(', ')}</div>`;
+      if (S.abertas){ const np = pendentes().length, nu = pendentes().filter(v => v.urgente).length;
+        lado += `<button type="button" class="pc-btn" data-trazer="" data-pend="1" style="text-align:left"><b>${np}</b> visita${np === 1 ? '' : 's'} em aberto sem direcionamento${nu ? ` <span class="pc-tag urg">${nu} urgente${nu === 1 ? '' : 's'}</span>` : ''}<br><small style="color:var(--muted)">Clique para ver todas e direcionar</small></button>`; }
+      if (veTodosCras()) lado += '<button type="button" class="pc-btn" data-act="config">⚙ Definir dia de cada CRAS</button>';
+
+      const info = crasDoDia();
+      let avisos = '';
+      if (S.erro) avisos += `<div class="pc-aviso erro"><span>${esc(S.erro)}</span><button type="button" data-act="atualizar">Tentar de novo</button></div>`;
+      if (!S.banco && veTodosCras()) avisos += '<div class="pc-aviso"><span>A tabela <b>cras_dia_semana</b> ainda não existe no Supabase: os dias fixos estão guardados só neste computador. Rode o SQL 2026-11-cras-dia-semana.sql para valer para todos.</span></div>';
+      if (info.aviso) avisos += `<div class="pc-aviso"><span>${esc(info.aviso)}</span>${info.ir ? `<button type="button" data-ir="${info.ir}">Ir para ${fmtData(info.ir)}</button>` : ''}</div>`;
+
+      const opCras = '<option value="">Todos os CRAS do dia</option>' + S.cras.map(c => `<option value="${esc(c.id)}"${String(c.id) === String(S.crasSel) ? ' selected' : ''}>${esc(c.nome)}${cfgDe(c.id).dia ? ' — ' + DIAS[cfgDe(c.id).dia].split('-')[0] : ''}</option>`).join('');
+      const barra = `<div class="pc-bar">
+        <div class="pc-nav"><button type="button" data-act="prev" title="Anterior">&lsaquo;</button><input type="date" id="pcData" value="${S.data}"><button type="button" data-act="next" title="Próximo">&rsaquo;</button><button type="button" data-act="hoje">Hoje</button></div>
+        <label class="pc-selwrap"><span>Onde a pessoa mora (CRAS da região)</span><select id="pcCras">${opCras}</select></label>
+        <span style="flex:1"></span>
+        <button type="button" class="pc-btn" data-trazer="" data-hoje="1" title="Buscar visitas já agendadas na Agenda ED (cadastradas hoje, urgentes...)">⇄ Trazer visitas já agendadas</button>
+        <button type="button" class="pc-btn" data-act="atualizar" title="Atualizar">↻ Atualizar</button>
+        <button type="button" class="pc-btn" data-act="imprimir">🖨 Imprimir folha do dia</button>
+      </div>`;
+      const corpo = info.lista.map(c => folha(c, passado)).join('');
+      raiz.innerHTML = `<div class="pc-wrap"><aside class="pc-lado">${lado}</aside><section class="pc-folha">${barra}<div class="pc-titulo"><b>Dia ${fmtData(S.data)}</b> <span>· ${DIAS[dow(S.data)]}</span></div>${avisos}${corpo}</section></div>`;
+    }
+
+    // ---------- navegação ----------
+    async function irPara(d){
+      const outraSemana = segunda(d) !== segunda(S.data);
+      S.data = d;
+      if (outraSemana){ render(); await carregarSemana(); }
+      render();
+    }
+    function passo(dir){
+      const fixo = S.crasSel && cfgDe(S.crasSel).dia != null;
+      let n = soma(S.data, fixo ? 7 * dir : dir);
+      if (!fixo) while (dow(n) === 0 || dow(n) === 6) n = soma(n, dir);
+      return irPara(n);
+    }
+    async function abrir(){
+      S.ok = false; render();
+      try { await garantirCras(); await carregarConfig(); } catch (e) { console.warn(e); }
+      if (!S.data) S.data = padrao();
+      await Promise.all([carregarSemana(true), carregarAbertas()]);
+      S.ok = true; render();
+    }
+    window.pcAtualizar = () => { if (!S.ok || !visivel() || el('pcModal').style.display === 'flex') return; carregarSemana(true).then(render); };
+    setInterval(() => { const a = document.activeElement; if (document.hidden || (a && raiz.contains(a) && /INPUT|SELECT/.test(a.tagName))) return; window.pcAtualizar(); }, 60000);
+
+    // ---------- janela (agendar / configurar) ----------
+    const modal = document.createElement('div');
+    modal.className = 'vs-modal-overlay'; modal.id = 'pcModal'; modal.style.display = 'none';
+    modal.innerHTML = '<div class="vs-modal" style="width:min(600px,100%)"><div class="vs-modal-head"><div><h3 id="pcMTit"></h3><p id="pcMSub"></p></div><button type="button" class="vs-modal-x" data-pcx aria-label="Fechar">&times;</button></div><div class="vs-modal-body" id="pcMCorpo"></div><div class="vs-modal-foot" id="pcMRodape"></div></div>';
+    document.body.appendChild(modal);
+    const fechar = () => { modal.style.display = 'none'; };
+    modal.addEventListener('click', (e) => { if (e.target === modal || e.target.closest('[data-pcx]')) fechar(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.style.display === 'flex'){ fechar(); e.stopPropagation(); } }, true);
+
+    function abrirAgendar(crasId, per){
+      const c = S.cras.find(x => String(x.id) === String(crasId)); if (!c) return;
+      el('pcMTit').textContent = 'Agendar visita domiciliar';
+      el('pcMSub').textContent = `${c.nome} · ${fmtData(S.data)} (${DIAS[dow(S.data)].toLowerCase()}) · ${per === 'manha' ? 'Manhã' : 'Tarde'}`;
+      el('pcMCorpo').innerHTML = `<div class="pc-fg">
+        <div class="field span-2"><label>Nome do responsável *</label><input type="text" id="pcNome" autocomplete="off"></div>
+        <div class="field"><label>CPF *</label><input type="text" id="pcCpf" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" autocomplete="off"></div>
+        <div class="field"><label>Telefone</label><input type="text" id="pcTel" inputmode="tel" placeholder="(51) 90000-0000" autocomplete="off"></div>
+        <div class="field span-2"><label>Endereço</label><input type="text" id="pcEnd" placeholder="Rua, número, complemento..." autocomplete="off"></div>
+        <div class="field"><label>Bairro</label><input type="text" id="pcBai" autocomplete="off"></div>
+        <div class="field"><label>Motivo</label><select id="pcMot">${el('vsMotivo').innerHTML}</select></div>
+        <div class="field span-2"><label>Observação</label><textarea id="pcObs" rows="2" placeholder="Ponto de referência, recados..."></textarea></div>
+        <label class="span-2" style="display:flex;gap:8px;align-items:center;font-size:13px"><input type="checkbox" id="pcUrg"> Visita urgente</label>
+      </div>`;
+      el('pcMot').value = MOTIVO_PADRAO;
+      el('pcMRodape').innerHTML = '<button type="button" class="btn-ghost" data-pcx>Cancelar</button><button type="button" class="btn-primary" id="pcSalvar">Agendar visita</button>';
+      const cpf = el('pcCpf'); let ultimo = '';
+      cpf.addEventListener('input', () => { const d = cpfSoDigitos(cpf.value).slice(0, 11); cpf.value = d.replace(/^(\d{3})(\d)/, '$1.$2').replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3').replace(/\.(\d{3})(\d)/, '.$1-$2'); });
+      cpf.addEventListener('blur', async () => {
+        const d = cpfCompletar(cpf.value);
+        if (d.length !== 11 || d === ultimo || !cpfValido(d)) return;
+        ultimo = d; cpf.value = d.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+        try {
+          const r = await escoparVsLista(sbClient.from('visitas_domiciliares').select('nome_responsavel, endereco, bairro, telefone')).eq('cpf', d).order('data_criacao', { ascending: false, nullsFirst: false }).limit(1);
+          const v = r.data && r.data[0]; if (!v) return;
+          const por = (id, val, fn) => { const e = el(id); if (e && val && !e.value.trim()) e.value = fn ? fn(val) : val; };
+          por('pcNome', v.nome_responsavel); por('pcEnd', v.endereco); por('pcBai', v.bairro); por('pcTel', v.telefone, vsFmtTel);
+        } catch (e) {}
+      });
+      el('pcTel').addEventListener('blur', () => { const t = el('pcTel'); if (t.value.trim()) t.value = vsFmtTel(t.value); });
+      el('pcSalvar').addEventListener('click', () => salvarAgendar(c, per));
+      modal.style.display = 'flex';
+      setTimeout(() => el('pcNome').focus(), 50);
+    }
+
+    async function salvarAgendar(c, per){
+      const nome = el('pcNome').value.trim(), cpf = cpfCompletar(el('pcCpf').value);
+      if (!nome || !cpf){ showToast('⚠️ Preencha o nome e o CPF'); return; }
+      if (cpf.length !== 11){ showToast('⚠️ CPF incompleto: use 11 números'); return; }
+      if (!cpfValido(cpf) && !confirm('Este CPF parece inválido (os dígitos verificadores não conferem).\n\nSalvar mesmo assim?')) return;
+      const btn = el('pcSalvar'); btn.disabled = true; btn.textContent = 'Salvando...';
+      try {
+        // já existe visita em aberto para este CPF? (evita duas funcionárias agendarem a mesma família)
+        try {
+          const r = await escoparVsLista(sbClient.from('visitas_domiciliares').select('data_agendada, status, cras:cras_id(nome)')).eq('cpf', cpf).gte('data_agendada', hoje()).in('status', ['agendada', 'reagendada']).limit(1);
+          const ex = r.data && r.data[0];
+          if (ex && !confirm(`Já existe uma visita em aberto para este CPF em ${fmtData(ex.data_agendada)} (${(ex.cras && ex.cras.nome) || 'outro CRAS'}).\n\nAgendar mesmo assim?`)){ btn.disabled = false; btn.textContent = 'Agendar visita'; return; }
+        } catch (e) {}
+        const quem = currentFuncionario ? `${currentFuncionario.nome || ''}${currentFuncionario.cras_nome ? ' (' + currentFuncionario.cras_nome + ')' : ''}` : '';
+        const obs = [el('pcObs').value.trim(), quem ? 'Agendado pelo painel do CRAS por ' + quem : ''].filter(Boolean).join(' — ');
+        const motivo = el('pcMot').value || MOTIVO_PADRAO;
+        const tel = el('pcTel').value.replace(/\D/g, '') || null;
+        const res = await Outbox.salvar({
+          tipo: 'visita', res: { nome, data: S.data, motivo },
+          reg: {
+            nome_responsavel: nome, cpf, data_agendada: S.data, hora_prevista: HORA[per], cras_id: c.id, motivo,
+            observacao: obs || null, endereco: el('pcEnd').value.trim() || null, bairro: el('pcBai').value.trim() || null, telefone: tel,
+            urgente: el('pcUrg').checked, entrevistadores: [], status: 'agendada', data_criacao: new Date().toISOString()
+          }
+        });
+        fechar();
+        if (res.estado === 'enviado') showToast('✅ Visita agendada: ' + c.nome + ' · ' + (per === 'manha' ? 'manhã' : 'tarde'));
+        else showToast('📴 Sem conexão estável: visita guardada neste computador. Será enviada sozinha quando a internet voltar.', 6000);
+        await carregarSemana(true); render();
+        if (typeof loadVisitas === 'function') loadVisitas();
+      } catch (err) {
+        console.error('Painel por CRAS: erro ao agendar', err);
+        showToast('❌ Não foi possível agendar. ' + erroAmigavel(err), 6000);
+        btn.disabled = false; btn.textContent = 'Agendar visita';
+      }
+    }
+
+
+    // ---------- trazer visitas já agendadas (de qualquer data/CRAS) para esta folha ----------
+    function abrirTrazer(crasId, soHoje, soPend){
+      const info0 = crasDoDia();
+      let dest = crasId || S.crasSel || (info0.lista[0] && info0.lista[0].id) || '';
+      const norm = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const nomeDe = (id) => (S.cras.find(x => String(x.id) === String(id)) || {}).nome || '';
+      const criadaHoje = (v) => { if (!v.data_criacao) return false; const d = new Date(v.data_criacao); return !isNaN(d) && iso(d) === hoje(); };
+      let extra = [];   // visitas cadastradas hoje que a Agenda ED ainda não carregou
+      const base = () => {
+        const cache = (typeof vsTabelaCache !== 'undefined' && vsTabelaCache) ? vsTabelaCache : [];
+        const ab = S.abertas || [], vistos = new Set(ab.map(v => String(v.id)));
+        const resto = cache.filter(v => !vistos.has(String(v.id)));
+        const ids = new Set(resto.map(v => String(v.id)).concat([...vistos]));
+        return ab.concat(resto, extra.filter(v => !ids.has(String(v.id))));
+      };
+      el('pcMTit').textContent = 'Trazer visita já agendada';
+      el('pcMCorpo').innerHTML = `<div class="pc-fg">
+        <div class="field"><label>Data da folha</label><input type="date" id="pcDataD" value="${S.data}"></div>
+        <div class="field"><label>Levar para o CRAS</label><select id="pcDest"><option value="">Selecione o CRAS de destino</option>${S.cras.map(x => `<option value="${esc(x.id)}"${String(x.id) === String(dest) ? ' selected' : ''}>${esc(x.nome)}</option>`).join('')}</select></div>
+        <div class="field span-2"><label>Buscar por nome ou CPF</label><input type="text" id="pcBusca" placeholder="Digite para filtrar..." autocomplete="off"></div>
+        <div class="field"><label>CRAS atual da visita</label><select id="pcOrig"><option value="">Todos</option>${S.cras.map(x => `<option value="${esc(x.id)}">${esc(x.nome)}</option>`).join('')}</select></div>
+        <div style="display:flex;flex-direction:column;gap:6px;justify-content:flex-end;padding-bottom:6px;font-size:13px">
+          <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="pcPend"${soPend ? ' checked' : ''}> Ainda sem direcionamento</label>
+          <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="pcHoje"${soHoje ? ' checked' : ''}> Cadastradas hoje</label>
+          <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="pcFUrg"> Só urgentes</label>
+          <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="pcAberto" checked> Só em aberto</label>
+        </div>
+      </div><div id="pcTrzCont" class="hint" style="margin:4px 0 6px"></div><div id="pcTrzLista"></div>`;
+      el('pcMRodape').innerHTML = '<button type="button" class="btn-ghost" data-pcx>Fechar</button>';
+      const sub = () => { el('pcMSub').textContent = `${fmtData(S.data)} (${DIAS[dow(S.data)].toLowerCase()}) · a visita passa a ser do CRAS de destino, neste dia e período.`; };
+      const lista = () => {
+        const q = norm(el('pcBusca').value), qd = q.replace(/\D/g, ''), orig = el('pcOrig').value, aberto = el('pcAberto').checked, hojeF = el('pcHoje').checked, urgF = el('pcFUrg').checked, pendF = el('pcPend').checked;
+        const cand = base().filter(v => v.id
+          && (!aberto || ['agendada', 'reagendada'].includes(v.status))
+          && (!pendF || !direcionada(v))
+          && (!hojeF || criadaHoje(v))
+          && (!urgF || v.urgente)
+          && (!orig || String(v.cras_id) === orig)
+          && !(dest && v.data_agendada === S.data && String(v.cras_id) === String(dest) && periodo(v) !== 'sem')
+          && (!q || norm(v.nome_responsavel).includes(q) || (qd && String(v.cpf || '').includes(qd))))
+          .sort((x, y) => (y.urgente ? 1 : 0) - (x.urgente ? 1 : 0) || (x.data_agendada || '9999').localeCompare(y.data_agendada || '9999'));
+        const nUrg = cand.filter(v => v.urgente).length;
+        el('pcTrzCont').textContent = `${cand.length} visita${cand.length === 1 ? '' : 's'}${nUrg ? ` (${nUrg} urgente${nUrg === 1 ? '' : 's'})` : ''}`;
+        const mostra = cand.slice(0, 80);
+        el('pcTrzLista').innerHTML = mostra.length ? mostra.map(v => {
+          const st = (typeof VS_ST_LABEL !== 'undefined' && VS_ST_LABEL[v.status]) || v.status || '';
+          const det = [v.cpf ? 'CPF ' + v.cpf : '', v.bairro || '', v.data_agendada ? 'agendada ' + fmtData(v.data_agendada) : 'sem data', (v.cras && v.cras.nome) || nomeDe(v.cras_id), st].filter(Boolean).map(esc).join(' · ');
+          return `<div class="pc-trz-it${v.urgente ? ' urg' : ''}"><div><b>${esc(v.nome_responsavel || '—')}${v.urgente ? ' <span class="pc-tag urg">Urgente</span>' : ''}</b><small>${det}</small></div><div class="pc-trz-bt"><button type="button" data-mv="${esc(v.id)}" data-per="manha">→ Manhã</button><button type="button" data-mv="${esc(v.id)}" data-per="tarde">→ Tarde</button></div></div>`;
+        }).join('') + (cand.length > 80 ? `<p class="hint" style="margin:8px 0 0">Mostrando 80 de ${cand.length}. Use a busca para achar a pessoa.</p>` : '')
+          : '<p class="hint" style="margin:8px 0 0">Nenhuma visita encontrada com esses filtros.</p>';
+      };
+      ['input', 'change'].forEach(ev => el('pcMCorpo').addEventListener(ev, (e) => { if (e.target.id === 'pcDataD'){ if (e.target.value) irPara(e.target.value).then(() => { sub(); lista(); }); return; }
+        if (e.target.id === 'pcDest') dest = e.target.value; if (e.target.closest('.pc-fg')) lista(); }));
+      el('pcTrzLista').addEventListener('click', async (e) => {
+        const b = e.target.closest('[data-mv]'); if (!b) return;
+        const c = S.cras.find(x => String(x.id) === String(dest));
+        if (!c){ showToast('⚠️ Escolha primeiro o CRAS de destino'); el('pcDest').focus(); return; }
+        const v = base().find(x => String(x.id) === b.dataset.mv); if (!v) return;
+        const diaFixo = cfgDe(c.id).dia;
+        if (diaFixo != null && diaFixo !== dow(S.data) && !confirm(`O dia fixo do ${c.nome} é ${DIAS[diaFixo].toLowerCase()}, e a data escolhida é ${DIAS[dow(S.data)].toLowerCase()}.\n\nMover mesmo assim?`)) return;
+        const per = b.dataset.per, o = ocup(c, S.data), usado = per === 'manha' ? o.m : o.t, vagas = per === 'manha' ? o.vm : o.vt;
+        if (usado >= vagas){
+          if (!veTodosCras()){ showToast(`⚠️ ${per === 'manha' ? 'Manhã' : 'Tarde'} sem vagas neste dia`); return; }
+          if (!confirm(`${per === 'manha' ? 'A manhã' : 'A tarde'} já está lotada (${usado}/${vagas}). Encaixar mesmo assim?`)) return;
+        }
+        b.disabled = true;
+        try {
+          const r = await sbClient.from('visitas_domiciliares').update({ data_agendada: S.data, hora_prevista: HORA[per], cras_id: c.id }).eq('id', v.id).select('id');
+          if (r.error) throw r.error;
+          if (!r.data || !r.data.length) throw new Error('o banco bloqueou a alteração (falta política de UPDATE no RLS)');
+          v.data_agendada = S.data; v.hora_prevista = HORA[per]; v.cras_id = c.id; v.cras = { nome: c.nome };
+          showToast('✅ ' + (v.nome_responsavel || 'Visita') + ' movida para ' + c.nome + ' · ' + (per === 'manha' ? 'manhã' : 'tarde'));
+          await carregarSemana(true); render(); lista();
+          if (typeof loadVisitas === 'function') loadVisitas();
+        } catch (err) { console.error(err); showToast('❌ Não foi possível mover. ' + erroAmigavel(err), 6000); b.disabled = false; }
+      });
+      sub(); modal.style.display = 'flex'; lista();
+      setTimeout(() => el('pcBusca').focus(), 50);
+      // busca no banco as visitas cadastradas hoje (podem não estar na lista já carregada da Agenda ED)
+      (async () => {
+        try {
+          const ini = new Date(); ini.setHours(0, 0, 0, 0);
+          const r = await escoparVsLista(sbClient.from('visitas_domiciliares').select('*, cras:cras_id(nome)')).gte('data_criacao', ini.toISOString()).limit(500);
+          if (r.error) throw r.error;
+          extra = r.data || []; if (modal.style.display === 'flex' && el('pcTrzLista')) lista();
+        } catch (e) { console.warn('Painel por CRAS: não buscou as visitas de hoje', e); }
+      })();
+    }
+
+    function abrirConfig(){
+      if (!veTodosCras()) return;
+      el('pcMTit').textContent = 'Dia fixo de cada CRAS';
+      el('pcMSub').textContent = 'Cada CRAS atende visitas em um dia da semana. Defina também quantas vagas há na manhã e na tarde.';
+      const opDia = (sel) => '<option value="">Sem dia fixo</option>' + [1, 2, 3, 4, 5].map(d => `<option value="${d}"${sel === d ? ' selected' : ''}>${DIAS[d]}</option>`).join('');
+      el('pcMCorpo').innerHTML = '<div class="pc-cfg-lin h"><span>CRAS</span><span>Dia da semana</span><span>Vagas manhã</span><span>Vagas tarde</span></div>' +
+        S.cras.map(c => { const cf = cfgDe(c.id); return `<div class="pc-cfg-lin" data-cid="${esc(c.id)}"><b>${esc(c.nome)}</b><select data-f="dia">${opDia(cf.dia)}</select><input type="number" min="0" max="20" data-f="vm" value="${cf.vm}"><input type="number" min="0" max="20" data-f="vt" value="${cf.vt}"></div>`; }).join('') +
+        (S.banco ? '' : '<p style="margin:10px 0 0;font-size:12.5px;color:#8A6100">A tabela cras_dia_semana ainda não existe: por enquanto isto fica salvo só neste computador.</p>');
+      el('pcMRodape').innerHTML = '<button type="button" class="btn-ghost" data-pcx>Cancelar</button><button type="button" class="btn-primary" id="pcCfgSalvar">Salvar</button>';
+      el('pcCfgSalvar').addEventListener('click', salvarConfig);
+      modal.style.display = 'flex';
+    }
+    async function salvarConfig(){
+      const linhas = Array.from(el('pcMCorpo').querySelectorAll('.pc-cfg-lin[data-cid]')).map(l => {
+        const q = (f) => l.querySelector(`[data-f="${f}"]`).value;
+        const n = (v) => Math.max(0, Math.min(20, parseInt(v, 10) || 0));
+        return { cras_id: String(l.dataset.cid), dia_semana: q('dia') ? Number(q('dia')) : null, vagas_manha: n(q('vm')), vagas_tarde: n(q('vt')) };
+      });
+      const btn = el('pcCfgSalvar'); btn.disabled = true; btn.textContent = 'Salvando...';
+      try {
+        if (S.banco){
+          const r = await sbClient.from('cras_dia_semana').upsert(linhas, { onConflict: 'cras_id' });
+          if (r.error) throw r.error;
+        } else {
+          localStorage.setItem(LS_KEY, JSON.stringify(linhas));
+        }
+        await carregarConfig();
+        fechar(); render(); showToast('✅ Dias dos CRAS salvos');
+      } catch (e) {
+        console.error('Painel por CRAS: erro ao salvar dias', e);
+        showToast('❌ Não foi possível salvar. ' + erroAmigavel(e), 6000);
+        btn.disabled = false; btn.textContent = 'Salvar';
+      }
+    }
+
+    // ---------- impressão (no modelo da folha de papel) ----------
+    function imprimir(){
+      const info = crasDoDia();
+      if (!info.lista.length){ showToast('⚠️ Não há CRAS para imprimir neste dia'); return; }
+      const cel = (v) => `<div class="c"><p><b>Nome:</b> ${esc(v ? v.nome_responsavel || '' : '')}</p><p><b>Endereço:</b> ${esc(v ? v.endereco || '' : '')}</p><p><b>Bairro:</b> ${esc(v ? v.bairro || '' : '')}</p><p><b>Fone:</b> ${esc(v && v.telefone ? vsFmtTel(v.telefone) : '')}</p></div>`;
+      const paginas = info.lista.map(c => {
+        const cf = cfgDe(c.id), vis = visDia(c, S.data);
+        const m = vis.filter(v => periodo(v) === 'manha'), t = vis.filter(v => periodo(v) === 'tarde'), sp = vis.filter(v => periodo(v) === 'sem');
+        const n = Math.max(cf.vm, cf.vt, m.length, t.length);
+        let linhas = '';
+        for (let i = 0; i < n; i++) linhas += `<tr><td>${i < Math.max(cf.vm, m.length) ? cel(m[i]) : ''}</td><td>${i < Math.max(cf.vt, t.length) ? cel(t[i]) : ''}</td></tr>`;
+        const extra = sp.length ? `<h3>Sem período definido</h3>${sp.map(v => `<p>${esc(v.nome_responsavel || '')} — ${esc(v.endereco || '')} ${esc(v.bairro || '')} ${v.telefone ? esc(vsFmtTel(v.telefone)) : ''}</p>`).join('')}` : '';
+        return `<section><h1>${esc(c.nome)}</h1><h2>${DIAS[dow(S.data)]} — ${fmtData(S.data)}</h2><table><thead><tr><th>MANHÃ</th><th>TARDE</th></tr></thead><tbody>${linhas}</tbody></table>${extra}</section>`;
+      }).join('');
+      const css = 'body{font-family:Arial,sans-serif;color:#111;margin:0;padding:18px}section{page-break-after:always}section:last-child{page-break-after:auto}h1{font-size:22px;margin:0}h2{font-size:15px;font-weight:600;margin:2px 0 14px;color:#444}h3{font-size:13px;margin:14px 0 4px}table{width:100%;border-collapse:collapse;table-layout:fixed}th{border:1px solid #333;padding:7px;font-size:14px;letter-spacing:.08em;background:#eee}td{border:1px solid #333;padding:0;vertical-align:top;height:92px}.c{padding:7px 9px}.c p{margin:0 0 5px;font-size:12px;border-bottom:1px dotted #999;min-height:15px}p{font-size:12px;margin:2px 0}';
+      const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Visitas ${fmtData(S.data)}</title><style>${css}</style></head><body>${paginas}</body></html>`;
+      if (typeof rpImprimirDoc === 'function') rpImprimirDoc(html);
+      else { const w = window.open('', '_blank'); if (w){ w.document.write(html); w.document.close(); setTimeout(() => w.print(), 350); } }
+    }
+
+    // ---------- eventos ----------
+    raiz.addEventListener('click', async (e) => {
+      const t = e.target;
+      const dia = t.closest('[data-dia]'); if (dia){ S.crasSel = ''; irPara(dia.dataset.dia); return; }
+      const ir = t.closest('[data-ir]'); if (ir){ irPara(ir.dataset.ir); return; }
+      const trz = t.closest('[data-trazer]'); if (trz){ abrirTrazer(trz.dataset.trazer, !!trz.dataset.hoje, !!trz.dataset.pend); return; }
+      const add = t.closest('[data-add]'); if (add){ abrirAgendar(add.dataset.cras, add.dataset.per); return; }
+      const mv = t.closest('[data-mover]');
+      if (mv){
+        mv.disabled = true;
+        try {
+          const r = await sbClient.from('visitas_domiciliares').update({ hora_prevista: HORA[mv.dataset.per] }).eq('id', mv.dataset.mover).select('id');
+          if (r.error) throw r.error;
+          if (!r.data || !r.data.length) throw new Error('o banco bloqueou a alteração (falta política de UPDATE no RLS)');
+          await carregarSemana(true); render();
+          if (typeof loadVisitas === 'function') loadVisitas();
+        } catch (err) { showToast('❌ Não foi possível mudar o período. ' + erroAmigavel(err), 5000); mv.disabled = false; }
+        return;
+      }
+      const cheio = t.closest('.pc-slot.cheio');
+      if (cheio){ const v = S.semana.find(x => String(x.id) === cheio.dataset.id); if (v) vsAbrirVisita(v); return; }
+      const ac = t.closest('[data-act]'); if (!ac) return;
+      switch (ac.dataset.act){
+        case 'prev': passo(-1); break;
+        case 'next': passo(1); break;
+        case 'hoje': { const h = padrao(); if (S.crasSel && cfgDe(S.crasSel).dia != null) irPara(proxima(cfgDe(S.crasSel).dia, hoje())); else irPara(h); break; }
+        case 'atualizar': await Promise.all([carregarSemana(), carregarAbertas()]); render(); break;
+        case 'imprimir': imprimir(); break;
+        case 'config': abrirConfig(); break;
+      }
+    });
+    raiz.addEventListener('change', (e) => {
+      if (e.target.id === 'pcData' && e.target.value) irPara(e.target.value);
+      if (e.target.id === 'pcCras'){
+        S.crasSel = e.target.value;
+        const dia = S.crasSel ? cfgDe(S.crasSel).dia : null;
+        if (dia != null){ const base = hoje(); if (dow(S.data) !== dia || S.data < base){ irPara(proxima(dia, S.data < base ? base : S.data)); return; } }
+        render();
+      }
+    });
+
+    // ---------- alternar Calendário / Painel por CRAS ----------
+    const btnCal = el('vsModoCal'), btnCras = el('vsModoCras'), sub = el('vsGavetaSub');
+    const SUB_CAL = sub ? sub.textContent : '';
+    function modo(cras){
+      g.classList.toggle('vs-modo-cras', cras);
+      btnCal.classList.toggle('active', !cras); btnCras.classList.toggle('active', cras);
+      if (sub) sub.textContent = cras ? 'Cada CRAS tem um dia fixo: escolha manhã ou tarde e agende a visita' : SUB_CAL;
+      if (cras) abrir();
+    }
+    btnCal.addEventListener('click', () => modo(false));
+    btnCras.addEventListener('click', () => modo(true));
+    el('vsCalToggle').addEventListener('click', () => { setTimeout(() => { if (g.classList.contains('vs-modo-cras') && visivel()) abrir(); }, 0); });
+  })();
+
   // ====== ABAS: Agenda / Últimas entrevistas ======
   document.getElementById('vsTabs').addEventListener('click', (e) => {
     const btn = e.target.closest('.vs-tab');
@@ -7011,6 +7577,7 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
         renderPgProximasVisitas();
         renderPgResumoDia();
         vsChecarMudanca(); // guarda a "assinatura" atual para a atualização automática
+        if (typeof window.pcAtualizar === 'function') window.pcAtualizar();   // Painel por CRAS acompanha as mudanças
       }
     } catch (e) {
       console.log('Não foi possível carregar visitas:', e.message);
@@ -7371,7 +7938,8 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
       : (conc ? btnTirar : '');   // concluído em outro setor também pode ser desfeito
     const destinos = Object.keys(SETORES).filter(k => k !== efetivo);
     const btns = destinos.map(k => `<button type="button" class="cad-btn cad-btn-set cad-mv-${k}" data-cad-mover="${k}">${SETORES[k]}</button>`).join('');
-    const limpar = '';
+    const limpar = (typeof veTodosCras === 'function' && veTodosCras())
+      ? '<button type="button" class="cad-btn cad-btn-limpar cad-btn-excluir" data-cad-excluir="1" title="Exclui este card e apaga do banco os registros dele">🗑 Excluir card</button>' : '';
     const hora = p.horario ? ' ' + String(p.horario).slice(0, 5) : '';
     return `<div class="cad-card" data-chave="${esc(p.chave)}" data-nome="${esc(p.nome)}">
       <div class="cad-nome">${esc(p.nome) || '—'}</div>
@@ -7479,7 +8047,7 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
         const mais = (data || '') > (p.data || '') || ((data || '') === (p.data || '') && String(horario || '') > String(p.horario || ''));
         if (mais){ p.data = data; p.horario = horario; p.cras = cras; if (nome) p.nome = nome; }
       };
-      (ra.data || []).forEach(a => add(chave(a.cpf_atendido, a.nome_atendido), a.nome_atendido, a.cpf_atendido, a.data_atendimento, a.horario, a.cras && a.cras.nome, 'Atendimento'));
+      (ra.data || []).forEach(a => { const k = chave(a.cpf_atendido, a.nome_atendido); add(k, a.nome_atendido, a.cpf_atendido, a.data_atendimento, a.horario, a.cras && a.cras.nome, 'Atendimento'); if (porChave[k]) (porChave[k].atIds = porChave[k].atIds || []).push(a.id); });
       (rv.data || []).forEach(v => add(chave(v.cpf, v.nome_responsavel), v.nome_responsavel, v.cpf, v.data_agendada, v.hora_prevista, v.cras && v.cras.nome, 'Entrevista domiciliar', { id: v.id, status: v.status, data: v.data_agendada, hora: v.hora_prevista }));
       Object.values(porChave).forEach(p => p.visitas.sort((x, y) => (y.data || '').localeCompare(x.data || '') || String(y.hora || '').localeCompare(String(x.hora || ''))));
       pessoas = Object.values(porChave).sort((x, y) => (y.data || '').localeCompare(x.data || '') || norm(x.nome).localeCompare(norm(y.nome)));
@@ -7566,6 +8134,61 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
   let tb = null;
   $('cadBusca').addEventListener('input', () => { clearTimeout(tb); tb = setTimeout(renderizar, 150); });
 
+  // Excluir o card: apaga do banco os atendimentos e visitas que formam o card, o setor e o histórico de movimentações
+  async function excluirCard(k, nome){
+    if (!(typeof veTodosCras === 'function' && veTodosCras())){ showToast('⚠️ Só coordenação e administração podem excluir cadernos'); return false; }
+    const p = pessoas.find(x => x.chave === k); if (!p) return false;
+    const atIds = (p.atIds || []).slice(), vsIds = (p.visitas || []).map(v => v.id);
+    const resumo = [atIds.length ? atIds.length + ' atendimento(s)' : '', vsIds.length ? vsIds.length + ' visita(s) domiciliar(es)' : ''].filter(Boolean).join(' e ') || 'nenhum atendimento ou visita';
+    if (!confirm(`Excluir o card de "${nome || 'pessoa'}"?\n\nSerão apagados do banco: ${resumo} que aparecem neste card, o setor atual e o histórico de movimentações do caderno.\n\nEsta ação não pode ser desfeita.`)) return false;
+    const CH = 200;
+    try {
+      let snapAt = [], snapVs = [];
+      if (atIds.length){ const r = await sbClient.from('atendimentos').select('id, data_atendimento, motivo, submotivo, cras_origem_id').in('id', atIds); snapAt = r.data || []; }
+      if (vsIds.length){ const r = await sbClient.from('visitas_domiciliares').select('id, data_agendada, motivo, status, cras_id').in('id', vsIds); snapVs = r.data || []; }
+      // atendimentos (primeiro os entrevistadores ligados a eles)
+      for (let i = 0; i < atIds.length; i += CH){
+        const ids = atIds.slice(i, i + CH);
+        const ent = await sbClient.from('atendimento_entrevistadores').select('atendimento_id, funcionario_id').in('atendimento_id', ids);
+        const r1 = await sbClient.from('atendimento_entrevistadores').delete().in('atendimento_id', ids);
+        if (r1.error) throw r1.error;
+        const r2 = await sbClient.from('atendimentos').delete().in('id', ids).select('id');
+        if (r2.error) throw r2.error;
+        const apagados = new Set((r2.data || []).map(x => String(x.id)));
+        if (typeof registrarExclusao === 'function') await registrarExclusao('atendimento', snapAt.filter(x => apagados.has(String(x.id))), 'manual');
+        const sobrou = ids.filter(id => !apagados.has(String(id)));
+        if (sobrou.length){
+          const volta = ((ent && ent.data) || []).filter(x => sobrou.includes(x.atendimento_id));
+          if (volta.length) await sbClient.from('atendimento_entrevistadores').insert(volta);
+          throw new Error('o banco bloqueou a exclusão de atendimentos (falta política de DELETE no RLS)');
+        }
+      }
+      // visitas domiciliares
+      for (let i = 0; i < vsIds.length; i += CH){
+        const ids = vsIds.slice(i, i + CH);
+        const r = await sbClient.from('visitas_domiciliares').delete().in('id', ids).select('id');
+        if (r.error) throw r.error;
+        const apagados = new Set((r.data || []).map(x => String(x.id)));
+        if (typeof registrarExclusao === 'function') await registrarExclusao('visita', snapVs.filter(x => apagados.has(String(x.id))), 'manual');
+        if (apagados.size < ids.length) throw new Error('o banco bloqueou a exclusão de visitas (falta política de DELETE no RLS)');
+      }
+      // setor e histórico de movimentações do caderno (se a tabela não existir ou bloquear, o card já saiu)
+      try { await sbClient.from('cadernos_setor').delete().eq('cpf', k); } catch (e) {}
+      try { await sbClient.from('cadernos_movimentos').delete().eq('cpf', k); } catch (e) {}
+      delete mapa[k];
+      pessoas = pessoas.filter(x => x.chave !== k);
+      renderizar();
+      showToast(`🗑️ Card de ${nome || 'pessoa'} excluído (${resumo})`, 5000);
+      if (typeof loadVisitas === 'function') loadVisitas();
+      return true;
+    } catch (err) {
+      console.error('Erro ao excluir card:', err);
+      showToast('❌ Não foi possível excluir tudo. ' + (typeof erroAmigavel === 'function' ? erroAmigavel(err) : ((err && err.message) || '')) + ' Atualize o painel para ver o que restou.', 7000);
+      carregarPainel();
+      return false;
+    }
+  }
+
   // mover pelos botões dos cartões
   $('cadSemSetor').parentElement.addEventListener('click', async (e) => {
     const bc = e.target.closest('button[data-cad-concluir]');
@@ -7574,6 +8197,14 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
       bc.disabled = true;
       const okC = await concluir(cardC.dataset.chave, cardC.dataset.nome, bc.dataset.cadConcluir === '1');
       if (okC){ renderizar(); if (typeof loadVisitas === 'function') loadVisitas(); } else bc.disabled = false;
+      return;
+    }
+    const bx = e.target.closest('button[data-cad-excluir]');
+    if (bx){
+      const cx = bx.closest('.cad-card');
+      bx.disabled = true;
+      const okx = await excluirCard(cx.dataset.chave, cx.dataset.nome);
+      if (!okx) bx.disabled = false;
       return;
     }
     const b = e.target.closest('button[data-cad-mover]');
