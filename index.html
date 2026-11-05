@@ -569,6 +569,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     cursor:pointer; font-family:'Inter',sans-serif;
   }
   .vs-tab + .vs-tab{ margin-left:18px; }
+  .vs-tabs{ align-items:center; flex-wrap:wrap; }
+  .vs-tabs .vs-cal-btn{ margin:0 0 4px 18px; padding:7px 13px; font-size:13px; }
   .vs-tab:hover{ color:var(--ink); }
   .vs-tab.active{ color:var(--blue); border-bottom-color:var(--blue); }
 
@@ -2034,6 +2036,18 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .pc-semper b{ display:block; margin-bottom:6px; }
   .pc-semper-it{ display:flex; justify-content:space-between; align-items:center; gap:8px; padding:4px 0; flex-wrap:wrap; }
   .pc-semper-it button{ border:1px solid var(--line); background:var(--card); color:var(--ink); border-radius:8px; padding:3px 9px; font:inherit; font-size:12px; font-weight:600; cursor:pointer; }
+  /* editar / excluir nos cards do painel por CRAS */
+  .pc-slot.cheio{ position:relative; }
+  .pc-slot.cheio .pc-lin.nm{ padding-right:72px; }
+  .pc-slot.cheio:focus-visible{ outline:2px solid var(--blue); outline-offset:2px; }
+  .pc-acoes{ position:absolute; top:8px; right:8px; display:flex; gap:5px; }
+  .pc-ic{ width:30px; height:30px; padding:0; border:1px solid var(--line); background:var(--card); color:var(--ink); border-radius:8px; cursor:pointer; font-size:14px; line-height:1; display:inline-flex; align-items:center; justify-content:center; }
+  .pc-ic:hover{ border-color:var(--blue); background:var(--page-bg); }
+  .pc-ic.del:hover{ border-color:#DC2626; background:#FEF2F2; }
+  .pc-ic:disabled{ opacity:.5; cursor:wait; }
+  body.dark .pc-ic.del:hover{ background:rgba(220,38,38,.18); border-color:#B94A4A; }
+  .pc-semper-it .pc-acoes{ position:static; display:inline-flex; vertical-align:middle; margin-left:4px; }
+  .pc-semper-it .pc-ic{ width:28px; height:28px; padding:0; }
   .pc-fg{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; }
   .pc-fg .span-2{ grid-column:1 / -1; }
   .pc-fg .field input, .pc-fg .field select, .pc-fg .field textarea{ width:100%; min-width:0; box-sizing:border-box; }
@@ -2279,9 +2293,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <div class="vs-tabs" id="vsTabs">
         <button type="button" class="vs-tab active" data-vstab="agenda">Agenda</button>
         <button type="button" class="vs-tab" data-vstab="lista">Últimas entrevistas</button>
+        <button type="button" class="vs-cal-btn" id="vsCalToggle" aria-expanded="false" aria-controls="vsGaveta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Calendário e visitas</button>
       </div>
       <div class="vs-tab-panel" id="vsTabAgenda">
-      <div class="vs-cal-bar"><button type="button" class="vs-cal-btn" id="vsCalToggle" aria-expanded="false" aria-controls="vsGaveta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Calendário e visitas</button></div>
       <div class="vs-gaveta-fundo" id="vsGavetaFundo"></div>
       <div class="visita-two-col">
         <div class="visita-left-col" id="vsGaveta">
@@ -6289,7 +6303,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   (function(){
     const aba = document.getElementById('vsTabAgenda'), btn = document.getElementById('vsCalToggle');
     const abrir = (v) => { aba.classList.toggle('vs-gaveta-aberta', v); btn.setAttribute('aria-expanded', v ? 'true' : 'false'); };
-    btn.addEventListener('click', () => abrir(!aba.classList.contains('vs-gaveta-aberta')));
+    btn.addEventListener('click', () => {
+      const tabAg = document.querySelector('#vsTabs .vs-tab[data-vstab="agenda"]');
+      if (tabAg && !tabAg.classList.contains('active')) tabAg.click();   // estando em "Últimas entrevistas", volta para a Agenda
+      abrir(!aba.classList.contains('vs-gaveta-aberta'));
+    });
     document.getElementById('vsCalFechar').addEventListener('click', () => abrir(false));
     document.getElementById('vsGavetaFundo').addEventListener('click', () => abrir(false));
     document.addEventListener('keydown', (e) => {
@@ -6298,7 +6316,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       if (sobre) return;                 // há uma janela (visita/reagendar) aberta por cima: o Esc fecha só ela
       abrir(false);
     });
-    document.getElementById('vsTabs').addEventListener('click', () => abrir(false));
+    document.getElementById('vsTabs').addEventListener('click', (e) => { if (e.target.closest('.vs-tab')) abrir(false); });
   })();
 
   // ====== PAINEL POR CRAS: cada CRAS tem um dia fixo da semana; a funcionária escolhe Manhã ou Tarde e agenda ======
@@ -6405,16 +6423,18 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     }
 
     // ---------- desenho ----------
+    const acoes = (v) => `<span class="pc-acoes"><button type="button" class="pc-ic" data-edit="${esc(v.id)}" title="Editar visita" aria-label="Editar visita">✏️</button><button type="button" class="pc-ic del" data-del="${esc(v.id)}" title="Excluir visita" aria-label="Excluir visita">🗑️</button></span>`;
     function slotCheio(v){
       const tel = v.telefone ? vsFmtTel(v.telefone) : '';
       const st = (typeof VS_ST_LABEL !== 'undefined' && VS_ST_LABEL[v.status]) || v.status || '';
-      return `<button type="button" class="pc-slot cheio${v.urgente ? ' urg' : ''}" data-id="${esc(v.id)}" title="Abrir visita">
+      return `<div class="pc-slot cheio${v.urgente ? ' urg' : ''}" data-id="${esc(v.id)}" role="button" tabindex="0" title="Abrir visita">
+        ${acoes(v)}
         <span class="pc-lin nm"><i>Nome:</i>${esc(v.nome_responsavel || '—')}</span>
         <span class="pc-lin"><i>Endereço:</i>${esc(v.endereco || '—')}</span>
         <span class="pc-lin"><i>Bairro:</i>${esc(v.bairro || '—')}</span>
         <span class="pc-lin"><i>Fone:</i>${esc(tel || '—')}</span>
         <span class="pc-tags">${v.urgente ? '<span class="pc-tag urg">Urgente</span>' : ''}${st ? `<span class="pc-tag">${esc(st)}</span>` : ''}</span>
-      </button>`;
+      </div>`;
     }
     function coluna(c, per, lista, vagas, passado){
       const livres = Math.max(0, vagas - lista.length);
@@ -6431,7 +6451,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       let h = `<div class="pc-folha-cras"><h4><span>${esc(c.nome)}</span><span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><small style="color:var(--muted);font-weight:600">${vis.length} visita${vis.length === 1 ? '' : 's'} no dia</small>${passado ? '' : `<button type="button" class="pc-btn" data-trazer="${esc(c.id)}">⇄ Trazer visita já agendada</button>`}</span></h4>
         <div class="pc-cols">${coluna(c, 'manha', m, cf.vm, passado)}${coluna(c, 'tarde', t, cf.vt, passado)}</div>`;
       if (sp.length){
-        h += `<div class="pc-semper"><b>Sem período definido (${sp.length})</b>${sp.map(v => `<div class="pc-semper-it"><span>${esc(v.nome_responsavel || '—')}${v.bairro ? ' · ' + esc(v.bairro) : ''}</span><span><button type="button" data-mover="${esc(v.id)}" data-per="manha">→ Manhã</button> <button type="button" data-mover="${esc(v.id)}" data-per="tarde">→ Tarde</button></span></div>`).join('')}</div>`;
+        h += `<div class="pc-semper"><b>Sem período definido (${sp.length})</b>${sp.map(v => `<div class="pc-semper-it"><span>${esc(v.nome_responsavel || '—')}${v.bairro ? ' · ' + esc(v.bairro) : ''}</span><span><button type="button" data-mover="${esc(v.id)}" data-per="manha">→ Manhã</button> <button type="button" data-mover="${esc(v.id)}" data-per="tarde">→ Tarde</button> ${acoes(v)}</span></div>`).join('')}</div>`;
       }
       return h + '</div>';
     }
@@ -6575,6 +6595,97 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     }
 
 
+    // ---------- editar / excluir um card ----------
+    const visPorId = (id) => S.semana.find(x => String(x.id) === String(id)) || (S.abertas || []).find(x => String(x.id) === String(id));
+
+    function abrirEditar(v){
+      const c = S.cras.find(x => String(x.id) === String(v.cras_id));
+      const per0 = periodo(v);
+      el('pcMTit').textContent = 'Editar visita domiciliar';
+      el('pcMSub').textContent = `${(c && c.nome) || (v.cras && v.cras.nome) || 'CRAS'}${v.data_agendada ? ' · ' + fmtData(v.data_agendada) + ' (' + DIAS[dow(v.data_agendada)].toLowerCase() + ')' : ''}`;
+      el('pcMCorpo').innerHTML = `<div class="pc-fg">
+        <div class="field span-2"><label>Período</label><select id="pcPer">${per0 === 'sem' ? '<option value="sem" selected>Sem período definido</option>' : ''}<option value="manha"${per0 === 'manha' ? ' selected' : ''}>Manhã</option><option value="tarde"${per0 === 'tarde' ? ' selected' : ''}>Tarde</option></select></div>
+        <div class="field span-2"><label>Nome do responsável *</label><input type="text" id="pcNome" autocomplete="off" value="${esc(v.nome_responsavel || '')}"></div>
+        <div class="field"><label>CPF *</label><input type="text" id="pcCpf" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" autocomplete="off" value="${esc(vsFormatarCpf(v.cpf))}"></div>
+        <div class="field"><label>Telefone</label><input type="text" id="pcTel" inputmode="tel" placeholder="(51) 90000-0000" autocomplete="off" value="${esc(vsFmtTel(v.telefone))}"></div>
+        <div class="field span-2"><label>Endereço</label><input type="text" id="pcEnd" placeholder="Rua, número, complemento..." autocomplete="off" value="${esc(v.endereco || '')}"></div>
+        <div class="field"><label>Bairro</label><input type="text" id="pcBai" autocomplete="off" value="${esc(v.bairro || '')}"></div>
+        <div class="field"><label>Motivo</label><select id="pcMot">${el('vsMotivo').innerHTML}</select></div>
+        <div class="field span-2"><label>Observação</label><textarea id="pcObs" rows="2" placeholder="Ponto de referência, recados...">${esc(v.observacao || '')}</textarea></div>
+        <label class="span-2" style="display:flex;gap:8px;align-items:center;font-size:13px"><input type="checkbox" id="pcUrg"${v.urgente ? ' checked' : ''}> Visita urgente</label>
+      </div>`;
+      const sm = el('pcMot');
+      if (v.motivo && ![...sm.options].some(o => o.value === v.motivo)){   // motivo antigo: mantém para não perder a informação
+        const op = document.createElement('option'); op.value = v.motivo; op.textContent = v.motivo + ' (motivo antigo)'; sm.appendChild(op);
+      }
+      sm.value = v.motivo || MOTIVO_PADRAO;
+      el('pcMRodape').innerHTML = '<button type="button" class="btn-ghost" data-pcx>Cancelar</button><button type="button" class="btn-primary" id="pcEdSalvar">Salvar alterações</button>';
+      const cpf = el('pcCpf');
+      cpf.addEventListener('input', () => { const d = cpfSoDigitos(cpf.value).slice(0, 11); cpf.value = d.replace(/^(\d{3})(\d)/, '$1.$2').replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3').replace(/\.(\d{3})(\d)/, '.$1-$2'); });
+      el('pcTel').addEventListener('blur', () => { const t = el('pcTel'); if (t.value.trim()) t.value = vsFmtTel(t.value); });
+      el('pcEdSalvar').addEventListener('click', () => salvarEditar(v, per0));
+      modal.style.display = 'flex';
+      setTimeout(() => el('pcNome').focus(), 50);
+    }
+
+    async function salvarEditar(v, per0){
+      const nome = el('pcNome').value.trim(), cpf = cpfCompletar(el('pcCpf').value), per = el('pcPer').value;
+      if (!nome){ showToast('⚠️ Preencha o nome'); return; }
+      if (!cpf && v.cpf){ showToast('⚠️ O CPF é obrigatório'); return; }
+      if (cpf && cpf.length !== 11){ showToast('⚠️ CPF incompleto: use 11 números'); return; }
+      if (cpf && cpf !== cpfCompletar(v.cpf) && !cpfValido(cpf) && !confirm('Este CPF parece inválido (os dígitos verificadores não conferem).\n\nSalvar mesmo assim?')) return;
+      const campos = {
+        nome_responsavel: nome,
+        endereco: el('pcEnd').value.trim() || null, bairro: el('pcBai').value.trim() || null,
+        telefone: el('pcTel').value.replace(/\D/g, '') || null,
+        motivo: el('pcMot').value || MOTIVO_PADRAO,
+        observacao: el('pcObs').value.trim() || null,
+        urgente: el('pcUrg').checked
+      };
+      if (cpf) campos.cpf = cpf;
+      if (per !== per0 && per !== 'sem'){          // mudou de manhã para tarde (ou vice-versa): confere as vagas
+        const o = ocup({ id: v.cras_id }, v.data_agendada), usado = per === 'manha' ? o.m : o.t, vagas = per === 'manha' ? o.vm : o.vt;
+        if (usado >= vagas){
+          if (!veTodosCras()){ showToast(`⚠️ ${per === 'manha' ? 'Manhã' : 'Tarde'} sem vagas neste dia`); return; }
+          if (!confirm(`${per === 'manha' ? 'A manhã' : 'A tarde'} já está lotada (${usado}/${vagas}). Mudar mesmo assim?`)) return;
+        }
+        campos.hora_prevista = HORA[per];
+      }
+      const btn = el('pcEdSalvar'); btn.disabled = true; btn.textContent = 'Salvando...';
+      try {
+        const r = await sbClient.from('visitas_domiciliares').update(campos).eq('id', v.id).select('id');
+        if (r.error) throw r.error;
+        if (!r.data || !r.data.length) throw new Error('o banco bloqueou a alteração (falta política de UPDATE no RLS)');
+        fechar();
+        showToast('✅ Visita atualizada');
+        await Promise.all([carregarSemana(true), carregarAbertas()]); render();
+        if (typeof loadVisitas === 'function') loadVisitas();
+      } catch (err) {
+        console.error('Painel por CRAS: erro ao editar', err);
+        showToast('❌ Não foi possível salvar. ' + erroAmigavel(err), 6000);
+        btn.disabled = false; btn.textContent = 'Salvar alterações';
+      }
+    }
+
+    async function excluirCard(v, btn){
+      if (!confirm(`Excluir a visita de "${v.nome_responsavel || 'sem nome'}"?\n\nEsta ação não pode ser desfeita.`)) return;
+      if (btn) btn.disabled = true;
+      try {
+        const r = await sbClient.from('visitas_domiciliares').delete().eq('id', v.id).select('id');
+        if (r.error) throw r.error;
+        if (!r.data || !r.data.length) throw new Error('o banco bloqueou a exclusão (falta política de DELETE no RLS)');
+        await registrarExclusao('visita', [v], 'manual');
+        if (typeof editandoVisitaId !== 'undefined' && String(editandoVisitaId) === String(v.id) && el('vsLimparBtn')) el('vsLimparBtn').click();
+        showToast('🗑️ Visita excluída');
+        await Promise.all([carregarSemana(true), carregarAbertas()]); render();
+        if (typeof loadVisitas === 'function') loadVisitas();
+      } catch (err) {
+        console.error('Painel por CRAS: erro ao excluir', err);
+        showToast('❌ Não foi possível excluir. ' + erroAmigavel(err), 6000);
+        if (btn) btn.disabled = false;
+      }
+    }
+
     // ---------- trazer visitas já agendadas (de qualquer data/CRAS) para esta folha ----------
     function abrirTrazer(crasId, soHoje, soPend){
       const info0 = crasDoDia();
@@ -6603,7 +6714,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="pcAberto" checked> Só em aberto</label>
         </div>
       </div><div id="pcTrzCont" class="hint" style="margin:4px 0 6px"></div><div id="pcTrzLista"></div>`;
-      el('pcMRodape').innerHTML = '<button type="button" class="btn-ghost" data-pcx>Fechar</button>';
+      el('pcMRodape').innerHTML = '<button type="button" class="btn-ghost" data-pcx>Fechar</button><button type="button" class="btn-primary" id="pcTrzImprimir">🖨 Imprimir lista</button>';
+      let ultima = [];   // visitas que aparecem com os filtros atuais (é o que vai para a impressão)
       const sub = () => { el('pcMSub').textContent = `${fmtData(S.data)} (${DIAS[dow(S.data)].toLowerCase()}) · a visita passa a ser do CRAS de destino, neste dia e período.`; };
       const lista = () => {
         const q = norm(el('pcBusca').value), qd = q.replace(/\D/g, ''), orig = el('pcOrig').value, aberto = el('pcAberto').checked, hojeF = el('pcHoje').checked, urgF = el('pcFUrg').checked, pendF = el('pcPend').checked;
@@ -6616,6 +6728,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           && !(dest && v.data_agendada === S.data && String(v.cras_id) === String(dest) && periodo(v) !== 'sem')
           && (!q || norm(v.nome_responsavel).includes(q) || (qd && String(v.cpf || '').includes(qd))))
           .sort((x, y) => (y.urgente ? 1 : 0) - (x.urgente ? 1 : 0) || (x.data_agendada || '9999').localeCompare(y.data_agendada || '9999'));
+        ultima = cand;
         const nUrg = cand.filter(v => v.urgente).length;
         el('pcTrzCont').textContent = `${cand.length} visita${cand.length === 1 ? '' : 's'}${nUrg ? ` (${nUrg} urgente${nUrg === 1 ? '' : 's'})` : ''}`;
         const mostra = cand.slice(0, 80);
@@ -6650,6 +6763,25 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           await carregarSemana(true); render(); lista();
           if (typeof loadVisitas === 'function') loadVisitas();
         } catch (err) { console.error(err); showToast('❌ Não foi possível mover. ' + erroAmigavel(err), 6000); b.disabled = false; }
+      });
+      el('pcTrzImprimir').addEventListener('click', () => {
+        if (!ultima.length){ showToast('⚠️ Não há visitas na lista para imprimir'); return; }
+        const cpfF = (c) => (typeof vsFormatarCpf === 'function' ? vsFormatarCpf(c) : (c || ''));
+        const filtros = [];
+        if (el('pcPend').checked) filtros.push('sem direcionamento');
+        if (el('pcHoje').checked) filtros.push('cadastradas hoje');
+        if (el('pcFUrg').checked) filtros.push('só urgentes');
+        if (el('pcAberto').checked) filtros.push('só em aberto');
+        if (el('pcOrig').value) filtros.push('CRAS: ' + nomeDe(el('pcOrig').value));
+        if (el('pcBusca').value.trim()) filtros.push('busca: "' + el('pcBusca').value.trim() + '"');
+        const linhas = ultima.map((v, i) => {
+          const st = (typeof VS_ST_LABEL !== 'undefined' && VS_ST_LABEL[v.status]) || v.status || '';
+          return `<tr${v.urgente ? ' class="u"' : ''}><td>${i + 1}</td><td><b>${esc(v.nome_responsavel || '')}</b>${v.urgente ? ' <span class="ug">URGENTE</span>' : ''}<br>${esc(cpfF(v.cpf))}</td><td>${esc(v.endereco || '')}<br>${esc(v.bairro || '')}</td><td>${esc(v.telefone ? vsFmtTel(v.telefone) : '')}</td><td>${esc((v.cras && v.cras.nome) || nomeDe(v.cras_id))}</td><td>${v.data_agendada ? fmtData(v.data_agendada) : 'sem data'}${v.hora_prevista ? '<br>' + (periodo(v) === 'manha' ? 'Manhã' : 'Tarde') : ''}</td><td>${esc(st)}</td></tr>`;
+        }).join('');
+        const css = 'body{font-family:Arial,sans-serif;color:#111;margin:0;padding:18px}h1{font-size:20px;margin:0}p{margin:2px 0 12px;font-size:12px;color:#444}table{width:100%;border-collapse:collapse}th,td{border:1px solid #333;padding:5px 7px;font-size:11.5px;vertical-align:top;text-align:left}th{background:#eee;font-size:11px;text-transform:uppercase}tr{page-break-inside:avoid}tr.u td{background:#fdecec}.ug{color:#b42318;font-size:10px;font-weight:700}';
+        const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Visitas já agendadas</title><style>${css}</style></head><body><h1>Visitas já agendadas</h1><p>${ultima.length} visita${ultima.length === 1 ? '' : 's'}${filtros.length ? ' · Filtros: ' + esc(filtros.join(', ')) : ''} · Impresso em ${fmtData(hoje())}</p><table><thead><tr><th>#</th><th>Nome / CPF</th><th>Endereço / Bairro</th><th>Fone</th><th>CRAS</th><th>Data</th><th>Situação</th></tr></thead><tbody>${linhas}</tbody></table></body></html>`;
+        if (typeof rpImprimirDoc === 'function') rpImprimirDoc(html);
+        else { const w = window.open('', '_blank'); if (w){ w.document.write(html); w.document.close(); setTimeout(() => w.print(), 350); } }
       });
       sub(); modal.style.display = 'flex'; lista();
       setTimeout(() => el('pcBusca').focus(), 50);
@@ -6738,6 +6870,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         } catch (err) { showToast('❌ Não foi possível mudar o período. ' + erroAmigavel(err), 5000); mv.disabled = false; }
         return;
       }
+      const ed = t.closest('[data-edit]'); if (ed){ const v = visPorId(ed.dataset.edit); if (v) abrirEditar(v); return; }
+      const dl = t.closest('[data-del]'); if (dl){ const v = visPorId(dl.dataset.del); if (v) excluirCard(v, dl); return; }
       const cheio = t.closest('.pc-slot.cheio');
       if (cheio){ const v = S.semana.find(x => String(x.id) === cheio.dataset.id); if (v) vsAbrirVisita(v); return; }
       const ac = t.closest('[data-act]'); if (!ac) return;
@@ -6748,6 +6882,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         case 'atualizar': await Promise.all([carregarSemana(), carregarAbertas()]); render(); break;
         case 'imprimir': imprimir(); break;
         case 'config': abrirConfig(); break;
+      }
+    });
+    raiz.addEventListener('keydown', (e) => {   // card é um div clicável: Enter/Espaço abrem a visita
+      if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('cheio')){
+        e.preventDefault(); const v = visPorId(e.target.dataset.id); if (v) vsAbrirVisita(v);
       }
     });
     raiz.addEventListener('change', (e) => {
