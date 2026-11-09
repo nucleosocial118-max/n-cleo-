@@ -1754,6 +1754,15 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .btn-print-sm svg{ width:15px; height:15px; }
   .btn-print:disabled{ background:var(--line); color:var(--muted); box-shadow:none; cursor:not-allowed; }
   body.dark .btn-print:not(:disabled){ color:#0F1F1B; }
+  /* Abas (páginas) do resultado de Fluxos */
+  .fluxo-abas{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin:6px 0 14px; }
+  .fluxo-abas .fluxo-aba{ min-width:38px; padding:7px 14px; border:1px solid var(--line); border-radius:999px; background:transparent; color:var(--ink); font-size:13px; font-weight:700; cursor:pointer; transition:background .15s, color .15s; }
+  .fluxo-abas .fluxo-aba:hover:not(:disabled):not(.ativa){ background:var(--line); }
+  .fluxo-abas .fluxo-aba.ativa{ background:var(--blue); border-color:var(--blue); color:#fff; cursor:default; }
+  .fluxo-abas .fluxo-aba:disabled{ opacity:.45; cursor:not-allowed; }
+  .fluxo-abas .fluxo-aba-info{ margin-left:auto; font-size:12px; color:var(--muted); }
+  .fluxo-abas .fluxo-aba-gap{ color:var(--muted); padding:0 2px; }
+  body.dark .fluxo-abas .fluxo-aba.ativa{ color:#0F1F1B; }
   .vs-table .vs-btn-icon[data-acao="imprimir"]{ color:var(--blue); }
   .search, .field input, .field select, .field textarea, .vs-f-chip{ background:var(--page-bg); border:1px solid transparent; border-radius:999px; }
   .field textarea, .field select[multiple]{ border-radius:16px; }
@@ -2271,7 +2280,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
         <div class="form-actions">
           <button class="btn-ghost" id="fluxoLimparBtn">Limpar</button>
-          <button class="btn-ghost" id="fluxoTodosBtn" title="Buscar e mostrar todos os registros, sem o limite de 200">Mostrar todos</button>
+          <button class="btn-ghost" id="fluxoTodosBtn" title="Listar todos os registros em abas de 200 (não exige filtro)">Mostrar todos</button>
           <button class="btn-primary" id="fluxoBuscarBtn">Buscar fluxo</button>
         </div>
       </div>
@@ -2283,7 +2292,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <h3>Resultado</h3>
           <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
             <span class="status-hint" id="fluxoResumo">Use a busca acima</span>
-            <button type="button" class="btn-print" id="fluxoImprimirBtn" disabled title="Imprimir os resultados filtrados (faça uma busca primeiro)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="6" y="14" width="12" height="7" rx="1"/><path d="M6 17H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/></svg><span>Imprimir resultado</span></button>
+            <button type="button" class="btn-print" id="fluxoImprimirBtn" disabled title="Imprimir a aba que está na tela (faça uma busca primeiro)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="6" y="14" width="12" height="7" rx="1"/><path d="M6 17H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/></svg><span>Imprimir resultado</span></button>
           </div>
         </div>
         <p style="color:var(--muted);font-size:13.5px;padding:6px 0 14px">Digite um nome, um CPF ou um período e clique em "Buscar fluxo".</p>
@@ -5649,10 +5658,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   }
 
   // Último resultado exibido (é ele que vai para a impressão)
-  let fluxoUltimo = { lista: [], filtros: {}, completo: false };
-  const FLUXO_LIMITE = 200;
-  const FLUXO_PAGINA = 1000;      // tamanho de cada lote ao carregar todos (limite padrão do Supabase por requisição)
-  const FLUXO_MAX_TOTAL = 20000;  // trava de segurança
+  let fluxoUltimo = { lista: [], filtros: {}, pagina: 1, temMais: false };
+  const FLUXO_LIMITE = 200;       // registros por aba (página)
 
   function fluxoAtualizaBtnImprimir(){
     const b = el('fluxoImprimirBtn');
@@ -5698,8 +5705,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <h2 class="motivo-tit">${escapeHtml(m)} <span>(${arr.length} registro${arr.length > 1 ? 's' : ''})</span></h2>
         ${rpTabela([{ t: 'Data / Hora' }, { t: 'Nome' }, { t: 'CPF' }, { t: 'Submotivo' }, { t: 'CRAS' }, { t: 'Entrevistadores' }], arr.map(linhaAt), 'Nenhum registro.')}
       </div>`).join('');
-    const aviso = (!fluxoUltimo.completo && lista.length >= FLUXO_LIMITE)
-      ? `<p class="rodape">Atenção: a busca exibe no máximo ${FLUXO_LIMITE} registros; podem existir mais resultados para estes filtros.</p>` : '';
+    const aviso = (fluxoUltimo.pagina > 1 || fluxoUltimo.temMais)
+      ? `<p class="rodape">Impressão da aba ${fluxoUltimo.pagina} (registros ${(fluxoUltimo.pagina - 1) * FLUXO_LIMITE + 1} a ${(fluxoUltimo.pagina - 1) * FLUXO_LIMITE + lista.length}). Os demais registros desta busca estão nas outras abas.</p>` : '';
     const cssExtra = `
       .motivo-tit{ background:#e9edf5; border-left:4px solid #2b4c8c; padding:5px 8px; font-size:12px; margin:16px 0 6px; page-break-after:avoid; break-after:avoid; }
       .motivo-tit span{ font-weight:400; color:#444; font-size:10px; }
@@ -5707,7 +5714,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Fluxos de atendimento</title><style>${rpDetCss}${cssExtra}</style></head><body>
       <section class="sec">
         <h1>Fluxos de atendimento</h1>${meta}
-        <div class="kpis"><div class="kpi"><span>Registros</span><b>${lista.length}</b></div><div class="kpi"><span>Motivos</span><b>${ordenados.length}</b></div></div>
+        <div class="kpis"><div class="kpi"><span>Registros${fluxoUltimo.pagina > 1 || fluxoUltimo.temMais ? ' (aba ' + fluxoUltimo.pagina + ')' : ''}</span><b>${lista.length}</b></div><div class="kpi"><span>Motivos</span><b>${ordenados.length}</b></div></div>
         <h2>Resumo por motivo</h2>
         ${resumoMotivos}
         ${blocos}
@@ -5727,23 +5734,79 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     return q.order('data_atendimento', { ascending: false }).order('horario', { ascending: false, nullsFirst: false }).order('id', { ascending: false });
   }
 
-  function fluxoRender(lista){
+  function fluxoLimpaLista(){
+    const r = el('fluxoResultado');
+    r.querySelectorAll('.tl-item, p, .fluxo-abas').forEach(n => n.remove());
+  }
+
+  // Barra de abas: Anterior | 1 2 3 ... | Próxima (só mostra a próxima se o banco tiver mais registros)
+  function fluxoAbasHtml(){
+    const { pagina, temMais, lista } = fluxoUltimo;
+    if (pagina === 1 && !temMais) return '';
+    const maxConhecida = pagina + (temMais ? 1 : 0);
+    const inicio = Math.max(1, maxConhecida - 6);
+    let nums = '';
+    if (inicio > 1) nums += `<button type="button" class="fluxo-aba" data-pg="1">1</button><span class="fluxo-aba-gap">…</span>`;
+    for (let n = inicio; n <= maxConhecida; n++){
+      nums += `<button type="button" class="fluxo-aba${n === pagina ? ' ativa' : ''}" data-pg="${n}"${n === pagina ? ' aria-current="page"' : ''}>${n}</button>`;
+    }
+    const de = (pagina - 1) * FLUXO_LIMITE + 1, ate = (pagina - 1) * FLUXO_LIMITE + lista.length;
+    return `<div class="fluxo-abas" role="navigation" aria-label="Abas do resultado">
+      <button type="button" class="fluxo-aba" data-pg="${pagina - 1}"${pagina <= 1 ? ' disabled' : ''}>‹ Anterior</button>
+      ${nums}
+      <button type="button" class="fluxo-aba" data-pg="${pagina + 1}"${temMais ? '' : ' disabled'}>Próxima ›</button>
+      <span class="fluxo-aba-info">Registros ${de}–${ate}</span>
+    </div>`;
+  }
+
+  function fluxoRender(){
+    const { lista } = fluxoUltimo;
     const resultado = el('fluxoResultado');
-    resultado.querySelectorAll('.tl-item, p').forEach(n => n.remove());
+    fluxoLimpaLista();
+    const abas = fluxoAbasHtml();
+    resultado.querySelector('.section-head').insertAdjacentHTML('afterend', abas);   // abas no topo
     resultado.insertAdjacentHTML('beforeend', lista.length
       ? lista.map(itemFluxo).join('')
       : '<p style="color:var(--muted);font-size:13.5px;padding:6px 0 14px">Nada encontrado com esses filtros.</p>');
+    if (abas && lista.length) resultado.insertAdjacentHTML('beforeend', abas);        // e no rodapé
   }
 
   function fluxoAtualizaResumo(){
-    const { lista, completo } = fluxoUltimo;
-    const limitado = !completo && lista.length >= FLUXO_LIMITE;
+    const { lista, pagina, temMais } = fluxoUltimo;
+    const de = (pagina - 1) * FLUXO_LIMITE + 1, ate = (pagina - 1) * FLUXO_LIMITE + lista.length;
     el('fluxoResumo').textContent = !lista.length ? 'Nenhum registro encontrado'
-      : limitado ? `${lista.length} registro(s) exibido(s) — pode haver mais (use "Mostrar todos")`
-      : `${lista.length} registro(s) encontrado(s)`;
+      : (pagina === 1 && !temMais) ? `${lista.length} registro(s) encontrado(s)`
+      : `Aba ${pagina} · registros ${de} a ${ate}${temMais ? ' (há mais abas)' : ''}`;
   }
 
-  // todos = false: traz só os primeiros 200 (rápido). todos = true ("Mostrar todos"): busca em lotes até acabar.
+  // Busca uma aba (página) do resultado. Cada aba é uma consulta pequena (200 registros), então não estoura o tempo do banco.
+  // todos = true ("Mostrar todos") dispensa o filtro; false ("Buscar fluxo") exige nome, CPF, CRAS ou período.
+  async function fluxoCarregaPagina(filtros, pagina){
+    const btnBuscar = el('fluxoBuscarBtn'), btnTodos = el('fluxoTodosBtn');
+    btnBuscar.disabled = btnTodos.disabled = true;
+    el('fluxoResumo').textContent = 'Buscando...';
+    el('fluxoResultado').querySelectorAll('.fluxo-abas button').forEach(b => b.disabled = true);
+    const de = (pagina - 1) * FLUXO_LIMITE;
+    try {
+      // pede 1 registro a mais só para saber se existe a próxima aba
+      const { data, error } = await fluxoMontaQuery(filtros).range(de, de + FLUXO_LIMITE);
+      if (error) throw error;
+      const lote = data || [];
+      fluxoUltimo = { lista: lote.slice(0, FLUXO_LIMITE), filtros, pagina, temMais: lote.length > FLUXO_LIMITE };
+    } catch (err){
+      console.error(err);
+      const tempo = err && (err.code === '57014' || /timeout/i.test(err.message || ''));
+      showToast(tempo ? 'A busca demorou demais. Preencha um filtro (nome, CRAS ou período) e tente de novo.' : 'Erro ao buscar fluxo: ' + (err.message || err));
+      // mantém a aba que já estava na tela, se houver
+      if (fluxoUltimo.lista.length){ fluxoRender(); fluxoAtualizaResumo(); }
+      else { fluxoLimpaLista(); el('fluxoResumo').textContent = 'Erro ao buscar.'; }
+      return false;
+    } finally { btnBuscar.disabled = btnTodos.disabled = false; fluxoAtualizaBtnImprimir(); }
+    fluxoAtualizaResumo();
+    fluxoRender();
+    return true;
+  }
+
   async function buscarFluxo(todos = false){
     todos = todos === true;
     const busca = el('fluxoBusca').value.trim().replace(/[,()%*]/g, '');
@@ -5754,42 +5817,20 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       showToast('Informe um nome, CPF ou período para buscar.');
       return;
     }
-    const f = { busca, cras, ini, fim };
-    const btnBuscar = el('fluxoBuscarBtn'), btnTodos = el('fluxoTodosBtn');
-    btnBuscar.disabled = btnTodos.disabled = true;
-    el('fluxoResumo').textContent = 'Buscando...';
-    el('fluxoResultado').querySelectorAll('.tl-item, p').forEach(n => n.remove());
-    let lista = [];
-    try {
-      if (!todos){
-        const { data, error } = await fluxoMontaQuery(f).limit(FLUXO_LIMITE);
-        if (error) throw error;
-        lista = data || [];
-      } else {
-        for (let i = 0; i < FLUXO_MAX_TOTAL; i += FLUXO_PAGINA){
-          const { data, error } = await fluxoMontaQuery(f).range(i, i + FLUXO_PAGINA - 1);
-          if (error) throw error;
-          lista.push(...(data || []));
-          el('fluxoResumo').textContent = `Carregando... ${lista.length} registro(s)`;
-          if ((data || []).length < FLUXO_PAGINA) break;
-        }
-      }
-    } catch (err){
-      console.error(err);
-      fluxoUltimo = { lista: [], filtros: {}, completo: false };
-      fluxoAtualizaBtnImprimir();
-      el('fluxoResumo').textContent = 'Erro ao buscar.';
-      showToast('Erro ao buscar fluxo: ' + (err.message || err));
-      return;
-    } finally { btnBuscar.disabled = btnTodos.disabled = false; }
-    fluxoUltimo = { lista, filtros: f, completo: todos };
-    fluxoAtualizaBtnImprimir();
-    fluxoAtualizaResumo();
-    fluxoRender(lista);
-    if (todos && lista.length >= FLUXO_MAX_TOTAL) showToast(`Exibindo os primeiros ${FLUXO_MAX_TOTAL} registros. Refine a busca para ver o restante.`);
+    fluxoUltimo = { lista: [], filtros: {}, pagina: 1, temMais: false };
+    fluxoLimpaLista();
+    await fluxoCarregaPagina({ busca, cras, ini, fim }, 1);
+  }
+
+  async function fluxoIrParaPagina(n){
+    if (!(n >= 1) || n === fluxoUltimo.pagina) return;
+    const ok = await fluxoCarregaPagina(fluxoUltimo.filtros, n);
+    if (ok) el('fluxoResultado').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   el('fluxoResultado').addEventListener('click', (e) => {
+    const aba = e.target.closest('.fluxo-aba');
+    if (aba){ e.preventDefault(); if (!aba.disabled) fluxoIrParaPagina(parseInt(aba.dataset.pg, 10)); return; }
     const pr = e.target.closest('.fluxo-item-print');
     if (pr){ e.preventDefault(); imprimirItemFluxo(pr); return; }
     const link = e.target.closest('.fluxo-hist-toggle');
@@ -5803,10 +5844,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   el('fluxoBusca').addEventListener('keydown', (e) => { if (e.key === 'Enter') buscarFluxo(false); });
   el('fluxoLimparBtn').addEventListener('click', () => {
     ['fluxoBusca', 'fluxoCras', 'fluxoIni', 'fluxoFim'].forEach(i => el(i).value = '');
-    fluxoUltimo = { lista: [], filtros: {}, completo: false };
+    fluxoUltimo = { lista: [], filtros: {}, pagina: 1, temMais: false };
     fluxoAtualizaBtnImprimir();
     el('fluxoResumo').textContent = 'Use a busca acima';
-    el('fluxoResultado').querySelectorAll('.tl-item, p').forEach(n => n.remove());
+    fluxoLimpaLista();
     el('fluxoResultado').insertAdjacentHTML('beforeend',
       '<p style="color:var(--muted);font-size:13.5px;padding:6px 0 14px">Digite um nome, um CPF ou um período e clique em "Buscar fluxo".</p>');
   });
