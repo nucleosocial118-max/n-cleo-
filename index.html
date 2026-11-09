@@ -2271,6 +2271,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
         <div class="form-actions">
           <button class="btn-ghost" id="fluxoLimparBtn">Limpar</button>
+          <button class="btn-ghost" id="fluxoTodosBtn" title="Buscar e mostrar todos os registros, sem o limite de 200">Mostrar todos</button>
           <button class="btn-primary" id="fluxoBuscarBtn">Buscar fluxo</button>
         </div>
       </div>
@@ -5648,8 +5649,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   }
 
   // Último resultado exibido (é ele que vai para a impressão)
-  let fluxoUltimo = { lista: [], filtros: {} };
+  let fluxoUltimo = { lista: [], filtros: {}, completo: false };
   const FLUXO_LIMITE = 200;
+  const FLUXO_PAGINA = 1000;      // tamanho de cada lote ao carregar todos (limite padrão do Supabase por requisição)
+  const FLUXO_MAX_TOTAL = 20000;  // trava de segurança
 
   function fluxoAtualizaBtnImprimir(){
     const b = el('fluxoImprimirBtn');
@@ -5669,59 +5672,121 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <b>CRAS:</b> ${escapeHtml(crasNome)} &nbsp;|&nbsp;
       <b>Período:</b> ${escapeHtml(periodo)}<br>
       <b>Emitido em:</b> ${escapeHtml(new Date().toLocaleString('pt-BR'))}</p>`;
-    const linhas = lista.map(a => {
-      const motivo = (a.motivo || '') + (a.submotivo ? ' - ' + a.submotivo : '');
+    // Agrupa por motivo (mantém a ordem de data da busca dentro de cada grupo; motivos mais frequentes primeiro)
+    const grupos = new Map();
+    lista.forEach(a => {
+      const m = String(a.motivo || '').trim() || 'Sem motivo';
+      if (!grupos.has(m)) grupos.set(m, []);
+      grupos.get(m).push(a);
+    });
+    const ordenados = [...grupos.entries()].sort((x, y) => y[1].length - x[1].length || x[0].localeCompare(y[0], 'pt-BR'));
+    const linhaAt = (a) => {
       const quem = (a.ents || []).map(e => e.func && e.func.nome).filter(Boolean).join(' / ');
       return `<tr>
         <td class="nw">${escapeHtml(fmtData(a.data_atendimento))}${a.horario ? ' ' + escapeHtml(String(a.horario).slice(0, 5)) : ''}</td>
         <td>${escapeHtml(a.nome_atendido || '')}</td>
         <td class="nw">${escapeHtml(rpCpf(a.cpf_atendido))}</td>
-        <td>${escapeHtml(motivo)}</td>
+        <td>${escapeHtml(a.submotivo || '')}</td>
         <td>${escapeHtml((a.cras && a.cras.nome) || '')}</td>
         <td>${escapeHtml(quem)}</td></tr>`;
-    });
-    const aviso = lista.length >= FLUXO_LIMITE
+    };
+    const resumoMotivos = rpTabela([{ t: 'Motivo' }, { t: 'Qtd.', cls: 'n' }],
+      ordenados.map(([m, arr]) => `<tr><td>${escapeHtml(m)}</td><td class="n">${arr.length}</td></tr>`).concat(
+        `<tr><td><b>Total</b></td><td class="n"><b>${lista.length}</b></td></tr>`), '');
+    const blocos = ordenados.map(([m, arr]) => `
+      <div class="grupo-motivo">
+        <h2 class="motivo-tit">${escapeHtml(m)} <span>(${arr.length} registro${arr.length > 1 ? 's' : ''})</span></h2>
+        ${rpTabela([{ t: 'Data / Hora' }, { t: 'Nome' }, { t: 'CPF' }, { t: 'Submotivo' }, { t: 'CRAS' }, { t: 'Entrevistadores' }], arr.map(linhaAt), 'Nenhum registro.')}
+      </div>`).join('');
+    const aviso = (!fluxoUltimo.completo && lista.length >= FLUXO_LIMITE)
       ? `<p class="rodape">Atenção: a busca exibe no máximo ${FLUXO_LIMITE} registros; podem existir mais resultados para estes filtros.</p>` : '';
-    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Fluxos de atendimento</title><style>${rpDetCss}</style></head><body>
+    const cssExtra = `
+      .motivo-tit{ background:#e9edf5; border-left:4px solid #2b4c8c; padding:5px 8px; font-size:12px; margin:16px 0 6px; page-break-after:avoid; break-after:avoid; }
+      .motivo-tit span{ font-weight:400; color:#444; font-size:10px; }
+      .grupo-motivo{ page-break-inside:auto; }`;
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Fluxos de atendimento</title><style>${rpDetCss}${cssExtra}</style></head><body>
       <section class="sec">
         <h1>Fluxos de atendimento</h1>${meta}
-        <div class="kpis"><div class="kpi"><span>Registros</span><b>${lista.length}</b></div></div>
-        ${rpTabela([{ t: 'Data / Hora' }, { t: 'Nome' }, { t: 'CPF' }, { t: 'Motivo' }, { t: 'CRAS' }, { t: 'Entrevistadores' }], linhas, 'Nenhum registro.')}
+        <div class="kpis"><div class="kpi"><span>Registros</span><b>${lista.length}</b></div><div class="kpi"><span>Motivos</span><b>${ordenados.length}</b></div></div>
+        <h2>Resumo por motivo</h2>
+        ${resumoMotivos}
+        ${blocos}
         ${aviso}
       </section></body></html>`;
     rpImprimirDoc(html);
   }
 
-  async function buscarFluxo(){
-    const busca = el('fluxoBusca').value.trim().replace(/[,()%*]/g, '');
-    const cras = el('fluxoCras').value;
-    const ini = el('fluxoIni').value;
-    const fim = el('fluxoFim').value;
-    if (!busca && !cras && !ini && !fim){
-      showToast('Informe um nome, CPF ou período para buscar.');
-      return;
-    }
-    el('fluxoResumo').textContent = 'Buscando...';
-    el('fluxoResultado').querySelectorAll('.tl-item, p').forEach(n => n.remove());
-    // Busca de fluxo: sem o escopo da unidade, para o atendente ver o resultado em qualquer CRAS
+  // Monta a consulta do Fluxo (sem o escopo da unidade, para o atendente ver o resultado em qualquer CRAS)
+  function fluxoMontaQuery({ busca, cras, ini, fim }){
     let q = sbClient.from('atendimentos').select(SEL_ATEND + ', cpf_atendido').or(FILTRO_DATA_POSSIVEL).lte('data_atendimento', hoje());
     if (busca && filtroNomeCpf(busca)) q = q.or(filtroNomeCpf(busca));
     if (cras) q = q.eq('cras_origem_id', cras);
     if (ini) q = q.gte('data_atendimento', ini);
     if (fim) q = q.lte('data_atendimento', fim);
-    q = q.order('data_atendimento', { ascending: false }).order('horario', { ascending: false, nullsFirst: false }).limit(FLUXO_LIMITE);
-    const { data, error } = await q;
-    if (error){ console.error(error); fluxoUltimo = { lista: [], filtros: {} }; fluxoAtualizaBtnImprimir(); el('fluxoResumo').textContent = 'Erro ao buscar.'; showToast('Erro ao buscar fluxo: ' + error.message); return; }
-    const lista = data || [];
-    fluxoUltimo = { lista, filtros: { busca, cras, ini, fim } };
-    fluxoAtualizaBtnImprimir();
-    el('fluxoResumo').textContent = lista.length
-      ? `${lista.length} registro(s) encontrado(s)`
-      : 'Nenhum registro encontrado';
+    // 'id' como desempate mantém a ordem estável entre os lotes
+    return q.order('data_atendimento', { ascending: false }).order('horario', { ascending: false, nullsFirst: false }).order('id', { ascending: false });
+  }
+
+  function fluxoRender(lista){
     const resultado = el('fluxoResultado');
+    resultado.querySelectorAll('.tl-item, p').forEach(n => n.remove());
     resultado.insertAdjacentHTML('beforeend', lista.length
       ? lista.map(itemFluxo).join('')
       : '<p style="color:var(--muted);font-size:13.5px;padding:6px 0 14px">Nada encontrado com esses filtros.</p>');
+  }
+
+  function fluxoAtualizaResumo(){
+    const { lista, completo } = fluxoUltimo;
+    const limitado = !completo && lista.length >= FLUXO_LIMITE;
+    el('fluxoResumo').textContent = !lista.length ? 'Nenhum registro encontrado'
+      : limitado ? `${lista.length} registro(s) exibido(s) — pode haver mais (use "Mostrar todos")`
+      : `${lista.length} registro(s) encontrado(s)`;
+  }
+
+  // todos = false: traz só os primeiros 200 (rápido). todos = true ("Mostrar todos"): busca em lotes até acabar.
+  async function buscarFluxo(todos = false){
+    todos = todos === true;
+    const busca = el('fluxoBusca').value.trim().replace(/[,()%*]/g, '');
+    const cras = el('fluxoCras').value;
+    const ini = el('fluxoIni').value;
+    const fim = el('fluxoFim').value;
+    if (!todos && !busca && !cras && !ini && !fim){
+      showToast('Informe um nome, CPF ou período para buscar.');
+      return;
+    }
+    const f = { busca, cras, ini, fim };
+    const btnBuscar = el('fluxoBuscarBtn'), btnTodos = el('fluxoTodosBtn');
+    btnBuscar.disabled = btnTodos.disabled = true;
+    el('fluxoResumo').textContent = 'Buscando...';
+    el('fluxoResultado').querySelectorAll('.tl-item, p').forEach(n => n.remove());
+    let lista = [];
+    try {
+      if (!todos){
+        const { data, error } = await fluxoMontaQuery(f).limit(FLUXO_LIMITE);
+        if (error) throw error;
+        lista = data || [];
+      } else {
+        for (let i = 0; i < FLUXO_MAX_TOTAL; i += FLUXO_PAGINA){
+          const { data, error } = await fluxoMontaQuery(f).range(i, i + FLUXO_PAGINA - 1);
+          if (error) throw error;
+          lista.push(...(data || []));
+          el('fluxoResumo').textContent = `Carregando... ${lista.length} registro(s)`;
+          if ((data || []).length < FLUXO_PAGINA) break;
+        }
+      }
+    } catch (err){
+      console.error(err);
+      fluxoUltimo = { lista: [], filtros: {}, completo: false };
+      fluxoAtualizaBtnImprimir();
+      el('fluxoResumo').textContent = 'Erro ao buscar.';
+      showToast('Erro ao buscar fluxo: ' + (err.message || err));
+      return;
+    } finally { btnBuscar.disabled = btnTodos.disabled = false; }
+    fluxoUltimo = { lista, filtros: f, completo: todos };
+    fluxoAtualizaBtnImprimir();
+    fluxoAtualizaResumo();
+    fluxoRender(lista);
+    if (todos && lista.length >= FLUXO_MAX_TOTAL) showToast(`Exibindo os primeiros ${FLUXO_MAX_TOTAL} registros. Refine a busca para ver o restante.`);
   }
 
   el('fluxoResultado').addEventListener('click', (e) => {
@@ -5732,12 +5797,13 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     e.preventDefault();
     alternarHistorico(link, link.dataset.id, link.dataset.cpf, link.dataset.nome);
   });
-  el('fluxoBuscarBtn').addEventListener('click', buscarFluxo);
+  el('fluxoBuscarBtn').addEventListener('click', () => buscarFluxo(false));
+  el('fluxoTodosBtn').addEventListener('click', () => buscarFluxo(true));
   el('fluxoImprimirBtn').addEventListener('click', imprimirFluxo);
-  el('fluxoBusca').addEventListener('keydown', (e) => { if (e.key === 'Enter') buscarFluxo(); });
+  el('fluxoBusca').addEventListener('keydown', (e) => { if (e.key === 'Enter') buscarFluxo(false); });
   el('fluxoLimparBtn').addEventListener('click', () => {
     ['fluxoBusca', 'fluxoCras', 'fluxoIni', 'fluxoFim'].forEach(i => el(i).value = '');
-    fluxoUltimo = { lista: [], filtros: {} };
+    fluxoUltimo = { lista: [], filtros: {}, completo: false };
     fluxoAtualizaBtnImprimir();
     el('fluxoResumo').textContent = 'Use a busca acima';
     el('fluxoResultado').querySelectorAll('.tl-item, p').forEach(n => n.remove());
