@@ -2081,6 +2081,56 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     .visita-left-col .vs-gaveta-head{ flex-wrap:wrap; }
   }
   @media (max-width:600px){ .pc-fg{ grid-template-columns:minmax(0,1fr); } .pc-cfg-lin{ grid-template-columns:minmax(0,1fr) minmax(0,1fr); } .pc-cfg-lin.h{ display:none; } }
+
+  /* Aviso ao vivo de visita duplicada (Agenda ED e Painel por CRAS) */
+  .vs-dup-box{ grid-column:1 / -1; display:block; padding:12px 14px; border-radius:12px; background:#fff4e5; border:1px solid #f5b971; color:#7a4a00; font-size:13.5px; line-height:1.45; }
+  .vs-dup-box[hidden]{ display:none; }
+  .vs-dup-box.vs-dup-info{ background:#eef5ff; border-color:#b6cff5; color:#1e3a6b; }
+  .vs-dup-box.vs-dup-info .vs-dup-sep{ border-top-color:#b6cff5; }
+  body.dark .vs-dup-box.vs-dup-info{ background:rgba(95,179,158,.12); border-color:rgba(95,179,158,.45); color:#BFE3D9; }
+  .vs-dup-box ul{ margin:6px 0 6px 18px; padding:0; }
+  .vs-dup-box li{ margin:2px 0; overflow-wrap:anywhere; }
+  .vs-dup-box small{ display:block; opacity:.85; }
+  .vs-dup-box .vs-dup-sep{ margin-top:10px; padding-top:10px; border-top:1px dashed #f5b971; }
+  body.dark .vs-dup-box{ background:rgba(245,185,113,.12); border-color:rgba(245,185,113,.45); color:#F3D3A6; }
+  /* ===== PAINEL GERAL — CELULAR / TELAS ESTREITAS =====
+     Causa do corte: "1fr" deixa a coluna crescer até o tamanho do texto sem quebra
+     (nome, motivo, "por Fulano") e o excesso era escondido pelo overflow do .shell.
+     minmax(0,1fr) + min-width:0 obrigam as caixas a caberem na tela. */
+  .lower-grid > .panel, .stat-grid > .stat-card{ min-width:0; }
+  @media (max-width:1100px){
+    .lower-grid{ grid-template-columns:minmax(0,1fr); }
+    .stat-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+  }
+  @media (max-width:760px){
+    /* cartões "Atendimentos deste mês": 2 por linha e mais compactos, para as caixas abaixo aparecerem logo */
+    #rlMesHead{ flex-wrap:wrap; gap:4px 10px; margin-bottom:10px; }
+    #rlMesGrid{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-bottom:16px; }
+    #rlMesGrid .stat-card{ padding:12px; }
+    #rlMesGrid .badge{ font-size:11px; padding:4px 10px; margin-bottom:8px; max-width:100%; box-sizing:border-box; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    #rlMesGrid .stat-card p.desc{ display:none; }
+    #rlMesGrid .stat-num{ font-size:22px; margin:0 0 6px; }
+    #rlMesGrid .stat-foot{ font-size:11px; gap:6px; margin-bottom:6px; }
+
+    /* Próximas visitas / Últimos atendimentos / Resumo do dia */
+    .lower-grid{ gap:14px; }
+    .lower-grid > .panel{ padding:14px; box-sizing:border-box; max-width:100%; overflow:hidden; }
+    .lower-grid .section-head{ gap:6px 10px; margin-bottom:10px; flex-wrap:wrap; }
+    .lower-grid .section-head h3{ font-size:15px; }
+    .view-all{ padding:6px 2px; }                       /* área de toque maior */
+    #pgProxVisitas{ max-height:296px; }                 /* 3 cards visíveis (3×92 + 2×10) */
+    #pgProxVisitas .visit-item{ grid-template-columns:minmax(0,1fr) auto; }
+    #pgUltAtendimentos .case-item{ gap:10px; padding:10px 0; min-width:0; }
+    .pg-atend .pg-atend-por{ overflow:hidden; text-overflow:ellipsis; }
+    .pg-placar{ gap:6px; }
+    .pg-placar-item{ padding:8px 4px; }
+    .pg-placar-item b{ font-size:21px; line-height:25px; }
+    .pg-placar-item span{ font-size:11px; overflow-wrap:anywhere; }
+    .pg-rs-linha{ min-width:0; }
+  }
+  @media (max-width:420px){
+    #rlMesGrid{ grid-template-columns:repeat(2,minmax(0,1fr)); }   /* mantém 2 colunas (antes virava 1 e empurrava tudo para baixo) */
+  }
 </style>
 </head>
 <body>
@@ -2365,6 +2415,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
             </div>
             <div class="field"><label>CPF *</label><input type="text" id="vsCpf" placeholder="000.000.000-00"></div>
             <div class="field"><label>Data *</label><input type="date" id="vsData"><small id="vsDataInfo" class="cpf-msg"></small></div>
+            <div class="vs-dup-box" id="vsDupBox" role="alert" hidden></div>
             <div class="field"><label>Horário previsto</label><input type="time" id="vsHora"></div>
             <div class="field"><label>CRAS *</label><select id="vsCras"></select></div>
             <div class="field span-2"><label>Motivo *</label><select id="vsMotivo"></select></div>
@@ -3130,6 +3181,119 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   const hoje = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
   const fmtData = (d) => d ? d.split('-').reverse().join('/') : '';
+
+  // ---- Verificação de visita DUPLICADA (usada pela Agenda ED e pelo Painel por CRAS, antes de gravar) ----
+  // Procura, para o mesmo CPF: (a) visita ainda em aberto (agendada/reagendada) de hoje em diante, em QUALQUER CRAS;
+  // (b) qualquer visita na mesma data. Se achar, mostra quem/quando/onde e pergunta se continua.
+  // Devolve { ok, forcar }: ok=false → cancelar o salvamento; forcar=true → a pessoa confirmou duplicar (a conferência
+  // final do envio não deve bloquear). Se a consulta falhar (sem internet/lenta), deixa salvar: a fila offline confere de novo no envio.
+  const VS_DUP_SEL = 'id, nome_responsavel, cpf, endereco, data_agendada, hora_prevista, status, cras:cras_id(nome)';
+  const vsComTempo = (q, ms) => Promise.race([q, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms || 6000))]);
+
+  // Visitas do mesmo CPF: em aberto de hoje em diante (qualquer CRAS) + qualquer visita na data informada
+  async function vsBuscarVisitasDoCpf(cpf, dataAgendada, ignorarId){
+    const d = String(cpf || '').replace(/\D/g, '');
+    if (d.length !== 11) return [];
+    const aberto = `and(status.in.(${VS_ST_ABERTO.join(',')}),data_agendada.gte.${hoje()})`;
+    let q = sbClient.from('visitas_domiciliares').select(VS_DUP_SEL).eq('cpf', d)
+      .or(dataAgendada ? `${aberto},data_agendada.eq.${dataAgendada}` : aberto)
+      .order('data_agendada', { ascending: true }).limit(6);
+    if (ignorarId) q = q.neq('id', ignorarId);
+    const r = await vsComTempo(q);
+    if (r.error) throw r.error;
+    return r.data || [];
+  }
+
+  // Histórico do CPF: visitas anteriores a hoje (ou sem data), de qualquer situação. Não é duplicata: serve para a pessoa saber que o cadastro já existe.
+  async function vsBuscarHistoricoCpf(cpf, ignorarId){
+    const d = String(cpf || '').replace(/\D/g, '');
+    if (d.length !== 11) return [];
+    let q = sbClient.from('visitas_domiciliares').select(VS_DUP_SEL).eq('cpf', d)
+      .or(`data_agendada.lt.${hoje()},data_agendada.is.null`)
+      .order('data_agendada', { ascending: false, nullsFirst: false }).limit(5);
+    if (ignorarId) q = q.neq('id', ignorarId);
+    const r = await vsComTempo(q);
+    if (r.error) throw r.error;
+    return r.data || [];
+  }
+
+  // "Rua Borges de Medeiros, 299 casa 02" -> %Rua%Borges%de%Medeiros%299%  (ignora vírgulas/pontuação e o complemento)
+  function vsPadraoEndereco(txt){
+    const stop = /^(casa|apto|ap|apartamento|bloco|bl|fundos|frente|sala|lote|compl|complemento)$/i;
+    const out = [];
+    for (const t of String(txt || '').split(/[^\p{L}\p{N}]+/u).filter(Boolean)){
+      if (stop.test(t) && out.length >= 2) break;
+      out.push(t); if (out.length >= 7) break;
+    }
+    return (out.length >= 2 && out.some(t => /\d/.test(t))) ? '%' + out.join('%') + '%' : null;
+  }
+  // Outras visitas EM ABERTO no mesmo endereço (CPF diferente = possível mesma família/moradia)
+  async function vsBuscarMesmoEndereco(endereco, cpf, ignorarId){
+    const pad = vsPadraoEndereco(endereco);
+    if (!pad) return [];
+    let q = sbClient.from('visitas_domiciliares').select(VS_DUP_SEL).ilike('endereco', pad)
+      .in('status', VS_ST_ABERTO).gte('data_agendada', hoje()).order('data_agendada', { ascending: true }).limit(5);
+    const d = String(cpf || '').replace(/\D/g, '');
+    if (d.length === 11) q = q.neq('cpf', d);
+    if (ignorarId) q = q.neq('id', ignorarId);
+    const r = await vsComTempo(q);
+    if (r.error) throw r.error;
+    return r.data || [];
+  }
+  const vsLinhaVisita = (v) => `${v.data_agendada ? fmtData(String(v.data_agendada).slice(0, 10)) : 'sem data'}${v.hora_prevista ? ' às ' + String(v.hora_prevista).slice(0, 5) : ''} — ${(v.cras && v.cras.nome) || 'outro CRAS'} — ${VS_ST_LABEL[v.status] || v.status || ''}${v.nome_responsavel ? ' — ' + String(v.nome_responsavel).trim() : ''}`;
+
+  // Aviso AO VIVO (Agenda ED e Painel por CRAS): mostra o que já existe para o CPF e para o endereço, antes de salvar
+  async function vsAtualizarAvisoDup(box, { cpf, data, endereco, ignorarId }){
+    if (!box) return;
+    const tok = box._tok = (box._tok || 0) + 1;
+    const d = String(cpf || '').replace(/\D/g, '');
+    const [porCpf, porEnd, hist0] = await Promise.all([
+      vsBuscarVisitasDoCpf(d, data, ignorarId).catch(e => { console.warn('Aviso por CPF indisponível:', e); return []; }),
+      vsBuscarMesmoEndereco(endereco, d, ignorarId).catch(e => { console.warn('Aviso por endereço indisponível:', e); return []; }),
+      vsBuscarHistoricoCpf(d, ignorarId).catch(e => { console.warn('Histórico por CPF indisponível:', e); return []; })
+    ]);
+    if (tok !== box._tok) return;   // chegou resposta de uma digitação mais antiga
+    const jaMostradas = new Set(porCpf.map(v => v.id));
+    const hist = hist0.filter(v => !jaMostradas.has(v.id));
+    if (!porCpf.length && !porEnd.length && !hist.length){ box.hidden = true; box.innerHTML = ''; return; }
+    box.classList.toggle('vs-dup-info', !porCpf.length && !porEnd.length);   // só histórico = aviso azul (informativo), não alerta
+    const mesmaData = !!data && porCpf.some(v => String(v.data_agendada).slice(0, 10) === data);
+    let html = '';
+    if (porCpf.length){
+      html += `<b>${mesmaData ? '⚠️ Este CPF já tem visita NA MESMA DATA (' + fmtData(data) + ')' : '⚠️ Este CPF já tem visita cadastrada'}</b>
+        <ul>${porCpf.map(v => `<li>${escapeHtml(vsLinhaVisita(v))}</li>`).join('')}</ul>
+        <small>Se for a mesma visita, não cadastre de novo: localize-a na lista de entrevistas domiciliares (ou no Painel por CRAS) e edite.</small>`;
+    }
+    if (porEnd.length){
+      html += `<div class="${porCpf.length ? 'vs-dup-sep' : ''}"><b>🏠 Há visita em aberto neste mesmo endereço (outro CPF — pode ser a mesma família):</b>
+        <ul>${porEnd.map(v => `<li>${escapeHtml(vsLinhaVisita(v))}</li>`).join('')}</ul></div>`;
+    }
+    if (hist.length){
+      html += `<div class="${porCpf.length || porEnd.length ? 'vs-dup-sep' : ''}"><b>ℹ️ Este CPF já tem cadastro: ${hist.length >= 5 ? '5 ou mais visitas anteriores' : hist.length === 1 ? '1 visita anterior' : hist.length + ' visitas anteriores'} (só para consulta)</b>
+        <ul>${hist.map(v => `<li>${escapeHtml(vsLinhaVisita(v))}${VS_ST_ABERTO.includes(v.status) ? ' <em>— ainda marcada como em aberto</em>' : ''}</li>`).join('')}</ul>
+        <small>Por isso o sistema pode ter preenchido nome, endereço e telefone sozinho. Se esta visita antiga ainda está "em aberto", confira se não é a mesma que você está cadastrando.</small></div>`;
+    }
+    box.innerHTML = html; box.hidden = false;
+  }
+
+  // Conferência ao clicar em salvar (mesmos dados do aviso ao vivo)
+  async function vsConfirmarSemDuplicata(cpf, dataAgendada){
+    const d = String(cpf || '').replace(/\D/g, '');
+    if (d.length !== 11 || !dataAgendada) return { ok: true, forcar: false };
+    let achadas = [];
+    try {
+      achadas = await vsBuscarVisitasDoCpf(d, dataAgendada);
+    } catch (e){
+      console.warn('Verificação de visita duplicada não concluída (segue o salvamento):', e);
+      return { ok: true, forcar: false };
+    }
+    if (!achadas.length) return { ok: true, forcar: false };
+    const mesmaData = achadas.some(v => String(v.data_agendada).slice(0, 10) === dataAgendada);
+    const linhas = achadas.map(v => '• ' + vsLinhaVisita(v)).join('\n');
+    const msg = (mesmaData ? '⚠️ Já existe visita para este CPF NA MESMA DATA (' + fmtData(dataAgendada) + ').' : '⚠️ Este CPF já tem visita em aberto.')
+      + `\n\n${linhas}\n\nSe você continuar, esta visita ficará DUPLICADA.\n\nSalvar mesmo assim?`;
+    return confirm(msg) ? { ok: true, forcar: true } : { ok: false, forcar: false };
+  }
   // O sistema antigo (dump de 22/09/2026, importado em 23/09) trouxe 40 atendimentos com data POSTERIOR à própria carga
   // (02/10, 02/12, 06/12, 09/12, 19/12/2026 e 08/04/2027). Esses dias nunca aconteceram: as telas não os mostram.
   // O banco NÃO é alterado. Regra: o que foi criado até 23/09/2026 não pode ter data depois de 23/09/2026; ninguém tem data futura.
@@ -5922,7 +6086,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   function erroAmigavel(err){
     const msg = String((err && err.message) || err || '');
     const code = String((err && err.code) || '');
-    if (code === 'OUTBOX') return msg;
+    if (code === 'OUTBOX' || code === 'DUP_VISITA') return msg;
     if (/failed to fetch|networkerror|load failed|network request/i.test(msg)) return 'Sem conexão com a internet. Confira a rede e tente de novo.';
     if (/jwt|token.*expir|not authenticated/i.test(msg)) return 'Sua sessão expirou. Saia e entre de novo.';
     if (code === '42501' || /row-level security|permission denied|RLS/i.test(msg)) return 'Você não tem permissão para fazer isso. Fale com o administrador.';
@@ -5939,6 +6103,26 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   function skelLinhas(n){ const w = [92, 78, 86, 64, 80]; return Array.from({ length: n || 4 }, (_, i) => `<span class="skel skel-linha" style="width:${w[i % w.length]}%"></span>`).join(''); }
   function skelKpis(n){ return `<div class="skel-kpis">${'<span class="skel skel-kpi"></span>'.repeat(n || 8)}</div>`; }
+
+  (function avisoDuplicidadeAgendaED(){
+    const box = document.getElementById('vsDupBox'), cpf = document.getElementById('vsCpf');
+    if (!box || !cpf) return;
+    let t = null;
+    const atualizar = () => {
+      clearTimeout(t);
+      t = setTimeout(() => vsAtualizarAvisoDup(box, {
+        cpf: cpf.value, data: document.getElementById('vsData').value,
+        endereco: document.getElementById('vsEndereco').value, ignorarId: editandoVisitaId || null
+      }), 350);
+    };
+    cpf.addEventListener('input', atualizar);
+    cpf.addEventListener('blur', atualizar);
+    document.getElementById('vsData').addEventListener('change', atualizar);
+    document.getElementById('vsEndereco').addEventListener('blur', atualizar);
+    // o autopreenchimento por CPF muda o endereço sem blur: confere de novo logo depois
+    cpf.addEventListener('input', () => setTimeout(atualizar, 1200));
+    document.getElementById('vsLimparBtn').addEventListener('click', () => { box._tok = (box._tok || 0) + 1; box.hidden = true; box.innerHTML = ''; });
+  })();
 
   (function melhorarCampoCpfVisita(){
     const inp = document.getElementById('vsCpf');
@@ -5989,7 +6173,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         por('vsBairro', v.bairro);
         por('vsTelefone', v.telefone, vsFmtTel);
         if (Array.isArray(v.tipo_imovel) && v.tipo_imovel.length && !vsTipoGet().length){ vsTipoSet(v.tipo_imovel); n++; }
-        if (n) showToast('✨ Dados preenchidos a partir da última visita deste CPF');
+        if (n) showToast('✨ Dados preenchidos a partir da última visita deste CPF' + (v.data_agendada ? ' (' + fmtData(String(v.data_agendada).slice(0, 10)) + ')' : '') + '. Confira o aviso abaixo do CPF: ele mostra se já existe visita.', 5000);
       } catch (e) { console.warn('Autopreenchimento por CPF não disponível:', e); }
     }
 
@@ -6142,8 +6326,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         return;
       }
 
+      const dup = await vsConfirmarSemDuplicata(cpf, data);   // mesma verificação do Painel por CRAS
+      if (!dup.ok) return;                                      // cancelou: o botão volta ao normal no finally
       const res = await Outbox.salvar({
         tipo: 'visita',
+        forcar: dup.forcar,
         res: { nome, data, motivo },
         reg: {
           nome_responsavel: nome, cpf: cpf.replace(/\D/g, ''), data_agendada: data, hora_prevista: hora || null, cras_id: cras, motivo: motivo,
@@ -6637,6 +6824,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <div class="field span-2"><label>Nome do responsável *</label><input type="text" id="pcNome" autocomplete="off"></div>
         <div class="field"><label>CPF *</label><input type="text" id="pcCpf" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" autocomplete="off"></div>
         <div class="field"><label>Telefone</label><input type="text" id="pcTel" inputmode="tel" placeholder="(51) 90000-0000" autocomplete="off"></div>
+        <div class="vs-dup-box" id="pcDupBox" role="alert" hidden></div>
         <div class="field span-2"><label>Endereço</label><input type="text" id="pcEnd" placeholder="Rua, número, complemento..." autocomplete="off"></div>
         <div class="field"><label>Bairro</label><input type="text" id="pcBai" autocomplete="off"></div>
         <div class="field"><label>Motivo</label><select id="pcMot">${el('vsMotivo').innerHTML}</select></div>
@@ -6659,6 +6847,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         } catch (e) {}
       });
       el('pcTel').addEventListener('blur', () => { const t = el('pcTel'); if (t.value.trim()) t.value = vsFmtTel(t.value); });
+      // aviso ao vivo de visita duplicada (mesmo CPF ou mesmo endereço), igual ao da Agenda ED
+      let tDup = null;
+      const avisarDup = () => { clearTimeout(tDup); tDup = setTimeout(() => vsAtualizarAvisoDup(el('pcDupBox'), { cpf: el('pcCpf').value, data: S.data, endereco: el('pcEnd').value }), 350); };
+      el('pcCpf').addEventListener('input', () => { avisarDup(); setTimeout(avisarDup, 1200); });
+      el('pcEnd').addEventListener('blur', avisarDup);
       el('pcSalvar').addEventListener('click', () => salvarAgendar(c, per));
       modal.style.display = 'flex';
       setTimeout(() => el('pcNome').focus(), 50);
@@ -6671,18 +6864,15 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       if (!cpfValido(cpf) && !confirm('Este CPF parece inválido (os dígitos verificadores não conferem).\n\nSalvar mesmo assim?')) return;
       const btn = el('pcSalvar'); btn.disabled = true; btn.textContent = 'Salvando...';
       try {
-        // já existe visita em aberto para este CPF? (evita duas funcionárias agendarem a mesma família)
-        try {
-          const r = await escoparVsLista(sbClient.from('visitas_domiciliares').select('data_agendada, status, cras:cras_id(nome)')).eq('cpf', cpf).gte('data_agendada', hoje()).in('status', ['agendada', 'reagendada']).limit(1);
-          const ex = r.data && r.data[0];
-          if (ex && !confirm(`Já existe uma visita em aberto para este CPF em ${fmtData(ex.data_agendada)} (${(ex.cras && ex.cras.nome) || 'outro CRAS'}).\n\nAgendar mesmo assim?`)){ btn.disabled = false; btn.textContent = 'Agendar visita'; return; }
-        } catch (e) {}
+        // mesma verificação da Agenda ED: evita duas pessoas agendarem a mesma família (em qualquer CRAS)
+        const dup = await vsConfirmarSemDuplicata(cpf, S.data);
+        if (!dup.ok){ btn.disabled = false; btn.textContent = 'Agendar visita'; return; }
         const quem = currentFuncionario ? `${currentFuncionario.nome || ''}${currentFuncionario.cras_nome ? ' (' + currentFuncionario.cras_nome + ')' : ''}` : '';
         const obs = [el('pcObs').value.trim(), quem ? 'Agendado pelo painel do CRAS por ' + quem : ''].filter(Boolean).join(' — ');
         const motivo = el('pcMot').value || MOTIVO_PADRAO;
         const tel = el('pcTel').value.replace(/\D/g, '') || null;
         const res = await Outbox.salvar({
-          tipo: 'visita', res: { nome, data: S.data, motivo },
+          tipo: 'visita', forcar: dup.forcar, res: { nome, data: S.data, motivo },
           reg: {
             nome_responsavel: nome, cpf, data_agendada: S.data, hora_prevista: HORA[per], cras_id: c.id, motivo,
             observacao: obs || null, endereco: el('pcEnd').value.trim() || null, bairro: el('pcBai').value.trim() || null, telefone: tel,
@@ -8551,6 +8741,12 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
       const r = await sbClient.from('visitas_domiciliares').select('id').eq('cpf', it.reg.cpf).eq('data_criacao', it.reg.data_criacao).limit(1);
       if (r.error) throw r.error;
       if (r.data && r.data.length) return;
+    }
+    if (!it.forcar){   // última conferência imediatamente antes de gravar: outra pessoa pode ter agendado a mesma família há segundos
+      const c = await sbClient.from('visitas_domiciliares').select('id').eq('cpf', it.reg.cpf).eq('data_agendada', it.reg.data_agendada).in('status', ['agendada', 'reagendada']).limit(1);
+      if (!c.error && c.data && c.data.length){
+        const e = new Error('Já existe uma visita em aberto para este CPF nesta mesma data. Confira a Agenda ED antes de agendar de novo.'); e.code = 'DUP_VISITA'; throw e;
+      }
     }
     const r = await sbClient.from('visitas_domiciliares').insert(it.reg);   // sem .select(): quem agenda para outra unidade não lê de volta
     if (r.error) throw r.error;
