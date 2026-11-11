@@ -1754,15 +1754,6 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .btn-print-sm svg{ width:15px; height:15px; }
   .btn-print:disabled{ background:var(--line); color:var(--muted); box-shadow:none; cursor:not-allowed; }
   body.dark .btn-print:not(:disabled){ color:#0F1F1B; }
-  /* Abas (páginas) do resultado de Fluxos */
-  .fluxo-abas{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin:6px 0 14px; }
-  .fluxo-abas .fluxo-aba{ min-width:38px; padding:7px 14px; border:1px solid var(--line); border-radius:999px; background:transparent; color:var(--ink); font-size:13px; font-weight:700; cursor:pointer; transition:background .15s, color .15s; }
-  .fluxo-abas .fluxo-aba:hover:not(:disabled):not(.ativa){ background:var(--line); }
-  .fluxo-abas .fluxo-aba.ativa{ background:var(--blue); border-color:var(--blue); color:#fff; cursor:default; }
-  .fluxo-abas .fluxo-aba:disabled{ opacity:.45; cursor:not-allowed; }
-  .fluxo-abas .fluxo-aba-info{ margin-left:auto; font-size:12px; color:var(--muted); }
-  .fluxo-abas .fluxo-aba-gap{ color:var(--muted); padding:0 2px; }
-  body.dark .fluxo-abas .fluxo-aba.ativa{ color:#0F1F1B; }
   .vs-table .vs-btn-icon[data-acao="imprimir"]{ color:var(--blue); }
   .search, .field input, .field select, .field textarea, .vs-f-chip{ background:var(--page-bg); border:1px solid transparent; border-radius:999px; }
   .field textarea, .field select[multiple]{ border-radius:16px; }
@@ -2081,56 +2072,6 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     .visita-left-col .vs-gaveta-head{ flex-wrap:wrap; }
   }
   @media (max-width:600px){ .pc-fg{ grid-template-columns:minmax(0,1fr); } .pc-cfg-lin{ grid-template-columns:minmax(0,1fr) minmax(0,1fr); } .pc-cfg-lin.h{ display:none; } }
-
-  /* Aviso ao vivo de visita duplicada (Agenda ED e Painel por CRAS) */
-  .vs-dup-box{ grid-column:1 / -1; display:block; padding:12px 14px; border-radius:12px; background:#fff4e5; border:1px solid #f5b971; color:#7a4a00; font-size:13.5px; line-height:1.45; }
-  .vs-dup-box[hidden]{ display:none; }
-  .vs-dup-box.vs-dup-info{ background:#eef5ff; border-color:#b6cff5; color:#1e3a6b; }
-  .vs-dup-box.vs-dup-info .vs-dup-sep{ border-top-color:#b6cff5; }
-  body.dark .vs-dup-box.vs-dup-info{ background:rgba(95,179,158,.12); border-color:rgba(95,179,158,.45); color:#BFE3D9; }
-  .vs-dup-box ul{ margin:6px 0 6px 18px; padding:0; }
-  .vs-dup-box li{ margin:2px 0; overflow-wrap:anywhere; }
-  .vs-dup-box small{ display:block; opacity:.85; }
-  .vs-dup-box .vs-dup-sep{ margin-top:10px; padding-top:10px; border-top:1px dashed #f5b971; }
-  body.dark .vs-dup-box{ background:rgba(245,185,113,.12); border-color:rgba(245,185,113,.45); color:#F3D3A6; }
-  /* ===== PAINEL GERAL — CELULAR / TELAS ESTREITAS =====
-     Causa do corte: "1fr" deixa a coluna crescer até o tamanho do texto sem quebra
-     (nome, motivo, "por Fulano") e o excesso era escondido pelo overflow do .shell.
-     minmax(0,1fr) + min-width:0 obrigam as caixas a caberem na tela. */
-  .lower-grid > .panel, .stat-grid > .stat-card{ min-width:0; }
-  @media (max-width:1100px){
-    .lower-grid{ grid-template-columns:minmax(0,1fr); }
-    .stat-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
-  }
-  @media (max-width:760px){
-    /* cartões "Atendimentos deste mês": 2 por linha e mais compactos, para as caixas abaixo aparecerem logo */
-    #rlMesHead{ flex-wrap:wrap; gap:4px 10px; margin-bottom:10px; }
-    #rlMesGrid{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-bottom:16px; }
-    #rlMesGrid .stat-card{ padding:12px; }
-    #rlMesGrid .badge{ font-size:11px; padding:4px 10px; margin-bottom:8px; max-width:100%; box-sizing:border-box; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    #rlMesGrid .stat-card p.desc{ display:none; }
-    #rlMesGrid .stat-num{ font-size:22px; margin:0 0 6px; }
-    #rlMesGrid .stat-foot{ font-size:11px; gap:6px; margin-bottom:6px; }
-
-    /* Próximas visitas / Últimos atendimentos / Resumo do dia */
-    .lower-grid{ gap:14px; }
-    .lower-grid > .panel{ padding:14px; box-sizing:border-box; max-width:100%; overflow:hidden; }
-    .lower-grid .section-head{ gap:6px 10px; margin-bottom:10px; flex-wrap:wrap; }
-    .lower-grid .section-head h3{ font-size:15px; }
-    .view-all{ padding:6px 2px; }                       /* área de toque maior */
-    #pgProxVisitas{ max-height:296px; }                 /* 3 cards visíveis (3×92 + 2×10) */
-    #pgProxVisitas .visit-item{ grid-template-columns:minmax(0,1fr) auto; }
-    #pgUltAtendimentos .case-item{ gap:10px; padding:10px 0; min-width:0; }
-    .pg-atend .pg-atend-por{ overflow:hidden; text-overflow:ellipsis; }
-    .pg-placar{ gap:6px; }
-    .pg-placar-item{ padding:8px 4px; }
-    .pg-placar-item b{ font-size:21px; line-height:25px; }
-    .pg-placar-item span{ font-size:11px; overflow-wrap:anywhere; }
-    .pg-rs-linha{ min-width:0; }
-  }
-  @media (max-width:420px){
-    #rlMesGrid{ grid-template-columns:repeat(2,minmax(0,1fr)); }   /* mantém 2 colunas (antes virava 1 e empurrava tudo para baixo) */
-  }
 </style>
 </head>
 <body>
@@ -2330,7 +2271,6 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
         <div class="form-actions">
           <button class="btn-ghost" id="fluxoLimparBtn">Limpar</button>
-          <button class="btn-ghost" id="fluxoTodosBtn" title="Listar todos os registros em abas de 200 (não exige filtro)">Mostrar todos</button>
           <button class="btn-primary" id="fluxoBuscarBtn">Buscar fluxo</button>
         </div>
       </div>
@@ -2342,7 +2282,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <h3>Resultado</h3>
           <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
             <span class="status-hint" id="fluxoResumo">Use a busca acima</span>
-            <button type="button" class="btn-print" id="fluxoImprimirBtn" disabled title="Imprimir a aba que está na tela (faça uma busca primeiro)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="6" y="14" width="12" height="7" rx="1"/><path d="M6 17H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/></svg><span>Imprimir resultado</span></button>
+            <button type="button" class="btn-print" id="fluxoImprimirBtn" disabled title="Imprimir os resultados filtrados (faça uma busca primeiro)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="6" y="14" width="12" height="7" rx="1"/><path d="M6 17H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/></svg><span>Imprimir resultado</span></button>
           </div>
         </div>
         <p style="color:var(--muted);font-size:13.5px;padding:6px 0 14px">Digite um nome, um CPF ou um período e clique em "Buscar fluxo".</p>
@@ -2415,7 +2355,6 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
             </div>
             <div class="field"><label>CPF *</label><input type="text" id="vsCpf" placeholder="000.000.000-00"></div>
             <div class="field"><label>Data *</label><input type="date" id="vsData"><small id="vsDataInfo" class="cpf-msg"></small></div>
-            <div class="vs-dup-box" id="vsDupBox" role="alert" hidden></div>
             <div class="field"><label>Horário previsto</label><input type="time" id="vsHora"></div>
             <div class="field"><label>CRAS *</label><select id="vsCras"></select></div>
             <div class="field span-2"><label>Motivo *</label><select id="vsMotivo"></select></div>
@@ -3181,119 +3120,6 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   const hoje = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
   const fmtData = (d) => d ? d.split('-').reverse().join('/') : '';
-
-  // ---- Verificação de visita DUPLICADA (usada pela Agenda ED e pelo Painel por CRAS, antes de gravar) ----
-  // Procura, para o mesmo CPF: (a) visita ainda em aberto (agendada/reagendada) de hoje em diante, em QUALQUER CRAS;
-  // (b) qualquer visita na mesma data. Se achar, mostra quem/quando/onde e pergunta se continua.
-  // Devolve { ok, forcar }: ok=false → cancelar o salvamento; forcar=true → a pessoa confirmou duplicar (a conferência
-  // final do envio não deve bloquear). Se a consulta falhar (sem internet/lenta), deixa salvar: a fila offline confere de novo no envio.
-  const VS_DUP_SEL = 'id, nome_responsavel, cpf, endereco, data_agendada, hora_prevista, status, cras:cras_id(nome)';
-  const vsComTempo = (q, ms) => Promise.race([q, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms || 6000))]);
-
-  // Visitas do mesmo CPF: em aberto de hoje em diante (qualquer CRAS) + qualquer visita na data informada
-  async function vsBuscarVisitasDoCpf(cpf, dataAgendada, ignorarId){
-    const d = String(cpf || '').replace(/\D/g, '');
-    if (d.length !== 11) return [];
-    const aberto = `and(status.in.(${VS_ST_ABERTO.join(',')}),data_agendada.gte.${hoje()})`;
-    let q = sbClient.from('visitas_domiciliares').select(VS_DUP_SEL).eq('cpf', d)
-      .or(dataAgendada ? `${aberto},data_agendada.eq.${dataAgendada}` : aberto)
-      .order('data_agendada', { ascending: true }).limit(6);
-    if (ignorarId) q = q.neq('id', ignorarId);
-    const r = await vsComTempo(q);
-    if (r.error) throw r.error;
-    return r.data || [];
-  }
-
-  // Histórico do CPF: visitas anteriores a hoje (ou sem data), de qualquer situação. Não é duplicata: serve para a pessoa saber que o cadastro já existe.
-  async function vsBuscarHistoricoCpf(cpf, ignorarId){
-    const d = String(cpf || '').replace(/\D/g, '');
-    if (d.length !== 11) return [];
-    let q = sbClient.from('visitas_domiciliares').select(VS_DUP_SEL).eq('cpf', d)
-      .or(`data_agendada.lt.${hoje()},data_agendada.is.null`)
-      .order('data_agendada', { ascending: false, nullsFirst: false }).limit(5);
-    if (ignorarId) q = q.neq('id', ignorarId);
-    const r = await vsComTempo(q);
-    if (r.error) throw r.error;
-    return r.data || [];
-  }
-
-  // "Rua Borges de Medeiros, 299 casa 02" -> %Rua%Borges%de%Medeiros%299%  (ignora vírgulas/pontuação e o complemento)
-  function vsPadraoEndereco(txt){
-    const stop = /^(casa|apto|ap|apartamento|bloco|bl|fundos|frente|sala|lote|compl|complemento)$/i;
-    const out = [];
-    for (const t of String(txt || '').split(/[^\p{L}\p{N}]+/u).filter(Boolean)){
-      if (stop.test(t) && out.length >= 2) break;
-      out.push(t); if (out.length >= 7) break;
-    }
-    return (out.length >= 2 && out.some(t => /\d/.test(t))) ? '%' + out.join('%') + '%' : null;
-  }
-  // Outras visitas EM ABERTO no mesmo endereço (CPF diferente = possível mesma família/moradia)
-  async function vsBuscarMesmoEndereco(endereco, cpf, ignorarId){
-    const pad = vsPadraoEndereco(endereco);
-    if (!pad) return [];
-    let q = sbClient.from('visitas_domiciliares').select(VS_DUP_SEL).ilike('endereco', pad)
-      .in('status', VS_ST_ABERTO).gte('data_agendada', hoje()).order('data_agendada', { ascending: true }).limit(5);
-    const d = String(cpf || '').replace(/\D/g, '');
-    if (d.length === 11) q = q.neq('cpf', d);
-    if (ignorarId) q = q.neq('id', ignorarId);
-    const r = await vsComTempo(q);
-    if (r.error) throw r.error;
-    return r.data || [];
-  }
-  const vsLinhaVisita = (v) => `${v.data_agendada ? fmtData(String(v.data_agendada).slice(0, 10)) : 'sem data'}${v.hora_prevista ? ' às ' + String(v.hora_prevista).slice(0, 5) : ''} — ${(v.cras && v.cras.nome) || 'outro CRAS'} — ${VS_ST_LABEL[v.status] || v.status || ''}${v.nome_responsavel ? ' — ' + String(v.nome_responsavel).trim() : ''}`;
-
-  // Aviso AO VIVO (Agenda ED e Painel por CRAS): mostra o que já existe para o CPF e para o endereço, antes de salvar
-  async function vsAtualizarAvisoDup(box, { cpf, data, endereco, ignorarId }){
-    if (!box) return;
-    const tok = box._tok = (box._tok || 0) + 1;
-    const d = String(cpf || '').replace(/\D/g, '');
-    const [porCpf, porEnd, hist0] = await Promise.all([
-      vsBuscarVisitasDoCpf(d, data, ignorarId).catch(e => { console.warn('Aviso por CPF indisponível:', e); return []; }),
-      vsBuscarMesmoEndereco(endereco, d, ignorarId).catch(e => { console.warn('Aviso por endereço indisponível:', e); return []; }),
-      vsBuscarHistoricoCpf(d, ignorarId).catch(e => { console.warn('Histórico por CPF indisponível:', e); return []; })
-    ]);
-    if (tok !== box._tok) return;   // chegou resposta de uma digitação mais antiga
-    const jaMostradas = new Set(porCpf.map(v => v.id));
-    const hist = hist0.filter(v => !jaMostradas.has(v.id));
-    if (!porCpf.length && !porEnd.length && !hist.length){ box.hidden = true; box.innerHTML = ''; return; }
-    box.classList.toggle('vs-dup-info', !porCpf.length && !porEnd.length);   // só histórico = aviso azul (informativo), não alerta
-    const mesmaData = !!data && porCpf.some(v => String(v.data_agendada).slice(0, 10) === data);
-    let html = '';
-    if (porCpf.length){
-      html += `<b>${mesmaData ? '⚠️ Este CPF já tem visita NA MESMA DATA (' + fmtData(data) + ')' : '⚠️ Este CPF já tem visita cadastrada'}</b>
-        <ul>${porCpf.map(v => `<li>${escapeHtml(vsLinhaVisita(v))}</li>`).join('')}</ul>
-        <small>Se for a mesma visita, não cadastre de novo: localize-a na lista de entrevistas domiciliares (ou no Painel por CRAS) e edite.</small>`;
-    }
-    if (porEnd.length){
-      html += `<div class="${porCpf.length ? 'vs-dup-sep' : ''}"><b>🏠 Há visita em aberto neste mesmo endereço (outro CPF — pode ser a mesma família):</b>
-        <ul>${porEnd.map(v => `<li>${escapeHtml(vsLinhaVisita(v))}</li>`).join('')}</ul></div>`;
-    }
-    if (hist.length){
-      html += `<div class="${porCpf.length || porEnd.length ? 'vs-dup-sep' : ''}"><b>ℹ️ Este CPF já tem cadastro: ${hist.length >= 5 ? '5 ou mais visitas anteriores' : hist.length === 1 ? '1 visita anterior' : hist.length + ' visitas anteriores'} (só para consulta)</b>
-        <ul>${hist.map(v => `<li>${escapeHtml(vsLinhaVisita(v))}${VS_ST_ABERTO.includes(v.status) ? ' <em>— ainda marcada como em aberto</em>' : ''}</li>`).join('')}</ul>
-        <small>Por isso o sistema pode ter preenchido nome, endereço e telefone sozinho. Se esta visita antiga ainda está "em aberto", confira se não é a mesma que você está cadastrando.</small></div>`;
-    }
-    box.innerHTML = html; box.hidden = false;
-  }
-
-  // Conferência ao clicar em salvar (mesmos dados do aviso ao vivo)
-  async function vsConfirmarSemDuplicata(cpf, dataAgendada){
-    const d = String(cpf || '').replace(/\D/g, '');
-    if (d.length !== 11 || !dataAgendada) return { ok: true, forcar: false };
-    let achadas = [];
-    try {
-      achadas = await vsBuscarVisitasDoCpf(d, dataAgendada);
-    } catch (e){
-      console.warn('Verificação de visita duplicada não concluída (segue o salvamento):', e);
-      return { ok: true, forcar: false };
-    }
-    if (!achadas.length) return { ok: true, forcar: false };
-    const mesmaData = achadas.some(v => String(v.data_agendada).slice(0, 10) === dataAgendada);
-    const linhas = achadas.map(v => '• ' + vsLinhaVisita(v)).join('\n');
-    const msg = (mesmaData ? '⚠️ Já existe visita para este CPF NA MESMA DATA (' + fmtData(dataAgendada) + ').' : '⚠️ Este CPF já tem visita em aberto.')
-      + `\n\n${linhas}\n\nSe você continuar, esta visita ficará DUPLICADA.\n\nSalvar mesmo assim?`;
-    return confirm(msg) ? { ok: true, forcar: true } : { ok: false, forcar: false };
-  }
   // O sistema antigo (dump de 22/09/2026, importado em 23/09) trouxe 40 atendimentos com data POSTERIOR à própria carga
   // (02/10, 02/12, 06/12, 09/12, 19/12/2026 e 08/04/2027). Esses dias nunca aconteceram: as telas não os mostram.
   // O banco NÃO é alterado. Regra: o que foi criado até 23/09/2026 não pode ter data depois de 23/09/2026; ninguém tem data futura.
@@ -5822,8 +5648,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   }
 
   // Último resultado exibido (é ele que vai para a impressão)
-  let fluxoUltimo = { lista: [], filtros: {}, pagina: 1, temMais: false };
-  const FLUXO_LIMITE = 200;       // registros por aba (página)
+  let fluxoUltimo = { lista: [], filtros: {} };
+  const FLUXO_LIMITE = 200;
 
   function fluxoAtualizaBtnImprimir(){
     const b = el('fluxoImprimirBtn');
@@ -5843,158 +5669,62 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <b>CRAS:</b> ${escapeHtml(crasNome)} &nbsp;|&nbsp;
       <b>Período:</b> ${escapeHtml(periodo)}<br>
       <b>Emitido em:</b> ${escapeHtml(new Date().toLocaleString('pt-BR'))}</p>`;
-    // Agrupa por motivo (mantém a ordem de data da busca dentro de cada grupo; motivos mais frequentes primeiro)
-    const grupos = new Map();
-    lista.forEach(a => {
-      const m = String(a.motivo || '').trim() || 'Sem motivo';
-      if (!grupos.has(m)) grupos.set(m, []);
-      grupos.get(m).push(a);
-    });
-    const ordenados = [...grupos.entries()].sort((x, y) => y[1].length - x[1].length || x[0].localeCompare(y[0], 'pt-BR'));
-    const linhaAt = (a) => {
+    const linhas = lista.map(a => {
+      const motivo = (a.motivo || '') + (a.submotivo ? ' - ' + a.submotivo : '');
       const quem = (a.ents || []).map(e => e.func && e.func.nome).filter(Boolean).join(' / ');
       return `<tr>
         <td class="nw">${escapeHtml(fmtData(a.data_atendimento))}${a.horario ? ' ' + escapeHtml(String(a.horario).slice(0, 5)) : ''}</td>
         <td>${escapeHtml(a.nome_atendido || '')}</td>
         <td class="nw">${escapeHtml(rpCpf(a.cpf_atendido))}</td>
-        <td>${escapeHtml(a.submotivo || '')}</td>
+        <td>${escapeHtml(motivo)}</td>
         <td>${escapeHtml((a.cras && a.cras.nome) || '')}</td>
         <td>${escapeHtml(quem)}</td></tr>`;
-    };
-    const resumoMotivos = rpTabela([{ t: 'Motivo' }, { t: 'Qtd.', cls: 'n' }],
-      ordenados.map(([m, arr]) => `<tr><td>${escapeHtml(m)}</td><td class="n">${arr.length}</td></tr>`).concat(
-        `<tr><td><b>Total</b></td><td class="n"><b>${lista.length}</b></td></tr>`), '');
-    const blocos = ordenados.map(([m, arr]) => `
-      <div class="grupo-motivo">
-        <h2 class="motivo-tit">${escapeHtml(m)} <span>(${arr.length} registro${arr.length > 1 ? 's' : ''})</span></h2>
-        ${rpTabela([{ t: 'Data / Hora' }, { t: 'Nome' }, { t: 'CPF' }, { t: 'Submotivo' }, { t: 'CRAS' }, { t: 'Entrevistadores' }], arr.map(linhaAt), 'Nenhum registro.')}
-      </div>`).join('');
-    const aviso = (fluxoUltimo.pagina > 1 || fluxoUltimo.temMais)
-      ? `<p class="rodape">Impressão da aba ${fluxoUltimo.pagina} (registros ${(fluxoUltimo.pagina - 1) * FLUXO_LIMITE + 1} a ${(fluxoUltimo.pagina - 1) * FLUXO_LIMITE + lista.length}). Os demais registros desta busca estão nas outras abas.</p>` : '';
-    const cssExtra = `
-      .motivo-tit{ background:#e9edf5; border-left:4px solid #2b4c8c; padding:5px 8px; font-size:12px; margin:16px 0 6px; page-break-after:avoid; break-after:avoid; }
-      .motivo-tit span{ font-weight:400; color:#444; font-size:10px; }
-      .grupo-motivo{ page-break-inside:auto; }`;
-    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Fluxos de atendimento</title><style>${rpDetCss}${cssExtra}</style></head><body>
+    });
+    const aviso = lista.length >= FLUXO_LIMITE
+      ? `<p class="rodape">Atenção: a busca exibe no máximo ${FLUXO_LIMITE} registros; podem existir mais resultados para estes filtros.</p>` : '';
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Fluxos de atendimento</title><style>${rpDetCss}</style></head><body>
       <section class="sec">
         <h1>Fluxos de atendimento</h1>${meta}
-        <div class="kpis"><div class="kpi"><span>Registros${fluxoUltimo.pagina > 1 || fluxoUltimo.temMais ? ' (aba ' + fluxoUltimo.pagina + ')' : ''}</span><b>${lista.length}</b></div><div class="kpi"><span>Motivos</span><b>${ordenados.length}</b></div></div>
-        <h2>Resumo por motivo</h2>
-        ${resumoMotivos}
-        ${blocos}
+        <div class="kpis"><div class="kpi"><span>Registros</span><b>${lista.length}</b></div></div>
+        ${rpTabela([{ t: 'Data / Hora' }, { t: 'Nome' }, { t: 'CPF' }, { t: 'Motivo' }, { t: 'CRAS' }, { t: 'Entrevistadores' }], linhas, 'Nenhum registro.')}
         ${aviso}
       </section></body></html>`;
     rpImprimirDoc(html);
   }
 
-  // Monta a consulta do Fluxo (sem o escopo da unidade, para o atendente ver o resultado em qualquer CRAS)
-  function fluxoMontaQuery({ busca, cras, ini, fim }){
+  async function buscarFluxo(){
+    const busca = el('fluxoBusca').value.trim().replace(/[,()%*]/g, '');
+    const cras = el('fluxoCras').value;
+    const ini = el('fluxoIni').value;
+    const fim = el('fluxoFim').value;
+    if (!busca && !cras && !ini && !fim){
+      showToast('Informe um nome, CPF ou período para buscar.');
+      return;
+    }
+    el('fluxoResumo').textContent = 'Buscando...';
+    el('fluxoResultado').querySelectorAll('.tl-item, p').forEach(n => n.remove());
+    // Busca de fluxo: sem o escopo da unidade, para o atendente ver o resultado em qualquer CRAS
     let q = sbClient.from('atendimentos').select(SEL_ATEND + ', cpf_atendido').or(FILTRO_DATA_POSSIVEL).lte('data_atendimento', hoje());
     if (busca && filtroNomeCpf(busca)) q = q.or(filtroNomeCpf(busca));
     if (cras) q = q.eq('cras_origem_id', cras);
     if (ini) q = q.gte('data_atendimento', ini);
     if (fim) q = q.lte('data_atendimento', fim);
-    // 'id' como desempate mantém a ordem estável entre os lotes
-    return q.order('data_atendimento', { ascending: false }).order('horario', { ascending: false, nullsFirst: false }).order('id', { ascending: false });
-  }
-
-  function fluxoLimpaLista(){
-    const r = el('fluxoResultado');
-    r.querySelectorAll('.tl-item, p, .fluxo-abas').forEach(n => n.remove());
-  }
-
-  // Barra de abas: Anterior | 1 2 3 ... | Próxima (só mostra a próxima se o banco tiver mais registros)
-  function fluxoAbasHtml(){
-    const { pagina, temMais, lista } = fluxoUltimo;
-    if (pagina === 1 && !temMais) return '';
-    const maxConhecida = pagina + (temMais ? 1 : 0);
-    const inicio = Math.max(1, maxConhecida - 6);
-    let nums = '';
-    if (inicio > 1) nums += `<button type="button" class="fluxo-aba" data-pg="1">1</button><span class="fluxo-aba-gap">…</span>`;
-    for (let n = inicio; n <= maxConhecida; n++){
-      nums += `<button type="button" class="fluxo-aba${n === pagina ? ' ativa' : ''}" data-pg="${n}"${n === pagina ? ' aria-current="page"' : ''}>${n}</button>`;
-    }
-    const de = (pagina - 1) * FLUXO_LIMITE + 1, ate = (pagina - 1) * FLUXO_LIMITE + lista.length;
-    return `<div class="fluxo-abas" role="navigation" aria-label="Abas do resultado">
-      <button type="button" class="fluxo-aba" data-pg="${pagina - 1}"${pagina <= 1 ? ' disabled' : ''}>‹ Anterior</button>
-      ${nums}
-      <button type="button" class="fluxo-aba" data-pg="${pagina + 1}"${temMais ? '' : ' disabled'}>Próxima ›</button>
-      <span class="fluxo-aba-info">Registros ${de}–${ate}</span>
-    </div>`;
-  }
-
-  function fluxoRender(){
-    const { lista } = fluxoUltimo;
+    q = q.order('data_atendimento', { ascending: false }).order('horario', { ascending: false, nullsFirst: false }).limit(FLUXO_LIMITE);
+    const { data, error } = await q;
+    if (error){ console.error(error); fluxoUltimo = { lista: [], filtros: {} }; fluxoAtualizaBtnImprimir(); el('fluxoResumo').textContent = 'Erro ao buscar.'; showToast('Erro ao buscar fluxo: ' + error.message); return; }
+    const lista = data || [];
+    fluxoUltimo = { lista, filtros: { busca, cras, ini, fim } };
+    fluxoAtualizaBtnImprimir();
+    el('fluxoResumo').textContent = lista.length
+      ? `${lista.length} registro(s) encontrado(s)`
+      : 'Nenhum registro encontrado';
     const resultado = el('fluxoResultado');
-    fluxoLimpaLista();
-    const abas = fluxoAbasHtml();
-    resultado.querySelector('.section-head').insertAdjacentHTML('afterend', abas);   // abas no topo
     resultado.insertAdjacentHTML('beforeend', lista.length
       ? lista.map(itemFluxo).join('')
       : '<p style="color:var(--muted);font-size:13.5px;padding:6px 0 14px">Nada encontrado com esses filtros.</p>');
-    if (abas && lista.length) resultado.insertAdjacentHTML('beforeend', abas);        // e no rodapé
-  }
-
-  function fluxoAtualizaResumo(){
-    const { lista, pagina, temMais } = fluxoUltimo;
-    const de = (pagina - 1) * FLUXO_LIMITE + 1, ate = (pagina - 1) * FLUXO_LIMITE + lista.length;
-    el('fluxoResumo').textContent = !lista.length ? 'Nenhum registro encontrado'
-      : (pagina === 1 && !temMais) ? `${lista.length} registro(s) encontrado(s)`
-      : `Aba ${pagina} · registros ${de} a ${ate}${temMais ? ' (há mais abas)' : ''}`;
-  }
-
-  // Busca uma aba (página) do resultado. Cada aba é uma consulta pequena (200 registros), então não estoura o tempo do banco.
-  // todos = true ("Mostrar todos") dispensa o filtro; false ("Buscar fluxo") exige nome, CPF, CRAS ou período.
-  async function fluxoCarregaPagina(filtros, pagina){
-    const btnBuscar = el('fluxoBuscarBtn'), btnTodos = el('fluxoTodosBtn');
-    btnBuscar.disabled = btnTodos.disabled = true;
-    el('fluxoResumo').textContent = 'Buscando...';
-    el('fluxoResultado').querySelectorAll('.fluxo-abas button').forEach(b => b.disabled = true);
-    const de = (pagina - 1) * FLUXO_LIMITE;
-    try {
-      // pede 1 registro a mais só para saber se existe a próxima aba
-      const { data, error } = await fluxoMontaQuery(filtros).range(de, de + FLUXO_LIMITE);
-      if (error) throw error;
-      const lote = data || [];
-      fluxoUltimo = { lista: lote.slice(0, FLUXO_LIMITE), filtros, pagina, temMais: lote.length > FLUXO_LIMITE };
-    } catch (err){
-      console.error(err);
-      const tempo = err && (err.code === '57014' || /timeout/i.test(err.message || ''));
-      showToast(tempo ? 'A busca demorou demais. Preencha um filtro (nome, CRAS ou período) e tente de novo.' : 'Erro ao buscar fluxo: ' + (err.message || err));
-      // mantém a aba que já estava na tela, se houver
-      if (fluxoUltimo.lista.length){ fluxoRender(); fluxoAtualizaResumo(); }
-      else { fluxoLimpaLista(); el('fluxoResumo').textContent = 'Erro ao buscar.'; }
-      return false;
-    } finally { btnBuscar.disabled = btnTodos.disabled = false; fluxoAtualizaBtnImprimir(); }
-    fluxoAtualizaResumo();
-    fluxoRender();
-    return true;
-  }
-
-  async function buscarFluxo(todos = false){
-    todos = todos === true;
-    const busca = el('fluxoBusca').value.trim().replace(/[,()%*]/g, '');
-    const cras = el('fluxoCras').value;
-    const ini = el('fluxoIni').value;
-    const fim = el('fluxoFim').value;
-    if (!todos && !busca && !cras && !ini && !fim){
-      showToast('Informe um nome, CPF ou período para buscar.');
-      return;
-    }
-    fluxoUltimo = { lista: [], filtros: {}, pagina: 1, temMais: false };
-    fluxoLimpaLista();
-    await fluxoCarregaPagina({ busca, cras, ini, fim }, 1);
-  }
-
-  async function fluxoIrParaPagina(n){
-    if (!(n >= 1) || n === fluxoUltimo.pagina) return;
-    const ok = await fluxoCarregaPagina(fluxoUltimo.filtros, n);
-    if (ok) el('fluxoResultado').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   el('fluxoResultado').addEventListener('click', (e) => {
-    const aba = e.target.closest('.fluxo-aba');
-    if (aba){ e.preventDefault(); if (!aba.disabled) fluxoIrParaPagina(parseInt(aba.dataset.pg, 10)); return; }
     const pr = e.target.closest('.fluxo-item-print');
     if (pr){ e.preventDefault(); imprimirItemFluxo(pr); return; }
     const link = e.target.closest('.fluxo-hist-toggle');
@@ -6002,16 +5732,15 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     e.preventDefault();
     alternarHistorico(link, link.dataset.id, link.dataset.cpf, link.dataset.nome);
   });
-  el('fluxoBuscarBtn').addEventListener('click', () => buscarFluxo(false));
-  el('fluxoTodosBtn').addEventListener('click', () => buscarFluxo(true));
+  el('fluxoBuscarBtn').addEventListener('click', buscarFluxo);
   el('fluxoImprimirBtn').addEventListener('click', imprimirFluxo);
-  el('fluxoBusca').addEventListener('keydown', (e) => { if (e.key === 'Enter') buscarFluxo(false); });
+  el('fluxoBusca').addEventListener('keydown', (e) => { if (e.key === 'Enter') buscarFluxo(); });
   el('fluxoLimparBtn').addEventListener('click', () => {
     ['fluxoBusca', 'fluxoCras', 'fluxoIni', 'fluxoFim'].forEach(i => el(i).value = '');
-    fluxoUltimo = { lista: [], filtros: {}, pagina: 1, temMais: false };
+    fluxoUltimo = { lista: [], filtros: {} };
     fluxoAtualizaBtnImprimir();
     el('fluxoResumo').textContent = 'Use a busca acima';
-    fluxoLimpaLista();
+    el('fluxoResultado').querySelectorAll('.tl-item, p').forEach(n => n.remove());
     el('fluxoResultado').insertAdjacentHTML('beforeend',
       '<p style="color:var(--muted);font-size:13.5px;padding:6px 0 14px">Digite um nome, um CPF ou um período e clique em "Buscar fluxo".</p>');
   });
@@ -6086,7 +5815,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   function erroAmigavel(err){
     const msg = String((err && err.message) || err || '');
     const code = String((err && err.code) || '');
-    if (code === 'OUTBOX' || code === 'DUP_VISITA') return msg;
+    if (code === 'OUTBOX') return msg;
     if (/failed to fetch|networkerror|load failed|network request/i.test(msg)) return 'Sem conexão com a internet. Confira a rede e tente de novo.';
     if (/jwt|token.*expir|not authenticated/i.test(msg)) return 'Sua sessão expirou. Saia e entre de novo.';
     if (code === '42501' || /row-level security|permission denied|RLS/i.test(msg)) return 'Você não tem permissão para fazer isso. Fale com o administrador.';
@@ -6103,26 +5832,6 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   function skelLinhas(n){ const w = [92, 78, 86, 64, 80]; return Array.from({ length: n || 4 }, (_, i) => `<span class="skel skel-linha" style="width:${w[i % w.length]}%"></span>`).join(''); }
   function skelKpis(n){ return `<div class="skel-kpis">${'<span class="skel skel-kpi"></span>'.repeat(n || 8)}</div>`; }
-
-  (function avisoDuplicidadeAgendaED(){
-    const box = document.getElementById('vsDupBox'), cpf = document.getElementById('vsCpf');
-    if (!box || !cpf) return;
-    let t = null;
-    const atualizar = () => {
-      clearTimeout(t);
-      t = setTimeout(() => vsAtualizarAvisoDup(box, {
-        cpf: cpf.value, data: document.getElementById('vsData').value,
-        endereco: document.getElementById('vsEndereco').value, ignorarId: editandoVisitaId || null
-      }), 350);
-    };
-    cpf.addEventListener('input', atualizar);
-    cpf.addEventListener('blur', atualizar);
-    document.getElementById('vsData').addEventListener('change', atualizar);
-    document.getElementById('vsEndereco').addEventListener('blur', atualizar);
-    // o autopreenchimento por CPF muda o endereço sem blur: confere de novo logo depois
-    cpf.addEventListener('input', () => setTimeout(atualizar, 1200));
-    document.getElementById('vsLimparBtn').addEventListener('click', () => { box._tok = (box._tok || 0) + 1; box.hidden = true; box.innerHTML = ''; });
-  })();
 
   (function melhorarCampoCpfVisita(){
     const inp = document.getElementById('vsCpf');
@@ -6173,7 +5882,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         por('vsBairro', v.bairro);
         por('vsTelefone', v.telefone, vsFmtTel);
         if (Array.isArray(v.tipo_imovel) && v.tipo_imovel.length && !vsTipoGet().length){ vsTipoSet(v.tipo_imovel); n++; }
-        if (n) showToast('✨ Dados preenchidos a partir da última visita deste CPF' + (v.data_agendada ? ' (' + fmtData(String(v.data_agendada).slice(0, 10)) + ')' : '') + '. Confira o aviso abaixo do CPF: ele mostra se já existe visita.', 5000);
+        if (n) showToast('✨ Dados preenchidos a partir da última visita deste CPF');
       } catch (e) { console.warn('Autopreenchimento por CPF não disponível:', e); }
     }
 
@@ -6326,11 +6035,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         return;
       }
 
-      const dup = await vsConfirmarSemDuplicata(cpf, data);   // mesma verificação do Painel por CRAS
-      if (!dup.ok) return;                                      // cancelou: o botão volta ao normal no finally
       const res = await Outbox.salvar({
         tipo: 'visita',
-        forcar: dup.forcar,
         res: { nome, data, motivo },
         reg: {
           nome_responsavel: nome, cpf: cpf.replace(/\D/g, ''), data_agendada: data, hora_prevista: hora || null, cras_id: cras, motivo: motivo,
@@ -6634,6 +6340,35 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const padrao = () => { const h = hoje(); const w = dow(h); return w === 6 ? soma(h, 2) : w === 0 ? soma(h, 1) : h; };
     const visivel = () => g.classList.contains('vs-modo-cras') && el('vsTabAgenda') && el('vsTabAgenda').classList.contains('vs-gaveta-aberta');
 
+    // ---------- data de nascimento (coluna "data_nascimento" em visitas_domiciliares; sem a coluna o campo fica desativado) ----------
+    let nascVsOk = null;
+    async function nascVsVerificar(){
+      if (nascVsOk !== null) return nascVsOk;
+      try {
+        const r = await sbClient.from('visitas_domiciliares').select('data_nascimento').limit(1);
+        if (!r.error) nascVsOk = true;
+        else if (/data_nascimento/i.test(r.error.message || '') || r.error.code === '42703' || r.error.code === 'PGRST204') nascVsOk = false;
+        else return null;      // erro de rede/permissão: tenta de novo depois
+      } catch (_) { return null; }
+      return nascVsOk;
+    }
+    function nascVsPreparar(){
+      const inp = el('pcNasc'), hint = el('pcNascHint'); if (!inp || !hint) return;
+      const atualizar = () => {
+        if (nascVsOk === false){ inp.disabled = true; hint.style.color = '#B45309'; hint.textContent = 'Ainda não ativado: falta criar a coluna "data_nascimento" no banco (veja o arquivo SQL).'; return; }
+        inp.disabled = false;
+        const v = inp.value, erro = nascErro(v);
+        hint.style.color = erro ? '#DC2626' : 'var(--muted)';
+        if (erro) hint.textContent = erro;
+        else if (v){ const i = idadeDe(v, hoje()); hint.textContent = i + (i === 1 ? ' ano' : ' anos'); }
+        else hint.textContent = '';
+      };
+      inp.addEventListener('input', atualizar);
+      atualizar();
+      nascVsVerificar().then(atualizar);
+    }
+    const campoNasc = (valor) => `<div class="field"><label>Data de nascimento</label><input type="date" id="pcNasc" min="1900-01-01" max="${hoje()}" autocomplete="off" value="${esc(valor || '')}"><small id="pcNascHint" class="cpf-msg"></small></div>`;
+
     // ---------- dados ----------
     async function garantirCras(){
       const ops = Array.from(el('vsCras').options).filter(o => o.value).map(o => ({ id: o.value, nome: o.textContent.trim() }));
@@ -6823,8 +6558,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       el('pcMCorpo').innerHTML = `<div class="pc-fg">
         <div class="field span-2"><label>Nome do responsável *</label><input type="text" id="pcNome" autocomplete="off"></div>
         <div class="field"><label>CPF *</label><input type="text" id="pcCpf" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" autocomplete="off"></div>
-        <div class="field"><label>Telefone</label><input type="text" id="pcTel" inputmode="tel" placeholder="(51) 90000-0000" autocomplete="off"></div>
-        <div class="vs-dup-box" id="pcDupBox" role="alert" hidden></div>
+        ${campoNasc('')}
+        <div class="field span-2"><label>Telefone</label><input type="text" id="pcTel" inputmode="tel" placeholder="(51) 90000-0000" autocomplete="off"></div>
         <div class="field span-2"><label>Endereço</label><input type="text" id="pcEnd" placeholder="Rua, número, complemento..." autocomplete="off"></div>
         <div class="field"><label>Bairro</label><input type="text" id="pcBai" autocomplete="off"></div>
         <div class="field"><label>Motivo</label><select id="pcMot">${el('vsMotivo').innerHTML}</select></div>
@@ -6832,6 +6567,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <label class="span-2" style="display:flex;gap:8px;align-items:center;font-size:13px"><input type="checkbox" id="pcUrg"> Visita urgente</label>
       </div>`;
       el('pcMot').value = MOTIVO_PADRAO;
+      nascVsPreparar();
       el('pcMRodape').innerHTML = '<button type="button" class="btn-ghost" data-pcx>Cancelar</button><button type="button" class="btn-primary" id="pcSalvar">Agendar visita</button>';
       const cpf = el('pcCpf'); let ultimo = '';
       cpf.addEventListener('input', () => { const d = cpfSoDigitos(cpf.value).slice(0, 11); cpf.value = d.replace(/^(\d{3})(\d)/, '$1.$2').replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3').replace(/\.(\d{3})(\d)/, '.$1-$2'); });
@@ -6840,18 +6576,15 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         if (d.length !== 11 || d === ultimo || !cpfValido(d)) return;
         ultimo = d; cpf.value = d.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
         try {
-          const r = await escoparVsLista(sbClient.from('visitas_domiciliares').select('nome_responsavel, endereco, bairro, telefone')).eq('cpf', d).order('data_criacao', { ascending: false, nullsFirst: false }).limit(1);
+          await nascVsVerificar();
+          const r = await escoparVsLista(sbClient.from('visitas_domiciliares').select('nome_responsavel, endereco, bairro, telefone' + (nascVsOk ? ', data_nascimento' : ''))).eq('cpf', d).order('data_criacao', { ascending: false, nullsFirst: false }).limit(1);
           const v = r.data && r.data[0]; if (!v) return;
           const por = (id, val, fn) => { const e = el(id); if (e && val && !e.value.trim()) e.value = fn ? fn(val) : val; };
           por('pcNome', v.nome_responsavel); por('pcEnd', v.endereco); por('pcBai', v.bairro); por('pcTel', v.telefone, vsFmtTel);
+          if (nascVsOk && v.data_nascimento){ const n = el('pcNasc'); if (n && !n.value){ n.value = v.data_nascimento; n.dispatchEvent(new Event('input')); } }
         } catch (e) {}
       });
       el('pcTel').addEventListener('blur', () => { const t = el('pcTel'); if (t.value.trim()) t.value = vsFmtTel(t.value); });
-      // aviso ao vivo de visita duplicada (mesmo CPF ou mesmo endereço), igual ao da Agenda ED
-      let tDup = null;
-      const avisarDup = () => { clearTimeout(tDup); tDup = setTimeout(() => vsAtualizarAvisoDup(el('pcDupBox'), { cpf: el('pcCpf').value, data: S.data, endereco: el('pcEnd').value }), 350); };
-      el('pcCpf').addEventListener('input', () => { avisarDup(); setTimeout(avisarDup, 1200); });
-      el('pcEnd').addEventListener('blur', avisarDup);
       el('pcSalvar').addEventListener('click', () => salvarAgendar(c, per));
       modal.style.display = 'flex';
       setTimeout(() => el('pcNome').focus(), 50);
@@ -6862,19 +6595,26 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       if (!nome || !cpf){ showToast('⚠️ Preencha o nome e o CPF'); return; }
       if (cpf.length !== 11){ showToast('⚠️ CPF incompleto: use 11 números'); return; }
       if (!cpfValido(cpf) && !confirm('Este CPF parece inválido (os dígitos verificadores não conferem).\n\nSalvar mesmo assim?')) return;
+      const nasc = el('pcNasc') ? el('pcNasc').value : '', erroNasc = nascErro(nasc);
+      if (erroNasc){ showToast('⚠️ ' + erroNasc); return; }
       const btn = el('pcSalvar'); btn.disabled = true; btn.textContent = 'Salvando...';
       try {
-        // mesma verificação da Agenda ED: evita duas pessoas agendarem a mesma família (em qualquer CRAS)
-        const dup = await vsConfirmarSemDuplicata(cpf, S.data);
-        if (!dup.ok){ btn.disabled = false; btn.textContent = 'Agendar visita'; return; }
+        // já existe visita em aberto para este CPF? (evita duas funcionárias agendarem a mesma família)
+        try {
+          const r = await escoparVsLista(sbClient.from('visitas_domiciliares').select('data_agendada, status, cras:cras_id(nome)')).eq('cpf', cpf).gte('data_agendada', hoje()).in('status', ['agendada', 'reagendada']).limit(1);
+          const ex = r.data && r.data[0];
+          if (ex && !confirm(`Já existe uma visita em aberto para este CPF em ${fmtData(ex.data_agendada)} (${(ex.cras && ex.cras.nome) || 'outro CRAS'}).\n\nAgendar mesmo assim?`)){ btn.disabled = false; btn.textContent = 'Agendar visita'; return; }
+        } catch (e) {}
         const quem = currentFuncionario ? `${currentFuncionario.nome || ''}${currentFuncionario.cras_nome ? ' (' + currentFuncionario.cras_nome + ')' : ''}` : '';
         const obs = [el('pcObs').value.trim(), quem ? 'Agendado pelo painel do CRAS por ' + quem : ''].filter(Boolean).join(' — ');
         const motivo = el('pcMot').value || MOTIVO_PADRAO;
         const tel = el('pcTel').value.replace(/\D/g, '') || null;
+        const nascGravar = nasc ? (await nascVsVerificar()) === true : false;
+        if (nasc && !nascGravar) showToast('⚠️ A data de nascimento não foi salva: coluna ainda não ativada no banco (ou sem conexão para conferir).', 6000);
         const res = await Outbox.salvar({
-          tipo: 'visita', forcar: dup.forcar, res: { nome, data: S.data, motivo },
+          tipo: 'visita', res: { nome, data: S.data, motivo },
           reg: {
-            nome_responsavel: nome, cpf, data_agendada: S.data, hora_prevista: HORA[per], cras_id: c.id, motivo,
+            nome_responsavel: nome, cpf, ...(nascGravar ? { data_nascimento: nasc } : {}), data_agendada: S.data, hora_prevista: HORA[per], cras_id: c.id, motivo,
             observacao: obs || null, endereco: el('pcEnd').value.trim() || null, bairro: el('pcBai').value.trim() || null, telefone: tel,
             urgente: el('pcUrg').checked, entrevistadores: [], status: 'agendada', data_criacao: new Date().toISOString()
           }
@@ -6904,7 +6644,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <div class="field span-2"><label>Período</label><select id="pcPer">${per0 === 'sem' ? '<option value="sem" selected>Sem período definido</option>' : ''}<option value="manha"${per0 === 'manha' ? ' selected' : ''}>Manhã</option><option value="tarde"${per0 === 'tarde' ? ' selected' : ''}>Tarde</option></select></div>
         <div class="field span-2"><label>Nome do responsável *</label><input type="text" id="pcNome" autocomplete="off" value="${esc(v.nome_responsavel || '')}"></div>
         <div class="field"><label>CPF *</label><input type="text" id="pcCpf" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" autocomplete="off" value="${esc(vsFormatarCpf(v.cpf))}"></div>
-        <div class="field"><label>Telefone</label><input type="text" id="pcTel" inputmode="tel" placeholder="(51) 90000-0000" autocomplete="off" value="${esc(vsFmtTel(v.telefone))}"></div>
+        ${campoNasc(v.data_nascimento)}
+        <div class="field span-2"><label>Telefone</label><input type="text" id="pcTel" inputmode="tel" placeholder="(51) 90000-0000" autocomplete="off" value="${esc(vsFmtTel(v.telefone))}"></div>
         <div class="field span-2"><label>Endereço</label><input type="text" id="pcEnd" placeholder="Rua, número, complemento..." autocomplete="off" value="${esc(v.endereco || '')}"></div>
         <div class="field"><label>Bairro</label><input type="text" id="pcBai" autocomplete="off" value="${esc(v.bairro || '')}"></div>
         <div class="field"><label>Motivo</label><select id="pcMot">${el('vsMotivo').innerHTML}</select></div>
@@ -6916,6 +6657,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         const op = document.createElement('option'); op.value = v.motivo; op.textContent = v.motivo + ' (motivo antigo)'; sm.appendChild(op);
       }
       sm.value = v.motivo || MOTIVO_PADRAO;
+      nascVsPreparar();
       el('pcMRodape').innerHTML = '<button type="button" class="btn-ghost" data-pcx>Cancelar</button><button type="button" class="btn-primary" id="pcEdSalvar">Salvar alterações</button>';
       const cpf = el('pcCpf');
       cpf.addEventListener('input', () => { const d = cpfSoDigitos(cpf.value).slice(0, 11); cpf.value = d.replace(/^(\d{3})(\d)/, '$1.$2').replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3').replace(/\.(\d{3})(\d)/, '.$1-$2'); });
@@ -6931,6 +6673,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       if (!cpf && v.cpf){ showToast('⚠️ O CPF é obrigatório'); return; }
       if (cpf && cpf.length !== 11){ showToast('⚠️ CPF incompleto: use 11 números'); return; }
       if (cpf && cpf !== cpfCompletar(v.cpf) && !cpfValido(cpf) && !confirm('Este CPF parece inválido (os dígitos verificadores não conferem).\n\nSalvar mesmo assim?')) return;
+      const nasc = el('pcNasc') ? el('pcNasc').value : '', erroNasc = nascErro(nasc);
+      if (erroNasc){ showToast('⚠️ ' + erroNasc); return; }
       const campos = {
         nome_responsavel: nome,
         endereco: el('pcEnd').value.trim() || null, bairro: el('pcBai').value.trim() || null,
@@ -6940,6 +6684,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         urgente: el('pcUrg').checked
       };
       if (cpf) campos.cpf = cpf;
+      if ((await nascVsVerificar()) === true) campos.data_nascimento = nasc || null;
+      else if (nasc && nasc !== (v.data_nascimento || '')) showToast('⚠️ A data de nascimento não foi salva: coluna ainda não ativada no banco.', 6000);
       if (per !== per0 && per !== 'sem'){          // mudou de manhã para tarde (ou vice-versa): confere as vagas
         const o = ocup({ id: v.cras_id }, v.data_agendada), usado = per === 'manha' ? o.m : o.t, vagas = per === 'manha' ? o.vm : o.vt;
         if (usado >= vagas){
@@ -8741,12 +8487,6 @@ ${L('7.1 NOME:', d.enNome)}${L('7.2 CPF:', d.enCpf)}${L('7.3 UNIDADE REFERENCIAD
       const r = await sbClient.from('visitas_domiciliares').select('id').eq('cpf', it.reg.cpf).eq('data_criacao', it.reg.data_criacao).limit(1);
       if (r.error) throw r.error;
       if (r.data && r.data.length) return;
-    }
-    if (!it.forcar){   // última conferência imediatamente antes de gravar: outra pessoa pode ter agendado a mesma família há segundos
-      const c = await sbClient.from('visitas_domiciliares').select('id').eq('cpf', it.reg.cpf).eq('data_agendada', it.reg.data_agendada).in('status', ['agendada', 'reagendada']).limit(1);
-      if (!c.error && c.data && c.data.length){
-        const e = new Error('Já existe uma visita em aberto para este CPF nesta mesma data. Confira a Agenda ED antes de agendar de novo.'); e.code = 'DUP_VISITA'; throw e;
-      }
     }
     const r = await sbClient.from('visitas_domiciliares').insert(it.reg);   // sem .select(): quem agenda para outra unidade não lê de volta
     if (r.error) throw r.error;
